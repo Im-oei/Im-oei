@@ -1,0 +1,6 @@
+{
+  "name": "Im Oei POS",
+  "short_name": "ImOei",
+  "start_url": "app.html",
+  "display": "standalone"
+}

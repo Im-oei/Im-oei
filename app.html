@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Im Oei POS</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f59e0b">
+
+<style>
+body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;}
+.nav{display:flex;gap:10px;padding:10px;background:#020617;}
+.nav button{flex:1;padding:10px;border:none;border-radius:10px;background:#1e293b;color:#fff;}
+.page{display:none;padding:15px;}
+.active{display:block;}
+.card{background:#1e293b;padding:15px;border-radius:15px;margin-bottom:15px;}
+button{padding:10px;margin:5px;border:none;border-radius:10px;background:#f59e0b;}
+</style>
+</head>
+
+<body>
+
+<div class="nav">
+  <button onclick="show('pos')">🛒 POS</button>
+  <button onclick="show('kitchen')">🍳 Kitchen</button>
+  <button onclick="show('dash')">📊 Dashboard</button>
+</div>
+
+<div id="pos" class="page active">
+  <div class="card">
+    <h3>ขายสินค้า</h3>
+    <button onclick="add('แซนวิช',20)">🥪 แซนวิช</button>
+    <button onclick="add('ข้าว',50)">🍱 ข้าว</button>
+  </div>
+
+  <div class="card">
+    <h3>ตะกร้า</h3>
+    <div id="cart"></div>
+    <button onclick="checkout()">💸 คิดเงิน</button>
+  </div>
+</div>
+
+<div id="kitchen" class="page">
+  <div class="card">
+    <h3>ออเดอร์</h3>
+    <div id="orders"></div>
+  </div>
+</div>
+
+<div id="dash" class="page">
+  <div class="card">
+    <h3>ยอดรวม</h3>
+    <div id="total"></div>
+  </div>
+  <canvas id="chart"></canvas>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.show = (id)=>{
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+};
+
+let cart=[];
+let queue=1;
+
+window.add=(m,p)=>{
+ let i=cart.find(x=>x.m===m);
+ if(i){i.q++}else{cart.push({m,p,q:1})}
+ render();
+}
+
+function render(){
+ document.getElementById("cart").innerHTML=
+ cart.map(i=>i.m+" x"+i.q).join("<br>");
+}
+
+const sound = new Audio("ding.mp3");
+
+window.checkout=async()=>{
+ for(const i of cart){
+  await addDoc(collection(db,"orders"),{
+   Menu:i.m,price:i.p,qty:i.q,
+   queue:queue,
+   status:"pending"
+  });
+
+  await sendLine("🛒 ออเดอร์ใหม่ คิว "+queue+" "+i.m+" x"+i.q);
+
+  queue++;
+ }
+
+ cart=[];
+ render();
+ alert("คิว: "+(queue-1));
+};
+
+onSnapshot(collection(db,"orders"), snap=>{
+ let html="";
+ let total=0;
+ let sales={};
+
+ snap.forEach(docSnap=>{
+  const o = docSnap.data();
+
+  total += o.price * o.qty;
+
+  if(!sales[o.Menu]) sales[o.Menu]=0;
+  sales[o.Menu]+=o.price * o.qty;
+
+  html += `
+  <div style="margin:10px;padding:10px;background:#334155">
+    <b>คิว #${o.queue}</b><br>
+    ${o.Menu} x ${o.qty}<br>
+    ${o.status}<br>
+    <button onclick="updateStatus('${docSnap.id}','done')">เสร็จ</button>
+  </div>`;
+ });
+
+ document.getElementById("orders").innerHTML = html;
+ document.getElementById("total").innerText = total+" บาท";
+
+ new Chart(document.getElementById("chart"),{
+  type:"bar",
+  data:{labels:Object.keys(sales),datasets:[{data:Object.values(sales)}]}
+ });
+
+ sound.play();
+});
+
+window.updateStatus = async(id,status)=>{
+ await updateDoc(doc(db,"orders",id),{status:status});
+};
+
+const token="YOUR_LINE_TOKEN";
+
+async function sendLine(msg){
+ await fetch("https://notify-api.line.me/api/notify",{
+  method:"POST",
+  headers:{
+   "Content-Type":"application/x-www-form-urlencoded",
+   "Authorization":"Bearer "+token
+  },
+  body:"message="+encodeURIComponent(msg)
+ });
+}
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+ navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
