@@ -3,90 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Im Oei</title>
+<title>อิ่มอิ่ม ทุกเช้า</title>
 
 <style>
 body{
   margin:0;
   font-family:sans-serif;
-  background:#fff;
+  background:#f2f2f2;
 }
 
 /* HEADER */
 .header{
-  background:#facc15;
+  background:#ffc107;
   padding:20px;
   text-align:center;
-  font-size:22px;
   font-weight:bold;
+  font-size:22px;
 }
 
-/* MENU */
-.menu{
-  padding:15px;
-}
-
+/* CARD */
 .card{
-  display:flex;
-  gap:10px;
   background:#fff;
+  margin:15px;
+  padding:15px;
   border-radius:15px;
-  padding:10px;
-  margin-bottom:10px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
 .card img{
-  width:80px;
-  height:80px;
+  width:70px;
+  height:70px;
   border-radius:10px;
   object-fit:cover;
 }
 
-.info{flex:1;}
+.info{
+  flex:1;
+  margin-left:10px;
+}
 
 .qty{
   display:flex;
   align-items:center;
-  gap:5px;
+  gap:10px;
 }
 
-.qty button{
+.btn{
   width:30px;
   height:30px;
   border:none;
   border-radius:50%;
-  background:#facc15;
+  background:#ffc107;
+  font-size:18px;
 }
 
-/* CART BAR */
-.cart-bar{
+/* FOOTER */
+.footer{
   position:fixed;
   bottom:0;
   width:100%;
-  background:#facc15;
-  padding:15px;
+  background:#ffc107;
   display:flex;
   justify-content:space-between;
+  padding:15px;
+  font-weight:bold;
 }
 
-/* FULL CART */
-.cart-page{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#fff;
+/* PAGE */
+.page{
   display:none;
-  padding:20px;
+}
+.active{
+  display:block;
 }
 
 /* SUCCESS */
 .success{
-  display:none;
   text-align:center;
   padding:50px;
+}
+.success h1{
+  color:green;
 }
 </style>
 </head>
@@ -95,168 +95,114 @@ body{
 
 <div class="header">อิ่มอิ่ม ทุกเช้า</div>
 
-<div class="menu" id="menu"></div>
+<!-- หน้า MENU -->
+<div id="menu" class="page active">
 
-<div class="cart-bar" onclick="openCart()">
-  <div id="sum">0 บาท</div>
-  <button>สั่งซื้อ</button>
+<div class="card">
+<img src="https://picsum.photos/100">
+<div class="info">
+  <b>แซนวิช</b><br>
+  20 บาท
 </div>
-<!-- PAGE: MENU -->
-<div id="page-menu">
+<div class="qty">
+  <button class="btn" onclick="change('sandwich',20,-1)">-</button>
+  <span id="sandwich">0</span>
+  <button class="btn" onclick="change('sandwich',20,1)">+</button>
+</div>
+</div>
 
-  <div class="header">อิ่มอิ่ม ทุกเช้า</div>
-
-  <div class="menu">
-    <div class="card">
-      <img src="https://picsum.photos/100">
-      <div>
-        <h3>แซนวิช</h3>
-        <p>20 บาท</p>
-        <button onclick="add('แซนวิช')">+</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <img src="https://picsum.photos/101">
-      <div>
-        <h3>ข้าว</h3>
-        <p>50 บาท</p>
-        <button onclick="add('ข้าว')">+</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <span id="total">0 บาท</span>
-    <button onclick="goCart()">สั่งซื้อ</button>
-  </div>
+<div class="card">
+<img src="https://picsum.photos/101">
+<div class="info">
+  <b>ข้าว</b><br>
+  50 บาท
+</div>
+<div class="qty">
+  <button class="btn" onclick="change('rice',50,-1)">-</button>
+  <span id="rice">0</span>
+  <button class="btn" onclick="change('rice',50,1)">+</button>
+</div>
+</div>
 
 </div>
 
-
-<!-- PAGE: CART -->
-<div id="page-cart" style="display:none">
-
-  <div class="header">ตะกร้า</div>
-
-  <div class="menu" id="cart-list"></div>
-
-  <div class="footer">
-    <button onclick="confirmOrder()">ยืนยัน</button>
-  </div>
-
+<!-- หน้า CART -->
+<div id="cart" class="page">
+<div style="padding:20px">
+<h2>ตะกร้า</h2>
+<div id="cartList"></div>
 </div>
-
-
-<!-- PAGE: SUCCESS -->
-<div id="page-success" style="display:none; text-align:center; margin-top:100px">
-
-  <h1>✅</h1>
-  <h2>สั่งซื้อสำเร็จ</h2>
-  <p id="order-id"></p>
-
-</div>
-<!-- CART -->
-<div class="cart-page" id="cartPage">
-  <h2>ตะกร้า</h2>
-  <div id="cart"></div>
-  <button onclick="checkout()">ยืนยัน</button>
 </div>
 
 <!-- SUCCESS -->
-<div class="success" id="success">
-  <h1>✅</h1>
-  <h2>สั่งซื้อสำเร็จ</h2>
-  <div id="orderId"></div>
+<div id="success" class="page success">
+<h1>✔ สั่งซื้อสำเร็จ</h1>
+<p id="orderId"></p>
+<button onclick="goHome()">กลับหน้าหลัก</button>
 </div>
-<script>
-let cart = {}
 
-function add(name){
-  cart[name] = (cart[name] || 0) + 1
-  updateTotal()
+<!-- FOOTER -->
+<div class="footer">
+<span id="total">0 บาท</span>
+<div>
+<button onclick="openCart()">ตะกร้า</button>
+<button onclick="checkout()">สั่งซื้อ</button>
+</div>
+</div>
+
+<script>
+let cart = {
+  sandwich:0,
+  rice:0
+};
+
+let prices = {
+  sandwich:20,
+  rice:50
+};
+
+function change(name, price, amount){
+  cart[name] += amount;
+  if(cart[name] < 0) cart[name]=0;
+
+  document.getElementById(name).innerText = cart[name];
+  updateTotal();
 }
 
 function updateTotal(){
-  let total = Object.values(cart).reduce((a,b)=>a+b,0)
-  document.getElementById("total").innerText = total + " บาท"
-}
-
-function goCart(){
-  document.getElementById("page-menu").style.display = "none"
-  document.getElementById("page-cart").style.display = "block"
-
-  let html = ""
+  let total = 0;
   for(let k in cart){
-    html += `<div class="card">${k} x ${cart[k]}</div>`
+    total += cart[k] * prices[k];
   }
-  document.getElementById("cart-list").innerHTML = html
-}
-
-function confirmOrder(){
-  document.getElementById("page-cart").style.display = "none"
-  document.getElementById("page-success").style.display = "block"
-
-  let id = "OD" + Date.now()
-  document.getElementById("order-id").innerText = id
-}
-                          </script>
-<script>
-let menu=[
- {name:"แซนวิช",price:20,img:"https://picsum.photos/100"},
- {name:"ข้าว",price:50,img:"https://picsum.photos/101"}
-];
-
-let cart=[];
-
-function renderMenu(){
- document.getElementById("menu").innerHTML=
- menu.map((m,i)=>`
- <div class="card">
-  <img src="${m.img}">
-  <div class="info">
-    <h4>${m.name}</h4>
-    <p>${m.price} บาท</p>
-    <div class="qty">
-      <button onclick="add(${i})">+</button>
-    </div>
-  </div>
- </div>
- `).join("");
-}
-
-function add(i){
- let m=menu[i];
- let f=cart.find(x=>x.name===m.name);
- if(f) f.qty++;
- else cart.push({...m,qty:1});
- renderCart();
-}
-
-function renderCart(){
- let total=0;
- document.getElementById("cart").innerHTML=
- cart.map(c=>{
-  total+=c.price*c.qty;
-  return c.name+" x"+c.qty+"<br>";
- }).join("");
- document.getElementById("sum").innerText=total+" บาท";
+  document.getElementById("total").innerText = total + " บาท";
 }
 
 function openCart(){
- document.getElementById("cartPage").style.display="block";
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("cart").classList.add("active");
+
+  let html="";
+  for(let k in cart){
+    if(cart[k]>0){
+      html += k + " x" + cart[k] + "<br>";
+    }
+  }
+  document.getElementById("cartList").innerHTML = html || "ไม่มีสินค้า";
 }
 
 function checkout(){
- let id="OD"+Date.now();
- document.getElementById("orderId").innerText=id;
- document.getElementById("success").style.display="block";
- document.getElementById("cartPage").style.display="none";
- cart=[];
- renderCart();
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("cart").classList.remove("active");
+  document.getElementById("success").classList.add("active");
+
+  let id = "OD" + Math.floor(Math.random()*1000000000);
+  document.getElementById("orderId").innerText = id;
 }
 
-renderMenu();
+function goHome(){
+  document.getElementById("success").classList.remove("active");
+  document.getElementById("menu").classList.add("active");
+}
 </script>
 
 </body>
