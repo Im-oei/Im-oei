@@ -163,12 +163,15 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
   <div>
     <h1>🧑‍🍳 แอดมิน</h1>
   </div>
-  <div class="store-toggle">
-    <span class="toggle-label" id="store-status-label">เปิดร้าน</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="store-open-toggle" checked onchange="toggleStore()">
-      <span class="slider"></span>
-    </label>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="store-toggle">
+      <span class="toggle-label" id="store-status-label">เปิดร้าน</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="store-open-toggle" checked onchange="toggleStore()">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <button onclick="doLogout()" title="ออกจากระบบ" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;">🚪</button>
   </div>
 </div>
 
@@ -257,13 +260,17 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       <button class="save-btn" onclick="saveBanner()">💾 บันทึก Banner</button>
     </div>
 
-    <div class="settings-card">
-      <h3>🔑 ตั้งค่าแอดมิน</h3>
+    <div class="settings-card owner-only">
+      <h3>🔑 ตั้งค่ารหัสผ่าน</h3>
       <div class="form-group">
         <label>รหัสผ่านแอดมิน</label>
-        <input type="password" class="form-input" id="set-password" placeholder="ตั้งรหัสผ่านใหม่">
+        <input type="password" class="form-input" id="set-admin-password" placeholder="ตั้งรหัสผ่านใหม่">
       </div>
-      <button class="save-btn" onclick="savePassword()">💾 บันทึกรหัสผ่าน</button>
+      <div class="form-group">
+        <label>รหัสผ่านเจ้าของร้าน</label>
+        <input type="password" class="form-input" id="set-owner-password" placeholder="ตั้งรหัสผ่านใหม่">
+      </div>
+      <button class="save-btn" onclick="savePasswords()">💾 บันทึกรหัสผ่าน</button>
     </div>
   </div>
 </div>
@@ -358,15 +365,28 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-// ====== SIMPLE PASSWORD PROTECT ======
+// ====== AUTH & ROLE ======
 const ADMIN_KEY = 'imkum_admin_auth';
 function checkAuth() {
   if (!sessionStorage.getItem(ADMIN_KEY)) {
-    // ไม่ผ่านการล็อกอิน → กลับหน้าหลัก
-    window.location.href = 'index.html';
-    return false;
+    window.location.href = 'login.html'; return false;
   }
   return true;
+}
+function getUser(){ try{ return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
+function getCurrentRole(){ const u=getUser(); return u?u.role:'admin'; }
+
+// ซ่อน/แสดง UI ตาม role
+function applyRoleUI() {
+  const role = getCurrentRole();
+  const isOwner = role === 'owner';
+  // แสดงชื่อ role ใน header
+  const h1 = document.querySelector('.admin-header h1');
+  if(h1) h1.textContent = isOwner ? '👑 เจ้าของร้าน' : '🧑‍🍳 แอดมิน';
+  // owner เห็นทุกแท็บ, admin ไม่เห็นแท็บตั้งค่าบางส่วน
+  document.querySelectorAll('.owner-only').forEach(el => {
+    el.style.display = isOwner ? '' : 'none';
+  });
 }
 
 // ====== STATE ======
@@ -378,6 +398,7 @@ let unsubOrders = null;
 
 // ====== INIT ======
 if (!checkAuth()) { throw new Error('not authenticated'); }
+applyRoleUI();
 loadSettings();
 loadMenu();
 listenOrders();
@@ -642,12 +663,35 @@ window.saveBanner = async function() {
   finally { showLoading(false); }
 };
 
-window.savePassword = function() {
-  const pwd = document.getElementById('set-password').value;
-  if (!pwd || pwd.length < 4) { showToast('รหัสผ่านต้องมีอย่างน้อย 4 ตัว'); return; }
-  localStorage.setItem('imkum_admin_pwd', pwd);
-  document.getElementById('set-password').value = '';
-  showToast('บันทึกรหัสผ่านแล้ว ✓');
+window.savePasswords = async function() {
+  const role = getCurrentRole();
+  if(role !== 'owner'){ showToast('เฉพาะเจ้าของร้านเท่านั้น'); return; }
+  const adminPwd = document.getElementById('set-admin-password').value;
+  const ownerPwd = document.getElementById('set-owner-password').value;
+  if(adminPwd && adminPwd.length < 4){ showToast('รหัสผ่านต้องมีอย่างน้อย 4 ตัว'); return; }
+  if(ownerPwd && ownerPwd.length < 4){ showToast('รหัสผ่านต้องมีอย่างน้อย 4 ตัว'); return; }
+  showLoading(true);
+  try {
+    const updates = {};
+    if(adminPwd){ updates.adminPassword = adminPwd; localStorage.setItem('imkum_admin_pwd', adminPwd); }
+    if(ownerPwd){ updates.ownerPassword = ownerPwd; localStorage.setItem('imkum_owner_pwd', ownerPwd); }
+    if(Object.keys(updates).length){
+      await setDoc(doc(db, 'settings', 'roles'), updates, { merge: true });
+      document.getElementById('set-admin-password').value = '';
+      document.getElementById('set-owner-password').value = '';
+      showToast('บันทึกรหัสผ่านแล้ว ✓');
+    } else {
+      showToast('ไม่มีรหัสผ่านที่ต้องบันทึก');
+    }
+  } catch(e){ showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+window.doLogout = function() {
+  if(!confirm('ออกจากระบบใช่ไหม?')) return;
+  sessionStorage.removeItem('imkum_user');
+  sessionStorage.removeItem('imkum_admin_auth');
+  window.location.href = 'login.html';
 };
 
 window.previewBanner = function() {

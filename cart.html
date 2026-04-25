@@ -33,7 +33,25 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== MENU DATA (เหมือน index.html) =====
+// ===== AUTH CHECK =====
+(function(){
+  var sess = sessionStorage.getItem('imkum_user');
+  if(!sess){
+    // ไม่ได้ล็อกอิน → ไปหน้า login
+    window.location.href = 'login.html';
+    return;
+  }
+  var user = JSON.parse(sess);
+  // admin/owner ไม่ควรมาที่หน้านี้
+  if(user.role === 'admin' || user.role === 'owner'){
+    window.location.href = 'admin.html';
+    return;
+  }
+  // Pre-fill ข้อมูลจาก session
+  if(user.name) localStorage.setItem('imkum_name', user.name);
+  if(user.phone) localStorage.setItem('imkum_phone', user.phone);
+})();
+</script>
 var MENU = [
   { category:"🥪 แซนวิช", catKey:"sandwich", price:20, items:[
     { id:"tuna",         name:"ปูอัดทูน่า",     desc:"ปูอัด, ทูน่า, ผักสลัด",        emoji:"🥪", price:20 },
@@ -212,8 +230,11 @@ window.placeOrder = async function() {
 
   showLoading(true);
   try {
+    const userSess = sessionStorage.getItem('imkum_user');
+    const userObj = userSess ? JSON.parse(userSess) : null;
     const ref = await addDoc(collection(db, 'orders'), {
       items: orderItems, total, note, customerName, pickupTime,
+      customerPhone: (userObj && userObj.phone) || localStorage.getItem('imkum_phone') || '',
       status: 'pending', createdAt: serverTimestamp()
     });
     localStorage.setItem('imkum_last_order', JSON.stringify({ orderId: ref.id, total, pickupTime, customerName }));
