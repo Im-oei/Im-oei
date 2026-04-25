@@ -11,10 +11,6 @@
 .banner-img-wrap { margin: 0 16px 6px; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
 .banner-img-wrap img { width: 100%; height: 160px; object-fit: cover; display: block; }
 .closed-overlay { background: #f44336; color: #fff; text-align: center; padding: 14px 16px; margin: 10px 16px; border-radius: 14px; font-weight: 700; font-size: 15px; }
-.skeleton { background: linear-gradient(90deg, #f0e8d8 25%, #fff8e1 50%, #f0e8d8 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 14px; }
-@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-.skel-card { height: 70px; margin: 6px 16px; }
-.skel-featured { height: 160px; width: 132px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -34,7 +30,7 @@
 
 <div id="closed-banner" style="display:none"></div>
 
-<div class="order-time-banner" id="time-banner">
+<div class="order-time-banner">
   <span class="clock-icon">🕐</span>
   <div class="time-text">
     <strong id="cutoff-text">รับออเดอร์ถึง 06:30 น.</strong>
@@ -45,18 +41,9 @@
 <div id="banner-section"></div>
 
 <div class="section-title"><span class="icon">🔥</span><span>เมนูแนะนำ</span></div>
-<div class="featured-row" id="featured-row">
-  <div class="skeleton skel-featured"></div>
-  <div class="skeleton skel-featured"></div>
-  <div class="skeleton skel-featured"></div>
-</div>
+<div class="featured-row" id="featured-row"></div>
 
-<div id="menu-list" class="pb-footer">
-  <div class="skeleton skel-card"></div>
-  <div class="skeleton skel-card"></div>
-  <div class="skeleton skel-card"></div>
-  <div class="skeleton skel-card"></div>
-</div>
+<div id="menu-list" class="pb-footer"></div>
 
 <div class="footer">
   <div class="cart-summary" onclick="location.href='cart.html'">
@@ -74,120 +61,179 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="app.js"></script>
+<script>
+// ===== MENU DATA =====
+var MENU = [
+  { category:"🥪 แซนวิช", catKey:"sandwich", price:20, items:[
+    { id:"tuna",         name:"ปูอัดทูน่า",     desc:"ปูอัด, ทูน่า, ผักสลัด",        emoji:"🥪", price:20 },
+    { id:"pork_salad",   name:"หมูหยองสลัด",    desc:"หมูหยอง, สลัด, มายองเนส",      emoji:"🥙", price:20 },
+    { id:"egg_sausage",  name:"ไข่ดาวไส้กรอก",  desc:"ไข่ดาว, ไส้กรอก, ซอส",         emoji:"🍳", price:20 },
+    { id:"shrimp",       name:"ไข่กุ้งสาหร่าย", desc:"ไข่กุ้ง, สาหร่าย, มายองเนส",  emoji:"🍤", price:20 },
+  ]},
+  { category:"🍚 ข้าว", catKey:"rice", price:50, items:[
+    { id:"chicken_rice",  name:"ข้าวไก่อบ",      desc:"ไก่อบ, ไข่ต้ม, ผัก",   emoji:"🍗", price:50 },
+    { id:"chicken_lime",  name:"ข้าวไก่อบมะนาว", desc:"ไก่มะนาว, ข้าว, ผัก",  emoji:"🍋", price:50 },
+  ]},
+  { category:"🍜 หมี่", catKey:"noodle", price:50, items:[
+    { id:"chicken_noodle", name:"หมี่ไก่ฉีก", desc:"หมี่เหลือง, ไก่ฉีก, น้ำซุป", emoji:"🍜", price:50 },
+    { id:"pork_noodle",    name:"หมี่หมูแดง", desc:"หมี่, หมูแดง, ไข่ต้ม",        emoji:"🥢", price:50 },
+  ]}
+];
+var ALL_ITEMS = [].concat.apply([], MENU.map(function(c){ return c.items; }));
+var FEATURED_IDS = ["tuna","chicken_noodle","egg_sausage"];
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// ===== CART =====
+var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
+function saveCart(){ localStorage.setItem('imkum_cart', JSON.stringify(cart)); }
 
-const app = initializeApp({
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei"
-});
-const db = getFirestore(app);
-
-async function loadAndRender() {
-  try {
-    // Load store settings
-    const settingsDoc = await getDoc(doc(db, 'settings', 'store'));
-    if (settingsDoc.exists()) {
-      const s = settingsDoc.data();
-      STORE_SETTINGS = { ...STORE_SETTINGS, ...s };
-      document.getElementById('cutoff-text').textContent = `รับออเดอร์ถึง ${s.orderCutoff || '06:30'} น.`;
-      document.getElementById('pickup-text').textContent = `รับอาหาร ${s.pickupStart || '07:00'} - ${s.pickupEnd || '08:00'} น.`;
-      if (s.bannerUrl) {
-        document.getElementById('banner-section').innerHTML = `<div class="banner-img-wrap"><img src="${s.bannerUrl}" alt="banner"></div>`;
-      }
-      if (s.isOpen === false) {
-        document.getElementById('closed-banner').style.display = 'block';
-        document.getElementById('closed-banner').innerHTML = `<div class="closed-overlay">🔴 ร้านปิดรับออเดอร์แล้ว กรุณามาใหม่วันพรุ่งนี้</div>`;
-        document.getElementById('order-btn').disabled = true;
-        document.getElementById('order-btn').textContent = 'ปิดรับออเดอร์';
-      }
-      if (s.featuredIds) FEATURED_IDS = s.featuredIds;
-    }
-
-    // Load menu from Firestore
-    const menuSnapshot = await getDocs(collection(db, 'menu'));
-    if (!menuSnapshot.empty) {
-      // Build menu from Firestore docs
-      const categories = {};
-      menuSnapshot.forEach(d => {
-        const data = { id: d.id, ...d.data() };
-        if (data.hidden) return;
-        const catKey = data.catKey || 'other';
-        if (!categories[catKey]) {
-          categories[catKey] = { category: data.category || catKey, catKey, price: data.price || 0, items: [] };
-        }
-        categories[catKey].items.push(data);
-      });
-      MENU = Object.values(categories).sort((a,b) => (a.sortOrder||99) - (b.sortOrder||99));
-    } else {
-      // Seed default menu
-      MENU = DEFAULT_MENU;
-    }
-
-    ALL_ITEMS = MENU.flatMap(c => c.items);
-    buildFeatured();
-    buildMenuList();
-    render();
-  } catch (e) {
-    console.error('Firestore error, using local fallback', e);
-    MENU = DEFAULT_MENU;
-    ALL_ITEMS = MENU.flatMap(c => c.items);
-    buildFeatured();
-    buildMenuList();
-    render();
-  }
+function add(id){
+  var item = ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
+  if(!item) return;
+  cart[id] = (cart[id]||0)+1;
+  saveCart(); render();
+  showToast('เพิ่มลงตะกร้าแล้ว 🛒');
 }
-
-function buildFeatured() {
-  const featRow = document.getElementById('featured-row');
-  featRow.innerHTML = '';
-  FEATURED_IDS.forEach(fid => {
-    const item = ALL_ITEMS.find(i => i.id === fid);
-    if (!item || item.hidden) return;
-    featRow.innerHTML += `
-      <div class="featured-card">
-        <div class="badge">BEST</div>
-        <div class="fc-img">${renderFoodImg(item)}</div>
-        <div class="fc-info">
-          <div class="fc-name">${item.name}</div>
-          <div class="fc-price">${item.price} บาท</div>
-        </div>
-        <button class="fc-add" onclick="add('${item.id}')">+</button>
-      </div>`;
+function remove(id){
+  if((cart[id]||0)>0){ cart[id]--; if(!cart[id]) delete cart[id]; saveCart(); render(); }
+}
+function getTotal(){
+  var sum=0;
+  Object.keys(cart).forEach(function(id){
+    var item=ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
+    if(item) sum+=item.price*cart[id];
   });
-  if (!featRow.innerHTML) featRow.style.display = 'none';
+  return sum;
+}
+function getCount(){ var s=0; Object.values(cart).forEach(function(v){ s+=v; }); return s; }
+
+function render(){
+  ALL_ITEMS.forEach(function(item){
+    var el=document.getElementById('qty-'+item.id);
+    if(el) el.textContent=cart[item.id]||0;
+  });
+  var total=getTotal(), count=getCount();
+  var totalEl=document.getElementById('home-total');
+  var countEl=document.getElementById('cart-count');
+  var btn=document.getElementById('order-btn');
+  if(totalEl) totalEl.textContent=total+' บาท';
+  if(countEl) countEl.textContent=count;
+  if(btn && !btn.dataset.closed) btn.disabled=count===0;
 }
 
-function buildMenuList() {
-  const menuList = document.getElementById('menu-list');
-  menuList.innerHTML = '';
-  MENU.forEach(cat => {
-    if (!cat.items.length) return;
-    menuList.innerHTML += `<div class="cat-header"><span class="cat-name">${cat.category}</span><span class="cat-price">(${cat.price} บาท)</span></div>`;
-    cat.items.forEach(item => {
-      if (item.hidden) return;
-      menuList.innerHTML += `
-        <div class="card">
-          <div class="food-img">${renderFoodImg(item)}</div>
-          <div class="left">
-            <div class="name">${item.name}</div>
-            <div class="desc">${item.desc || ''}</div>
-          </div>
-          <div class="qty">
-            <button class="btn" onclick="remove('${item.id}')">−</button>
-            <span class="qty-num" id="qty-${item.id}">0</span>
-            <button class="btn plus" onclick="add('${item.id}')">+</button>
-          </div>
-        </div>`;
+function showToast(msg){
+  var t=document.getElementById('toast');
+  if(!t) return;
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); },2200);
+}
+
+function foodImg(item){
+  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+  return item.emoji||'🍽️';
+}
+
+function buildFeatured(){
+  var row=document.getElementById('featured-row');
+  row.innerHTML='';
+  FEATURED_IDS.forEach(function(fid){
+    var item=ALL_ITEMS.filter(function(i){ return i.id===fid; })[0];
+    if(!item||item.hidden) return;
+    row.innerHTML+='<div class="featured-card">'+
+      '<div class="badge">BEST</div>'+
+      '<div class="fc-img">'+foodImg(item)+'</div>'+
+      '<div class="fc-info">'+
+        '<div class="fc-name">'+item.name+'</div>'+
+        '<div class="fc-price">'+item.price+' บาท</div>'+
+      '</div>'+
+      '<button class="fc-add" onclick="add(\''+item.id+'\')">+</button>'+
+    '</div>';
+  });
+}
+
+function buildMenuList(){
+  var list=document.getElementById('menu-list');
+  list.innerHTML='';
+  MENU.forEach(function(cat){
+    var vis=cat.items.filter(function(i){ return !i.hidden; });
+    if(!vis.length) return;
+    list.innerHTML+='<div class="cat-header"><span class="cat-name">'+cat.category+'</span><span class="cat-price">('+cat.price+' บาท)</span></div>';
+    vis.forEach(function(item){
+      list.innerHTML+='<div class="card">'+
+        '<div class="food-img">'+foodImg(item)+'</div>'+
+        '<div class="left">'+
+          '<div class="name">'+item.name+'</div>'+
+          '<div class="desc">'+(item.desc||'')+'</div>'+
+        '</div>'+
+        '<div class="qty">'+
+          '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
+          '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
+          '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'+
+        '</div>'+
+      '</div>';
     });
   });
 }
 
-loadAndRender();
+// ===== RENDER NOW (ไม่รอ Firebase) =====
+buildFeatured();
+buildMenuList();
+render();
+</script>
+
+<!-- Firebase: เพิ่ม/อัพเดทข้อมูล หลังจาก UI โชว์แล้ว -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+async function syncFirestore() {
+  try {
+    const app = initializeApp({
+      apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
+      authDomain: "im-oei.firebaseapp.com",
+      projectId: "im-oei"
+    });
+    const db = getFirestore(app);
+
+    // Settings
+    const sDoc = await getDoc(doc(db, 'settings', 'store'));
+    if (sDoc.exists()) {
+      const s = sDoc.data();
+      if (s.orderCutoff) document.getElementById('cutoff-text').textContent = 'รับออเดอร์ถึง ' + s.orderCutoff + ' น.';
+      if (s.pickupStart && s.pickupEnd) document.getElementById('pickup-text').textContent = 'รับอาหาร ' + s.pickupStart + ' - ' + s.pickupEnd + ' น.';
+      if (s.bannerUrl) document.getElementById('banner-section').innerHTML = '<div class="banner-img-wrap"><img src="' + s.bannerUrl + '" alt="banner"></div>';
+      if (s.isOpen === false) {
+        document.getElementById('closed-banner').style.display = 'block';
+        document.getElementById('closed-banner').innerHTML = '<div class="closed-overlay">🔴 ร้านปิดรับออเดอร์แล้ว กรุณามาใหม่วันพรุ่งนี้</div>';
+        const btn = document.getElementById('order-btn');
+        btn.disabled = true; btn.textContent = 'ปิดรับออเดอร์'; btn.dataset.closed = '1';
+      }
+      if (s.featuredIds) FEATURED_IDS = s.featuredIds;
+    }
+
+    // Menu from Firestore
+    const mSnap = await getDocs(collection(db, 'menu'));
+    if (!mSnap.empty) {
+      const catMap = {};
+      const catOrder = ['sandwich','rice','noodle','drink','other'];
+      mSnap.forEach(d => {
+        const data = Object.assign({ id: d.id }, d.data());
+        if (data.hidden) return;
+        const k = data.catKey || 'other';
+        if (!catMap[k]) catMap[k] = { category: data.category || k, catKey: k, price: data.price || 0, items: [], sortOrder: catOrder.indexOf(k) };
+        catMap[k].items.push(data);
+      });
+      MENU = Object.values(catMap).sort((a,b) => (a.sortOrder||99)-(b.sortOrder||99));
+      ALL_ITEMS = [].concat(...MENU.map(c => c.items));
+      buildFeatured();
+      buildMenuList();
+      render();
+    }
+  } catch(e) {
+    console.log('Firebase sync skipped:', e.message);
+  }
+}
+
+syncFirestore();
 </script>
 </body>
 </html>
