@@ -101,7 +101,61 @@ body{
   <div id="sum">0 บาท</div>
   <button>สั่งซื้อ</button>
 </div>
+<!-- PAGE: MENU -->
+<div id="page-menu">
 
+  <div class="header">อิ่มอิ่ม ทุกเช้า</div>
+
+  <div class="menu">
+    <div class="card">
+      <img src="https://picsum.photos/100">
+      <div>
+        <h3>แซนวิช</h3>
+        <p>20 บาท</p>
+        <button onclick="add('แซนวิช')">+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://picsum.photos/101">
+      <div>
+        <h3>ข้าว</h3>
+        <p>50 บาท</p>
+        <button onclick="add('ข้าว')">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="total">0 บาท</span>
+    <button onclick="goCart()">สั่งซื้อ</button>
+  </div>
+
+</div>
+
+
+<!-- PAGE: CART -->
+<div id="page-cart" style="display:none">
+
+  <div class="header">ตะกร้า</div>
+
+  <div class="menu" id="cart-list"></div>
+
+  <div class="footer">
+    <button onclick="confirmOrder()">ยืนยัน</button>
+  </div>
+
+</div>
+
+
+<!-- PAGE: SUCCESS -->
+<div id="page-success" style="display:none; text-align:center; margin-top:100px">
+
+  <h1>✅</h1>
+  <h2>สั่งซื้อสำเร็จ</h2>
+  <p id="order-id"></p>
+
+</div>
 <!-- CART -->
 <div class="cart-page" id="cartPage">
   <h2>ตะกร้า</h2>
@@ -115,7 +169,38 @@ body{
   <h2>สั่งซื้อสำเร็จ</h2>
   <div id="orderId"></div>
 </div>
+<script>
+let cart = {}
 
+function add(name){
+  cart[name] = (cart[name] || 0) + 1
+  updateTotal()
+}
+
+function updateTotal(){
+  let total = Object.values(cart).reduce((a,b)=>a+b,0)
+  document.getElementById("total").innerText = total + " บาท"
+}
+
+function goCart(){
+  document.getElementById("page-menu").style.display = "none"
+  document.getElementById("page-cart").style.display = "block"
+
+  let html = ""
+  for(let k in cart){
+    html += `<div class="card">${k} x ${cart[k]}</div>`
+  }
+  document.getElementById("cart-list").innerHTML = html
+}
+
+function confirmOrder(){
+  document.getElementById("page-cart").style.display = "none"
+  document.getElementById("page-success").style.display = "block"
+
+  let id = "OD" + Date.now()
+  document.getElementById("order-id").innerText = id
+}
+                          </script>
 <script>
 let menu=[
  {name:"แซนวิช",price:20,img:"https://picsum.photos/100"},
