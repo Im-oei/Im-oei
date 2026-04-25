@@ -362,11 +362,9 @@ const db = getFirestore(app);
 const ADMIN_KEY = 'imkum_admin_auth';
 function checkAuth() {
   if (!sessionStorage.getItem(ADMIN_KEY)) {
-    const pwd = prompt('🔑 รหัสผ่านแอดมิน:');
-    if (pwd !== (localStorage.getItem('imkum_admin_pwd') || 'admin1234')) {
-      alert('รหัสผ่านไม่ถูกต้อง'); window.location.href = 'index.html'; return false;
-    }
-    sessionStorage.setItem(ADMIN_KEY, '1');
+    // ไม่ผ่านการล็อกอิน → กลับหน้าหลัก
+    window.location.href = 'index.html';
+    return false;
   }
   return true;
 }

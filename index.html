@@ -18,7 +18,15 @@
 <div class="hero">
   <div class="hero-top">
     <span class="hero-logo">IM-OEI</span>
-    <div class="hero-icons">⚡ 🔔</div>
+    <div class="hero-icons">
+      <button id="admin-fab" onclick="openAdminLogin()" title="แอดมิน" style="
+        background:rgba(255,255,255,0.15);
+        border:none;cursor:pointer;border-radius:50%;
+        width:36px;height:36px;font-size:18px;
+        display:flex;align-items:center;justify-content:center;
+        backdrop-filter:blur(4px);transition:background 0.2s;
+      ">🧑‍🍳</button>
+    </div>
   </div>
   <div class="hero-mascot">🧑‍🍳</div>
   <div class="hero-brand">
@@ -60,6 +68,72 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ====== ADMIN LOGIN MODAL ====== -->
+<div id="admin-modal" onclick="if(event.target===this)closeAdminModal()" style="
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  z-index:800;align-items:flex-end;justify-content:center;
+">
+  <div style="
+    background:#fff;width:100%;max-width:540px;
+    border-radius:24px 24px 0 0;padding:28px 24px 44px;
+    font-family:'Sarabun',sans-serif;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  ">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">🧑‍🍳</div>
+      <div style="font-size:20px;font-weight:800;color:#2C2C2C">เข้าสู่ระบบแอดมิน</div>
+      <div style="font-size:13px;color:#999;margin-top:4px">กรุณากรอกรหัสผ่านเพื่อดำเนินการต่อ</div>
+    </div>
+
+    <div style="position:relative;margin-bottom:16px">
+      <input id="admin-pwd-input" type="password" placeholder="รหัสผ่าน" 
+        onkeydown="if(event.key==='Enter')doAdminLogin()"
+        style="
+          width:100%;border:2px solid #E8E8E8;border-radius:14px;
+          padding:14px 48px 14px 16px;font-family:'Sarabun',sans-serif;
+          font-size:16px;color:#2C2C2C;outline:none;box-sizing:border-box;
+          transition:border-color 0.2s;
+        "
+        onfocus="this.style.borderColor='#FFC107'"
+        onblur="this.style.borderColor='#E8E8E8'"
+      >
+      <button onclick="togglePwd()" style="
+        position:absolute;right:14px;top:50%;transform:translateY(-50%);
+        background:none;border:none;cursor:pointer;font-size:20px;padding:0;
+      " id="pwd-eye">👁️</button>
+    </div>
+
+    <div id="admin-error" style="
+      display:none;background:#FFEBEE;color:#B71C1C;
+      border-radius:10px;padding:10px 14px;font-size:13px;
+      font-weight:700;margin-bottom:14px;text-align:center;
+    ">❌ รหัสผ่านไม่ถูกต้อง</div>
+
+    <button onclick="doAdminLogin()" style="
+      width:100%;padding:15px;border-radius:14px;border:none;
+      background:linear-gradient(135deg,#FFC107,#F5A623);
+      font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;
+      color:#3E2000;cursor:pointer;
+      box-shadow:0 4px 14px rgba(255,193,7,0.4);
+      transition:transform 0.15s;margin-bottom:10px;
+    " onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+      🔑 เข้าสู่ระบบแอดมิน
+    </button>
+    <button onclick="closeAdminModal()" style="
+      width:100%;padding:12px;border-radius:14px;border:none;
+      background:#F5F5F5;font-family:'Sarabun',sans-serif;
+      font-size:14px;font-weight:700;color:#999;cursor:pointer;
+    ">ยกเลิก</button>
+  </div>
+</div>
+
+<style>
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+</style>
 
 <script>
 // ===== MENU DATA =====
@@ -126,6 +200,41 @@ function showToast(msg){
   t.textContent=msg; t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); },2200);
 }
+
+// ===== ADMIN LOGIN =====
+function openAdminLogin(){
+  var m=document.getElementById('admin-modal');
+  m.style.display='flex';
+  setTimeout(function(){ document.getElementById('admin-pwd-input').focus(); },100);
+  document.getElementById('admin-error').style.display='none';
+  document.getElementById('admin-pwd-input').value='';
+}
+function closeAdminModal(){
+  document.getElementById('admin-modal').style.display='none';
+}
+function togglePwd(){
+  var inp=document.getElementById('admin-pwd-input');
+  var eye=document.getElementById('pwd-eye');
+  if(inp.type==='password'){ inp.type='text'; eye.textContent='🙈'; }
+  else { inp.type='password'; eye.textContent='👁️'; }
+}
+function doAdminLogin(){
+  var pwd=document.getElementById('admin-pwd-input').value;
+  var correct=localStorage.getItem('imkum_admin_pwd')||'admin1234';
+  if(pwd===correct){
+    sessionStorage.setItem('imkum_admin_auth','1');
+    window.location.href='admin.html';
+  } else {
+    document.getElementById('admin-error').style.display='block';
+    document.getElementById('admin-pwd-input').value='';
+    document.getElementById('admin-pwd-input').focus();
+    setTimeout(function(){ document.getElementById('admin-error').style.display='none'; },2500);
+  }
+}
+window.openAdminLogin=openAdminLogin;
+window.closeAdminModal=closeAdminModal;
+window.togglePwd=togglePwd;
+window.doAdminLogin=doAdminLogin;
 
 function foodImg(item){
   if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
