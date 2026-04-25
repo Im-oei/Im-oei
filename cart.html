@@ -1,1 +1,159 @@
-<!DOCTYPE html><html lang='th'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Cart</title><link rel='stylesheet' href='css/style.css'></head><body><div class='header'>ตะกร้า</div><div style='padding:20px;'><p>แซนวิช x <span id='sandwich'></span></p><p>ข้าว x <span id='rice'></span></p></div><div class='footer'><div id='total'>0 บาท</div><button onclick='order()'>ยืนยัน</button></div><script src='js/app.js'></script></body></html>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ตะกร้า - อิ่มอิ่ม</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="back-btn" href="index.html">‹</a>
+  <h2>ตะกร้าของฉัน</h2>
+  <span class="clear-btn" onclick="clearCart()" title="ล้างตะกร้า">🗑️</span>
+</div>
+
+<div id="cart-body" class="pb-footer"></div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
+  authDomain: "im-oei.firebaseapp.com",
+  projectId: "im-oei"
+});
+const db = getFirestore(app);
+
+function showLoading(v) { document.getElementById('loading').classList.toggle('show', v); }
+
+function renderCart() {
+  const body = document.getElementById('cart-body');
+  const entries = Object.entries(cart).filter(([,q]) => q > 0);
+
+  if (entries.length === 0) {
+    body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:#999">
+      <div style="font-size:60px;opacity:.4">🛒</div>
+      <div style="font-size:15px">ยังไม่มีรายการ</div>
+      <a href="index.html" style="margin-top:8px;background:var(--yellow);color:#3E2000;font-weight:800;padding:12px 28px;border-radius:14px;text-decoration:none;font-size:15px">เลือกเมนู</a>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+  MENU.forEach(cat => {
+    const catItems = cat.items.filter(i => cart[i.id] > 0);
+    if (!catItems.length) return;
+    html += `<div class="cart-section-title">${cat.category}</div>`;
+    catItems.forEach(item => {
+      const qty = cart[item.id];
+      html += `
+        <div class="cart-item">
+          <div class="food-img">${item.emoji}</div>
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-unit-price">${item.price} บาท</div>
+          </div>
+          <div class="qty">
+            <button class="btn" onclick="cartRemove('${item.id}')">−</button>
+            <span class="qty-num" id="cqty-${item.id}">${qty}</span>
+            <button class="btn plus" onclick="cartAdd('${item.id}')">+</button>
+          </div>
+          <div class="item-subtotal" id="csub-${item.id}">${item.price * qty} บาท</div>
+        </div>`;
+    });
+  });
+
+  html += `
+    <div class="pickup-row">
+      <span class="clock">🕐</span>
+      <div>
+        <div class="pickup-label">เวลารับอาหาร</div>
+        <div class="pickup-time">07:30 น.</div>
+      </div>
+    </div>
+    <div class="note-section">
+      <label>หมายเหตุ (ถ้ามี)</label>
+      <textarea id="note-input" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก, ไม่ใส่ผักชี"></textarea>
+    </div>
+    <div class="total-row">
+      <span class="total-label">รวมทั้งหมด</span>
+      <span><span class="total-amount" id="cart-total">${getTotal()}</span><span class="total-unit">บาท</span></span>
+    </div>
+    <div class="confirm-btn-wrap">
+      <button class="confirm-btn" onclick="placeOrder()">ยืนยันการสั่งซื้อ</button>
+    </div>`;
+
+  body.innerHTML = html;
+}
+
+window.cartAdd = function(id) {
+  const item = ALL_ITEMS.find(i => i.id === id);
+  cart[id] = (cart[id] || 0) + 1;
+  saveCart();
+  document.getElementById('cqty-' + id).textContent = cart[id];
+  document.getElementById('csub-' + id).textContent = item.price * cart[id] + ' บาท';
+  document.getElementById('cart-total').textContent = getTotal();
+};
+
+window.cartRemove = function(id) {
+  if (!cart[id]) return;
+  const item = ALL_ITEMS.find(i => i.id === id);
+  cart[id]--;
+  if (!cart[id]) { delete cart[id]; saveCart(); renderCart(); return; }
+  saveCart();
+  document.getElementById('cqty-' + id).textContent = cart[id];
+  document.getElementById('csub-' + id).textContent = item.price * cart[id] + ' บาท';
+  document.getElementById('cart-total').textContent = getTotal();
+};
+
+window.clearCart = function() {
+  if (!confirm('ล้างตะกร้าทั้งหมดใช่ไหม?')) return;
+  cart = {}; saveCart(); renderCart();
+};
+
+window.placeOrder = async function() {
+  const total = getTotal();
+  if (!total) return;
+  const note = document.getElementById('note-input')?.value || '';
+  const orderItems = Object.entries(cart).map(([id, qty]) => {
+    const item = ALL_ITEMS.find(i => i.id === id);
+    return { id, name: item.name, qty, price: item.price, subtotal: item.price * qty };
+  });
+
+  showLoading(true);
+  try {
+    const ref = await addDoc(collection(db, 'orders'), {
+      items: orderItems, total, note,
+      pickupTime: '07:30',
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    localStorage.setItem('imkum_last_order', JSON.stringify({
+      orderId: ref.id,
+      total,
+      pickupTime: '07:30'
+    }));
+    cart = {}; saveCart();
+    window.location.href = 'success.html';
+  } catch (e) {
+    console.error(e);
+    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่');
+  } finally {
+    showLoading(false);
+  }
+};
+
+renderCart();
+</script>
+</body>
+</html>

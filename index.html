@@ -1,1 +1,98 @@
-<!DOCTYPE html><html lang='th'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Menu</title><link rel='stylesheet' href='css/style.css'></head><body><div class='header'>อิ่มอิ่ม ทุกเช้า</div><div class='card'><div class='left'><img src='img/sandwich.jpg'><div><div class='name'>แซนวิช</div><div class='price'>20 บาท</div></div></div><div class='qty'><button class='btn' onclick="remove('sandwich')">-</button><span id='sandwich'>0</span><button class='btn' onclick="add('sandwich')">+</button></div></div><div class='card'><div class='left'><img src='img/rice.jpg'><div><div class='name'>ข้าว</div><div class='price'>50 บาท</div></div></div><div class='qty'><button class='btn' onclick="remove('rice')">-</button><span id='rice'>0</span><button class='btn' onclick="add('rice')">+</button></div></div><div class='footer'><div id='total'>0 บาท</div><button onclick="location.href='cart.html'">ตะกร้า</button></div><script src='js/app.js'></script></body></html>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>อิ่มอิ่ม ทุกเช้า</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <span class="hero-logo">IM-OEI</span>
+    <div class="hero-icons">⚡ 🔔</div>
+  </div>
+  <div class="hero-mascot">🧑‍🍳</div>
+  <div class="hero-brand">
+    <h1>อิ่มอิ่ม<span class="big">ทุกเช้า</span></h1>
+    <p>อร่อย สดใหม่ ทุกเช้า</p>
+  </div>
+  <div class="hero-spacer"></div>
+</div>
+
+<div class="order-time-banner">
+  <span class="clock-icon">🕐</span>
+  <div class="time-text">
+    <strong>รับออเดอร์ถึง 06:30 น.</strong>
+    <span>รับอาหาร 07:00 - 08:00 น.</span>
+  </div>
+</div>
+
+<div class="section-title"><span class="icon">🔥</span><span>เมนูแนะนำ</span></div>
+<div class="featured-row" id="featured-row"></div>
+
+<div id="menu-list" class="pb-footer"></div>
+
+<div class="footer">
+  <div class="cart-summary" onclick="location.href='cart.html'">
+    <div class="cart-icon-wrap">
+      <span class="cart-emoji">🛒</span>
+      <div class="cart-badge" id="cart-count">0</div>
+    </div>
+    <div class="cart-amount">
+      <strong id="home-total">0 บาท</strong>
+      <span>ดูรายการ</span>
+    </div>
+  </div>
+  <button class="order-btn" id="order-btn" onclick="location.href='cart.html'" disabled>สั่งซื้อ</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+// Build featured
+const featRow = document.getElementById('featured-row');
+FEATURED_IDS.forEach(fid => {
+  const item = ALL_ITEMS.find(i => i.id === fid);
+  if (!item) return;
+  featRow.innerHTML += `
+    <div class="featured-card">
+      <div class="badge">BEST</div>
+      <div class="fc-img">${item.emoji}</div>
+      <div class="fc-info">
+        <div class="fc-name">${item.name}</div>
+        <div class="fc-price">${item.price} บาท</div>
+      </div>
+      <button class="fc-add" onclick="add('${item.id}')">+</button>
+    </div>`;
+});
+
+// Build menu list
+const menuList = document.getElementById('menu-list');
+MENU.forEach(cat => {
+  menuList.innerHTML += `<div class="cat-header"><span class="cat-name">${cat.category}</span><span class="cat-price">(${cat.price} บาท)</span></div>`;
+  cat.items.forEach(item => {
+    menuList.innerHTML += `
+      <div class="card">
+        <div class="food-img">${item.emoji}</div>
+        <div class="left">
+          <div class="name">${item.name}</div>
+          <div class="desc">${item.desc}</div>
+        </div>
+        <div class="qty">
+          <button class="btn" onclick="remove('${item.id}')">−</button>
+          <span class="qty-num" id="qty-${item.id}">0</span>
+          <button class="btn plus" onclick="add('${item.id}')">+</button>
+        </div>
+      </div>`;
+  });
+});
+
+render();
+</script>
+</body>
+</html>
