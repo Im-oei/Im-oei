@@ -36,20 +36,18 @@
 // ===== AUTH CHECK =====
 (function(){
   var sess = sessionStorage.getItem('imkum_user');
-  if(!sess){
-    // ไม่ได้ล็อกอิน → ไปหน้า login
-    window.location.href = 'login.html';
-    return;
+  if(sess){
+    var user = JSON.parse(sess);
+    // admin/owner ไม่ควรมาที่หน้านี้
+    if(user.role === 'admin' || user.role === 'owner'){
+      window.location.href = 'admin.html';
+      return;
+    }
+    // Pre-fill ข้อมูลจาก session
+    if(user.name) localStorage.setItem('imkum_name', user.name);
+    if(user.phone) localStorage.setItem('imkum_phone', user.phone);
   }
-  var user = JSON.parse(sess);
-  // admin/owner ไม่ควรมาที่หน้านี้
-  if(user.role === 'admin' || user.role === 'owner'){
-    window.location.href = 'admin.html';
-    return;
-  }
-  // Pre-fill ข้อมูลจาก session
-  if(user.name) localStorage.setItem('imkum_name', user.name);
-  if(user.phone) localStorage.setItem('imkum_phone', user.phone);
+  // ลูกค้าที่ไม่ได้ login → กรอกชื่อในหน้า cart ได้เลย (guest checkout)
 })();
 </script>
 var MENU = [

@@ -37,6 +37,10 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 
 .login-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4);transition:transform 0.15s;margin-top:4px}
 .login-btn:active{transform:scale(0.97)}
+.line-btn{width:100%;padding:15px;border-radius:14px;border:none;background:#06C755;font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(6,199,85,0.4);transition:transform 0.15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.line-btn:active{transform:scale(0.97)}
+.line-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#B0B0B0;font-size:13px}
+.line-divider::before,.line-divider::after{content:'';flex:1;height:1px;background:#EBEBEB}
 
 .error-box{display:none;background:#FFEBEE;color:#B71C1C;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;margin-bottom:14px;text-align:center}
 .info-box{background:var(--yellow-light);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;color:#5D3A00;margin-bottom:14px}
@@ -62,6 +66,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.28s;z-index:600;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
 
@@ -98,7 +103,12 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
           oninput="this.value=this.value.replace(/\D/g,'')">
         <div class="phone-hint">ใช้สำหรับติดตามออเดอร์ ไม่มีการส่ง SMS</div>
       </div>
-      <button class="login-btn" onclick="customerLogin()">🛒 เข้าสู่ระบบสั่งอาหาร</button>
+      <button class="line-btn" onclick="loginWithLine()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.02 2 11c0 3.67 2.17 6.88 5.38 8.65-.08.38-.52 2.44-.6 2.8 0 0-.01.08.04.11.05.03.11.01.11.01.47-.07 5.47-3.59 6.41-4.22.41.06.83.09 1.26.09C18.52 18.44 23 15.42 23 11S18.52 2 12 2z"/></svg>
+        เข้าสู่ระบบด้วย LINE
+      </button>
+      <div class="line-divider">หรือ</div>
+      <button class="login-btn" onclick="customerLogin()">🛒 เข้าสู่ระบบด้วยชื่อ-เบอร์</button>
     </div>
 
     <!-- ====== STAFF (ADMIN) PANEL ====== -->
@@ -163,6 +173,47 @@ window.togglePwd = function(inputId, btn) {
   const inp = document.getElementById(inputId);
   if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
   else { inp.type='password'; btn.textContent='👁️'; }
+};
+
+// ========== LINE LOGIN ==========
+// 🔧 ใส่ LIFF ID ของคุณที่นี่ (สร้างได้ที่ LINE Developers Console)
+const LIFF_ID = 'YOUR_LIFF_ID_HERE';
+
+window.loginWithLine = async function() {
+  if(!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID_HERE'){
+    showError('กรุณาตั้งค่า LIFF ID ก่อนใช้งาน LINE Login');
+    return;
+  }
+  showLoading(true);
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if(!liff.isLoggedIn()){
+      liff.login({ redirectUri: window.location.href });
+      return;
+    }
+    const profile = await liff.getProfile();
+    const name = profile.displayName;
+    const lineId = profile.userId;
+    const avatar = profile.pictureUrl || '';
+
+    // บันทึกลง Firestore
+    const custRef = doc(db, 'customers', 'line_' + lineId);
+    const now = new Date().toISOString();
+    const custDoc = await getDoc(custRef);
+    if(!custDoc.exists()){
+      await setDoc(custRef, { name, lineId, avatar, createdAt: now, lastLogin: now, loginType: 'line' });
+    } else {
+      await setDoc(custRef, { name, avatar, lastLogin: now }, { merge: true });
+    }
+    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, lineId, avatar }));
+    localStorage.setItem('imkum_name', name);
+    window.location.href = 'index.html';
+  } catch(e) {
+    console.error(e);
+    showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย LINE');
+  } finally {
+    showLoading(false);
+  }
 };
 
 // ========== CUSTOMER LOGIN ==========

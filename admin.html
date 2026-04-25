@@ -260,6 +260,24 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       <button class="save-btn" onclick="saveBanner()">💾 บันทึก Banner</button>
     </div>
 
+    <div class="settings-card">
+      <h3>🏷️ รูป Logo Hero Section</h3>
+      <div class="form-group">
+        <label>URL รูปภาพ Logo</label>
+        <input type="url" class="form-input" id="set-hero-logo-url" placeholder="https://..." oninput="previewHeroLogo()">
+        <img id="hero-logo-preview-img" class="banner-preview" alt="Hero logo preview">
+      </div>
+      <div class="form-group" style="margin-top:10px">
+        <label>หรืออัพโหลดรูป Logo</label>
+        <div class="photo-upload-area" onclick="document.getElementById('hero-logo-file').click()">
+          <div style="font-size:30px;margin-bottom:6px">🖼️</div>
+          <div style="font-size:13px;color:var(--text-sub)">แตะเพื่อเลือกรูป Logo</div>
+        </div>
+        <input type="file" id="hero-logo-file" accept="image/*" style="display:none" onchange="uploadHeroLogoFile(this)">
+      </div>
+      <button class="save-btn" onclick="saveHeroLogo()">💾 บันทึก Logo</button>
+    </div>
+
     <div class="settings-card owner-only">
       <h3>🔑 ตั้งค่ารหัสผ่าน</h3>
       <div class="form-group">
@@ -554,6 +572,11 @@ async function loadSettings() {
       const img = document.getElementById('banner-preview-img');
       img.src = s.bannerUrl; img.style.display = 'block';
     }
+    if (s.heroLogoUrl) {
+      document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
+      const logoImg = document.getElementById('hero-logo-preview-img');
+      logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
+    }
     storeIsOpen = s.isOpen !== false;
     document.getElementById('store-open-toggle').checked = storeIsOpen;
     document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
@@ -699,6 +722,34 @@ window.previewBanner = function() {
   const img = document.getElementById('banner-preview-img');
   if (url) { img.src = url; img.style.display = 'block'; }
   else { img.style.display = 'none'; }
+};
+
+window.previewHeroLogo = function() {
+  const url = document.getElementById('set-hero-logo-url').value;
+  const img = document.getElementById('hero-logo-preview-img');
+  if (url) { img.src = url; img.style.display = 'block'; }
+  else { img.style.display = 'none'; }
+};
+
+window.uploadHeroLogoFile = function(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('set-hero-logo-url').value = e.target.result;
+    previewHeroLogo();
+    showToast('โหลดรูป Logo สำเร็จ');
+  };
+  reader.readAsDataURL(file);
+};
+
+window.saveHeroLogo = async function() {
+  showLoading(true);
+  try {
+    const url = document.getElementById('set-hero-logo-url').value;
+    await setDoc(doc(db, 'settings', 'store'), { heroLogoUrl: url }, { merge: true });
+    showToast('บันทึก Logo แล้ว ✓');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
 };
 
 window.uploadBannerFile = function(input) {
