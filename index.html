@@ -3,75 +3,179 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Im Oei POS</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f59e0b">
+<title>Im Oei</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;}
-.nav{display:flex;gap:10px;padding:10px;background:#020617;}
-.nav button{flex:1;padding:10px;border:none;border-radius:10px;background:#1e293b;color:#fff;}
-.page{display:none;padding:15px;}
-.active{display:block;}
-.card{background:#1e293b;padding:15px;border-radius:15px;margin-bottom:15px;}
-button{padding:10px;margin:5px;border:none;border-radius:10px;background:#f59e0b;}
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#fff;
+}
+
+/* HEADER */
+.header{
+  background:#facc15;
+  padding:20px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* MENU */
+.menu{
+  padding:15px;
+}
+
+.card{
+  display:flex;
+  gap:10px;
+  background:#fff;
+  border-radius:15px;
+  padding:10px;
+  margin-bottom:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.card img{
+  width:80px;
+  height:80px;
+  border-radius:10px;
+  object-fit:cover;
+}
+
+.info{flex:1;}
+
+.qty{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.qty button{
+  width:30px;
+  height:30px;
+  border:none;
+  border-radius:50%;
+  background:#facc15;
+}
+
+/* CART BAR */
+.cart-bar{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#facc15;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* FULL CART */
+.cart-page{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#fff;
+  display:none;
+  padding:20px;
+}
+
+/* SUCCESS */
+.success{
+  display:none;
+  text-align:center;
+  padding:50px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="nav">
-  <button onclick="show('pos')">🛒 POS</button>
-  <button onclick="show('kitchen')">🍳 Kitchen</button>
-  <button onclick="show('dash')">📊 Dashboard</button>
+<div class="header">อิ่มอิ่ม ทุกเช้า</div>
+
+<div class="menu" id="menu"></div>
+
+<div class="cart-bar" onclick="openCart()">
+  <div id="sum">0 บาท</div>
+  <button>สั่งซื้อ</button>
 </div>
 
-<div id="pos" class="page active">
-  <div class="card">
-    <h3>ขายสินค้า</h3>
-    <button onclick="add('แซนวิช',20)">🥪 แซนวิช</button>
-    <button onclick="add('ข้าว',50)">🍱 ข้าว</button>
-  </div>
-
-  <div class="card">
-    <h3>ตะกร้า</h3>
-    <div id="cart"></div>
-    <button onclick="checkout()">💸 คิดเงิน</button>
-  </div>
+<!-- CART -->
+<div class="cart-page" id="cartPage">
+  <h2>ตะกร้า</h2>
+  <div id="cart"></div>
+  <button onclick="checkout()">ยืนยัน</button>
 </div>
 
-<div id="kitchen" class="page">
-  <div class="card">
-    <h3>ออเดอร์</h3>
-    <div id="orders"></div>
-  </div>
+<!-- SUCCESS -->
+<div class="success" id="success">
+  <h1>✅</h1>
+  <h2>สั่งซื้อสำเร็จ</h2>
+  <div id="orderId"></div>
 </div>
 
-<div id="dash" class="page">
-  <div class="card">
-    <h3>ยอดรวม</h3>
-    <div id="total"></div>
+<script>
+let menu=[
+ {name:"แซนวิช",price:20,img:"https://picsum.photos/100"},
+ {name:"ข้าว",price:50,img:"https://picsum.photos/101"}
+];
+
+let cart=[];
+
+function renderMenu(){
+ document.getElementById("menu").innerHTML=
+ menu.map((m,i)=>`
+ <div class="card">
+  <img src="${m.img}">
+  <div class="info">
+    <h4>${m.name}</h4>
+    <p>${m.price} บาท</p>
+    <div class="qty">
+      <button onclick="add(${i})">+</button>
+    </div>
   </div>
-  <canvas id="chart"></canvas>
-</div>
+ </div>
+ `).join("");
+}
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+function add(i){
+ let m=menu[i];
+ let f=cart.find(x=>x.name===m.name);
+ if(f) f.qty++;
+ else cart.push({...m,qty:1});
+ renderCart();
+}
 
-const firebaseConfig = {
-   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei"
-};
+function renderCart(){
+ let total=0;
+ document.getElementById("cart").innerHTML=
+ cart.map(c=>{
+  total+=c.price*c.qty;
+  return c.name+" x"+c.qty+"<br>";
+ }).join("");
+ document.getElementById("sum").innerText=total+" บาท";
+}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+function openCart(){
+ document.getElementById("cartPage").style.display="block";
+}
 
-window.show = (id)=>{
+function checkout(){
+ let id="OD"+Date.now();
+ document.getElementById("orderId").innerText=id;
+ document.getElementById("success").style.display="block";
+ document.getElementById("cartPage").style.display="none";
+ cart=[];
+ renderCart();
+}
+
+renderMenu();
+</script>
+
+</body>
+</html>window.show = (id)=>{
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 };
