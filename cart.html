@@ -6,6 +6,13 @@
 <title>ตะกร้า - อิ่มอิ่ม</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+.pickup-select { width: 100%; border: 1.5px solid #E8E8E8; border-radius: 12px; padding: 12px 14px; font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); background: var(--white); outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; cursor: pointer; transition: border-color 0.2s; }
+.pickup-select:focus { border-color: var(--yellow); }
+.name-input { width: 100%; border: 1.5px solid #E8E8E8; border-radius: 12px; padding: 12px 14px; font-family: 'Sarabun', sans-serif; font-size: 15px; color: var(--text); background: var(--white); outline: none; transition: border-color 0.2s; }
+.name-input:focus { border-color: var(--yellow); }
+.name-input::placeholder { color: #C8C8C8; }
+</style>
 </head>
 <body>
 
@@ -22,10 +29,9 @@
 
 <script src="app.js"></script>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
@@ -35,6 +41,38 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 function showLoading(v) { document.getElementById('loading').classList.toggle('show', v); }
+
+// Load menu + settings then render cart
+async function init() {
+  try {
+    const settingsDoc = await getDoc(doc(db, 'settings', 'store'));
+    if (settingsDoc.exists()) {
+      const s = settingsDoc.data();
+      STORE_SETTINGS = { ...STORE_SETTINGS, ...s };
+    }
+    const menuSnapshot = await getDocs(collection(db, 'menu'));
+    if (!menuSnapshot.empty) {
+      const categories = {};
+      menuSnapshot.forEach(d => {
+        const data = { id: d.id, ...d.data() };
+        if (data.hidden) return;
+        const catKey = data.catKey || 'other';
+        if (!categories[catKey]) {
+          categories[catKey] = { category: data.category || catKey, catKey, price: data.price || 0, items: [] };
+        }
+        categories[catKey].items.push(data);
+      });
+      MENU = Object.values(categories);
+    } else {
+      MENU = DEFAULT_MENU;
+    }
+    ALL_ITEMS = MENU.flatMap(c => c.items);
+  } catch(e) {
+    MENU = DEFAULT_MENU;
+    ALL_ITEMS = MENU.flatMap(c => c.items);
+  }
+  renderCart();
+}
 
 function renderCart() {
   const body = document.getElementById('cart-body');
@@ -49,6 +87,11 @@ function renderCart() {
     return;
   }
 
+  // Build time options
+  const s = STORE_SETTINGS;
+  const timeOptions = generateTimeSlots(s.pickupStart || '07:00', s.pickupEnd || '08:00');
+  const timeHTML = timeOptions.map(t => `<option value="${t}">${t} น.</option>`).join('');
+
   let html = '';
   MENU.forEach(cat => {
     const catItems = cat.items.filter(i => cart[i.id] > 0);
@@ -58,7 +101,7 @@ function renderCart() {
       const qty = cart[item.id];
       html += `
         <div class="cart-item">
-          <div class="food-img">${item.emoji}</div>
+          <div class="food-img">${renderFoodImg(item)}</div>
           <div class="item-info">
             <div class="item-name">${item.name}</div>
             <div class="item-unit-price">${item.price} บาท</div>
@@ -74,12 +117,13 @@ function renderCart() {
   });
 
   html += `
-    <div class="pickup-row">
-      <span class="clock">🕐</span>
-      <div>
-        <div class="pickup-label">เวลารับอาหาร</div>
-        <div class="pickup-time">07:30 น.</div>
-      </div>
+    <div class="note-section" style="padding-top:14px">
+      <label>ชื่อผู้สั่ง</label>
+      <input type="text" class="name-input" id="name-input" placeholder="กรอกชื่อของคุณ" value="${localStorage.getItem('imkum_name') || ''}">
+    </div>
+    <div class="pickup-row" style="flex-direction:column;align-items:flex-start;gap:8px;padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px"><span class="clock">🕐</span><span class="pickup-label" style="font-size:14px;font-weight:700">เวลารับอาหาร</span></div>
+      <select class="pickup-select" id="pickup-select">${timeHTML}</select>
     </div>
     <div class="note-section">
       <label>หมายเหตุ (ถ้ามี)</label>
@@ -96,8 +140,21 @@ function renderCart() {
   body.innerHTML = html;
 }
 
+function generateTimeSlots(start, end) {
+  const slots = [];
+  let [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  while (sh * 60 + sm <= eh * 60 + em) {
+    slots.push(`${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`);
+    sm += 15;
+    if (sm >= 60) { sm -= 60; sh++; }
+  }
+  return slots;
+}
+
 window.cartAdd = function(id) {
   const item = ALL_ITEMS.find(i => i.id === id);
+  if (!item) return;
   cart[id] = (cart[id] || 0) + 1;
   saveCart();
   document.getElementById('cqty-' + id).textContent = cart[id];
@@ -124,7 +181,15 @@ window.clearCart = function() {
 window.placeOrder = async function() {
   const total = getTotal();
   if (!total) return;
+
+  const nameEl = document.getElementById('name-input');
+  const customerName = nameEl?.value.trim() || '';
+  if (!customerName) { showToast('กรุณากรอกชื่อของคุณ'); nameEl?.focus(); return; }
+  localStorage.setItem('imkum_name', customerName);
+
   const note = document.getElementById('note-input')?.value || '';
+  const pickupTime = document.getElementById('pickup-select')?.value || '07:30';
+
   const orderItems = Object.entries(cart).map(([id, qty]) => {
     const item = ALL_ITEMS.find(i => i.id === id);
     return { id, name: item.name, qty, price: item.price, subtotal: item.price * qty };
@@ -133,15 +198,19 @@ window.placeOrder = async function() {
   showLoading(true);
   try {
     const ref = await addDoc(collection(db, 'orders'), {
-      items: orderItems, total, note,
-      pickupTime: '07:30',
+      items: orderItems,
+      total,
+      note,
+      customerName,
+      pickupTime,
       status: 'pending',
       createdAt: serverTimestamp()
     });
     localStorage.setItem('imkum_last_order', JSON.stringify({
       orderId: ref.id,
       total,
-      pickupTime: '07:30'
+      pickupTime,
+      customerName
     }));
     cart = {}; saveCart();
     window.location.href = 'success.html';
@@ -153,7 +222,7 @@ window.placeOrder = async function() {
   }
 };
 
-renderCart();
+init();
 </script>
 </body>
 </html>

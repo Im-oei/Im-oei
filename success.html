@@ -16,6 +16,7 @@
 
   <div class="order-summary-card">
     <div class="summary-row"><span class="key">เลขที่ออเดอร์</span><span class="val" id="s-id">-</span></div>
+    <div class="summary-row"><span class="key">ชื่อผู้สั่ง</span><span class="val" id="s-name">-</span></div>
     <div class="summary-row"><span class="key">เวลารับอาหาร</span><span class="val" id="s-time">07:30 น.</span></div>
     <div class="summary-row"><span class="key">วันที่สั่ง</span><span class="val" id="s-date">-</span></div>
     <div class="summary-row"><span class="key">ยอดรวม</span><span class="val orange" id="s-total">0 บาท</span></div>
@@ -32,7 +33,8 @@
 <script>
 const order = JSON.parse(localStorage.getItem('imkum_last_order') || '{}');
 const now = new Date();
-document.getElementById('s-id').textContent = order.orderId ? '#OD' + order.orderId.slice(0,8).toUpperCase() : '#OD000001';
+document.getElementById('s-id').textContent = order.orderId ? '#' + order.orderId.slice(0,8).toUpperCase() : '#??????';
+document.getElementById('s-name').textContent = order.customerName || '-';
 document.getElementById('s-time').textContent = (order.pickupTime || '07:30') + ' น.';
 document.getElementById('s-date').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'}) + ' ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.';
 document.getElementById('s-total').textContent = (order.total || 0) + ' บาท';
