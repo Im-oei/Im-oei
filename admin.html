@@ -718,11 +718,17 @@ function renderOrderCard(o) {
 
 // ====== LOAD MENU ======
 async function loadMenu() {
-  const snap = await getDocs(collection(db, 'menu'));
+  try {
+  const timeout2 = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
+  const snap = await Promise.race([getDocs(collection(db, 'menu')), timeout2]);
   allMenuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   // If empty, seed from defaults
   if (!allMenuItems.length) await seedMenu();
   renderMenuAdmin();
+  } catch(e) {
+    console.warn('loadMenu error:', e.message);
+    renderMenuAdmin();
+  }
 }
 
 async function seedMenu() {
@@ -1013,7 +1019,9 @@ window.deleteCategoryItem = async function(key) {
 
 
 async function loadSettings() {
-  const d = await getDoc(doc(db, 'settings', 'store'));
+  try {
+  const timeout = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
+  const d = await Promise.race([getDoc(doc(db, 'settings', 'store')), timeout]);
   if (d.exists()) {
     const s = d.data();
     if (s.orderCutoff) document.getElementById('set-cutoff').value = s.orderCutoff;
@@ -1033,6 +1041,15 @@ async function loadSettings() {
     storeIsOpen = s.isOpen !== false;
     document.getElementById('store-open-toggle').checked = storeIsOpen;
     document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
+  }
+  } catch(e) {
+    console.warn('loadSettings error (ใช้ค่า default):', e.message);
+    const savedOpen = localStorage.getItem('imkum_store_open');
+    storeIsOpen = savedOpen !== 'false';
+    const tog = document.getElementById('store-open-toggle');
+    const lbl = document.getElementById('store-status-label');
+    if(tog) tog.checked = storeIsOpen;
+    if(lbl) lbl.textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
   }
 }
 
