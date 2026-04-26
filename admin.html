@@ -712,7 +712,7 @@ let storeIsOpen = true;
 let unsubOrders = null;
 
 // ====== INIT ======
-if (!checkAuth()) { throw new Error('not authenticated'); }
+if (checkAuth()) {
 applyRoleUI();
 loadSettings();
 loadMenu();
@@ -720,6 +720,7 @@ loadBanners();
 loadCategories();
 listenOrders();
 initAdminNotifications();
+}
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
