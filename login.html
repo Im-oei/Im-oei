@@ -217,7 +217,7 @@ window.loginWithLine = async function() {
     const custRef = doc(db, 'customers', 'line_' + lineId);
     const now = new Date().toISOString();
     setDoc(custRef, { name, lineId, avatar, lastLogin: now, loginType: 'line' }, { merge: true }).catch(()=>{});
-    window.location.href = 'index.html';
+    window.location.href = getReturnUrl();
   } catch(e) {
     console.error(e);
     showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย LINE');
@@ -225,6 +225,13 @@ window.loginWithLine = async function() {
     showLoading(false);
   }
 };
+
+// ========== REDIRECT HELPER ==========
+function getReturnUrl() {
+  const p = new URLSearchParams(window.location.search).get('return');
+  if (p && ['index.html','cart.html','orders.html'].includes(p)) return p;
+  return 'index.html';
+}
 
 // ========== CUSTOMER LOGIN ==========
 window.customerLogin = async function() {
@@ -235,18 +242,15 @@ window.customerLogin = async function() {
 
   showLoading(true);
   try {
-    // บันทึก session ทันที (ไม่รอ Firestore)
     sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone }));
     localStorage.setItem('imkum_name', name);
     localStorage.setItem('imkum_phone', phone);
-    // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
     const now = new Date().toISOString();
     setDoc(doc(db, 'customers', phone), { name, phone, lastLogin: now }, { merge: true }).catch(()=>{});
-    window.location.href = 'index.html';
+    window.location.href = getReturnUrl();
   } catch(e) {
     console.error(e);
-    // ถ้า error ก็ยังเข้าได้ เพราะ session บันทึกไปแล้ว
-    window.location.href = 'index.html';
+    window.location.href = getReturnUrl();
   } finally {
     showLoading(false);
   }
