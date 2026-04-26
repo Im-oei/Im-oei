@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ออเดอร์ของฉัน - อิ่มอิ่ม</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.profile-hero{background:linear-gradient(135deg,rgba(62,32,0,0.88) 0%,rgba(123,63,0,0.82) 60%,rgba(255,140,0,0.75) 100%);padding:28px 20px 70px;position:relative;overflow:hidden;}
+.profile-hero::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.05);top:-60px;right:-40px;}
+.profile-hero::after{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);bottom:20px;left:-30px;}
+.profile-back{color:rgba(255,255,255,0.85);text-decoration:none;display:inline-flex;align-items:center;margin-bottom:16px;position:relative;z-index:1;}
+.profile-user-row{display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
+.profile-avatar{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.profile-info{flex:1;}
+.profile-name{font-size:20px;font-weight:800;color:#fff;line-height:1.2;}
+.profile-phone{font-size:13px;color:rgba(255,255,255,0.7);margin-top:3px;}
+.profile-logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:12px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.stamp-card-float{margin:-40px 16px 0;position:relative;z-index:10;}
+.stamp-card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 30px rgba(0,0,0,0.12);}
+.stamp-card-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;}
+.stamp-title{font-size:15px;font-weight:800;color:#3E2000;}
+.stamp-badge{background:linear-gradient(135deg,#FF6B35,#FF8C00);color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;}
+.stamps-grid{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.stamp{width:32px;height:32px;border-radius:50%;border:2px solid #EEE;background:#F9F9F9;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;}
+.stamp.filled{border-color:#FFB300;background:#FFF8E1;}
+.stamp-progress-bar{margin-top:12px;background:#F0E8D8;border-radius:10px;height:7px;overflow:hidden;}
+.stamp-progress-fill{height:100%;background:linear-gradient(90deg,#FFC107,#FF8C00);border-radius:10px;transition:width .6s ease;}
+.stamp-msg{font-size:12px;color:#999;margin-top:8px;text-align:center;}
+.sec-label{padding:20px 16px 8px;font-size:14px;font-weight:800;color:#3E2000;display:flex;align-items:center;gap:6px;}
+.sec-count{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:4px;}
+.order-card{background:#fff;margin:0 16px 12px;border-radius:18px;box-shadow:0 2px 14px rgba(0,0,0,0.07);overflow:hidden;border:1.5px solid #F5EDE0;transition:transform .15s;}
+.order-card:active{transform:scale(0.99);}
+.order-card.active-order{border-color:#FFC107;box-shadow:0 4px 20px rgba(255,193,7,0.2);}
+.order-card-head{padding:14px 16px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.order-id{font-size:12px;font-weight:800;color:#FF8C00;letter-spacing:.5px;}
+.order-date{font-size:12px;color:#BBB;margin-top:2px;}
+.order-pickup{display:inline-flex;align-items:center;gap:4px;background:#FFF8E1;color:#5D3A00;font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-top:5px;}
+.status-badge{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.status-pending{background:#FFF3E0;color:#E65100;}
+.status-preparing{background:#E3F2FD;color:#1565C0;}
+.status-ready{background:#E8F5E9;color:#2E7D32;}
+.status-done{background:#F3E5F5;color:#6A1B9A;}
+.status-cancelled{background:#FFEBEE;color:#B71C1C;}
+.order-divider{height:1px;background:#F5F0E8;margin:0 16px;}
+.order-items{padding:10px 16px;}
+.order-item-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px dashed #F0E8D8;}
+.order-item-row:last-child{border-bottom:none;}
+.order-item-name{color:#444;}
+.order-item-price{font-weight:700;color:#3E2000;}
+.order-footer{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.order-total-label{font-size:12px;font-weight:700;color:#888;}
+.order-total-val{font-size:20px;font-weight:800;color:#FF8C00;}
+.reorder-btn{background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:9px 18px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 3px 10px rgba(255,193,7,0.35);transition:all .15s;white-space:nowrap;}
+.reorder-btn:active{transform:scale(0.94);opacity:.85;}
+
+/* ===== ACTIVE PULSE ===== */
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(255,193,7,0.4)}70%{box-shadow:0 0 0 8px rgba(255,193,7,0)}100%{box-shadow:0 0 0 0 rgba(255,193,7,0)}}
+.order-card.active-order{animation:pulse-ring 2.5s ease infinite;}
+
+/* ===== SECTION HEADERS ===== */
+.sec-header{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;}
+.sec-header-left{display:flex;align-items:center;gap:8px;}
+.sec-header-title{font-size:14px;font-weight:800;color:#3E2000;}
+.sec-header-count{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;}
+.sec-header-empty{font-size:12px;color:#CCC;padding:8px 16px 14px;}
+
+/* ===== COMPACT HISTORY ROWS ===== */
+.history-row{display:flex;align-items:center;gap:12px;padding:11px 16px;background:#fff;margin:0 16px 8px;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);border:1px solid #F5EDE0;cursor:pointer;transition:background .15s;}
+.history-row:active{background:#FFF8F0;}
+.history-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.history-dot.done{background:#AB47BC;}
+.history-dot.cancelled{background:#EF5350;}
+.history-main{flex:1;min-width:0;}
+.history-id{font-size:11px;font-weight:800;color:#FF8C00;letter-spacing:.3px;}
+.history-items{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.history-right{text-align:right;flex-shrink:0;}
+.history-price{font-size:14px;font-weight:800;color:#3E2000;}
+.history-date{font-size:11px;color:#CCC;margin-top:1px;}
+
+/* ===== EXPAND BUTTON ===== */
+.show-more-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 16px 16px;padding:11px;border-radius:14px;border:1.5px dashed #E8DDD0;background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#999;cursor:pointer;width:calc(100% - 32px);transition:all .2s;}
+.show-more-btn:active{background:#FFF8F0;color:#FF8C00;}
+
+/* ===== DETAIL EXPAND ===== */
+.history-detail{display:none;padding:10px 16px 4px;border-top:1px solid #F5EDE0;}
+.history-detail.open{display:block;}
+.history-row.expanded{border-color:#FFD54F;}
+
+.empty-state{text-align:center;padding:60px 30px;color:#CCC;}
+.empty-icon{font-size:60px;opacity:.5;margin-bottom:14px;}
+.empty-text{font-size:15px;font-weight:700;color:#BBB;}
+.empty-sub{font-size:13px;color:#CCC;margin-top:6px;}
+.empty-btn{display:inline-block;margin-top:20px;background:linear-gradient(135deg,#FFC107,#F5A623);color:#3E2000;font-weight:800;padding:13px 30px;border-radius:14px;text-decoration:none;font-size:15px;box-shadow:0 4px 14px rgba(255,193,7,0.4);}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px 18px;background:#fff;box-shadow:0 -3px 16px rgba(0,0,0,0.08);z-index:100;}
+.order-btn-main{width:100%;padding:15px;border-radius:16px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 16px rgba(255,193,7,0.4);}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s;}
+.loading-overlay.show{opacity:1;pointer-events:all;}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid #FFE082;border-top-color:#F5A623;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .28s;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body style="background:#F7F3EE;padding-bottom:80px;">
+
+<div class="profile-hero">
+  <a class="profile-back" href="index.html">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.18)"/>
+      <path d="M16 9L11 14L16 19" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+  <div class="profile-user-row">
+    <div class="profile-avatar" id="profile-avatar-wrap">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="15" r="7" fill="rgba(255,255,255,0.85)"/>
+        <ellipse cx="19" cy="31" rx="12" ry="7" fill="rgba(255,255,255,0.85)"/>
+      </svg>
+    </div>
+    <div class="profile-info">
+      <div class="profile-name" id="user-name-display">ลูกค้า</div>
+      <div class="profile-phone" id="user-phone-display">📱 -</div>
+    </div>
+    <button class="profile-logout" onclick="doLogout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px">
+        <path d="M15 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H15" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 17L15 12L10 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="15" y1="12" x2="3" y2="12" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>ออก
+    </button>
+  </div>
+</div>
+
+<div class="stamp-card-float">
+  <div class="stamp-card">
+    <div class="stamp-card-top">
+      <div class="stamp-title">⭐ สะสมแต้ม</div>
+      <div class="stamp-badge" id="stamp-count-badge">0/10</div>
+    </div>
+    <div class="stamps-grid" id="stamps-grid"></div>
+    <div class="stamp-progress-bar">
+      <div class="stamp-progress-fill" id="stamp-progress" style="width:0%"></div>
+    </div>
+    <div class="stamp-msg" id="stamp-msg">กำลังโหลดแต้ม...</div>
+  </div>
+</div>
+
+<div id="active-section">
+  <div class="sec-header">
+    <div class="sec-header-left">
+      <div class="sec-header-title">🔥 กำลังดำเนินการ</div>
+      <span class="sec-header-count" id="active-count" style="display:none">0</span>
+    </div>
+  </div>
+  <div id="active-wrap"></div>
+</div>
+
+<div id="history-section">
+  <div class="sec-header">
+    <div class="sec-header-left">
+      <div class="sec-header-title">📋 ประวัติออเดอร์</div>
+      <span class="sec-header-count" id="history-count" style="display:none">0</span>
+    </div>
+  </div>
+  <div id="history-wrap"></div>
+  <button class="show-more-btn" id="show-more-btn" style="display:none" onclick="showAllHistory()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="show-more-text">ดูทั้งหมด</span>
+  </button>
+</div>
+
+<div class="bottom-bar">
+  <button class="order-btn-main" onclick="location.href='index.html'">🛒 สั่งอาหารเพิ่ม</button>
+</div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const sess = sessionStorage.getItem('imkum_user');
+if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
+const user = JSON.parse(sess);
+if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html'; throw new Error('wrong role'); }
+
+const app = initializeApp({
+  apiKey:"AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
+  authDomain:"im-oei.firebaseapp.com",
+  projectId:"im-oei"
+});
+const db = getFirestore(app);
+
+function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+document.getElementById('user-name-display').textContent = user.name||'ลูกค้า';
+document.getElementById('user-phone-display').textContent = '📱 '+(user.phone||'-');
+
+// Set hero background ด้วย JS เพื่อให้ path ถูกต้องเสมอ
+(function(){
+  const hero = document.querySelector('.profile-hero');
+  const img = new Image();
+  const base = window.location.href.replace(/\/[^/]*$/, '/');
+  img.onload = function(){
+    hero.style.backgroundImage = `linear-gradient(135deg,rgba(62,32,0,0.82) 0%,rgba(123,63,0,0.75) 60%,rgba(255,140,0,0.7) 100%), url('${img.src}')`;
+    hero.style.backgroundSize = 'auto, cover';
+    hero.style.backgroundPosition = 'center, center';
+  };
+  img.src = base + 'hero.png';
+})();
+
+// โหลดรูป profile ถ้ามี
+if (user.photoURL) {
+  const wrap = document.getElementById('profile-avatar-wrap');
+  const img = document.createElement('img');
+  img.src = user.photoURL;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+  img.onerror = function(){ this.remove(); }; // fallback กลับ SVG ถ้าโหลดไม่ได้
+  wrap.innerHTML = '';
+  wrap.appendChild(img);
+}
+
+window.doLogout = function(){
+  if(!confirm('ออกจากระบบใช่ไหม?')) return;
+  sessionStorage.removeItem('imkum_user');
+  sessionStorage.removeItem('imkum_admin_auth');
+  window.location.href='login.html';
+};
+
+const statusMap={pending:'รอรับ',preparing:'กำลังทำ',ready:'พร้อมรับ',done:'รับแล้ว',cancelled:'ยกเลิก'};
+const statusCls={pending:'status-pending',preparing:'status-preparing',ready:'status-ready',done:'status-done',cancelled:'status-cancelled'};
+const statusIcon={pending:'🟡',preparing:'🔵',ready:'🟢',done:'✅',cancelled:'❌'};
+
+const HISTORY_PREVIEW = 5;
+let allHistoryDocs = [];
+let historyExpanded = false;
+
+function renderOrders(docs){
+  if(!docs.length){
+    document.getElementById('active-wrap').innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีออเดอร์</div><div class="empty-sub">สั่งอาหารครั้งแรกของคุณได้เลย!</div><a href="index.html" class="empty-btn">🛒 ดูเมนู</a></div>`;
+    document.getElementById('history-wrap').innerHTML='';
+    return;
+  }
+
+  const active = docs.filter(o => ['pending','preparing','ready'].includes(o.status));
+  const history = docs.filter(o => ['done','cancelled'].includes(o.status));
+  allHistoryDocs = history;
+
+  // === ACTIVE ORDERS (full card) ===
+  const activeWrap = document.getElementById('active-wrap');
+  const activeCount = document.getElementById('active-count');
+  if(active.length){
+    activeCount.textContent = active.length; activeCount.style.display='inline';
+    activeWrap.innerHTML = active.map(o => renderActiveCard(o)).join('');
+  } else {
+    activeCount.style.display='none';
+    activeWrap.innerHTML = '<div class="sec-header-empty">ไม่มีออเดอร์ที่กำลังดำเนินการ</div>';
+  }
+
+  // === HISTORY (compact rows) ===
+  const historyCount = document.getElementById('history-count');
+  if(history.length){
+    historyCount.textContent = history.length; historyCount.style.display='inline';
+    renderHistoryRows(historyExpanded ? history : history.slice(0, HISTORY_PREVIEW));
+    const btn = document.getElementById('show-more-btn');
+    if(history.length > HISTORY_PREVIEW){
+      btn.style.display='flex';
+      document.getElementById('show-more-text').textContent = historyExpanded ? 'ย่อกลับ' : `ดูทั้งหมด ${history.length} รายการ`;
+    } else { btn.style.display='none'; }
+  } else {
+    historyCount.style.display='none';
+    document.getElementById('history-wrap').innerHTML='<div class="sec-header-empty">ยังไม่มีประวัติออเดอร์</div>';
+  }
+}
+
+function renderHistoryRows(list){
+  const wrap = document.getElementById('history-wrap');
+  wrap.innerHTML = list.map((o,idx) => {
+    const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+    const dateStr = dt.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+    const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    const itemNames = (o.items||[]).map(i=>`${i.name}×${i.qty}`).join(', ');
+    const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
+    const dotCls = o.status==='done'?'done':'cancelled';
+    const detailRows = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+    return `<div class="history-row" id="hrow-${idx}" onclick="toggleHistoryDetail(${idx})">
+      <div class="history-dot ${dotCls}"></div>
+      <div class="history-main">
+        <div class="history-id">#${o.id.slice(0,8).toUpperCase()} · ${statusMap[o.status]||o.status}</div>
+        <div class="history-items">${itemNames}</div>
+        <div class="history-detail" id="hdetail-${idx}">
+          <div style="padding:8px 0 4px">${detailRows}</div>
+          <div style="display:flex;justify-content:flex-end;padding-bottom:8px">
+            <button class="reorder-btn" onclick="event.stopPropagation();reorder(${itemsJson})">🔁 สั่งซ้ำ</button>
+          </div>
+        </div>
+      </div>
+      <div class="history-right">
+        <div class="history-price">${o.total} ฿</div>
+        <div class="history-date">${dateStr} ${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleHistoryDetail = function(idx){
+  const row = document.getElementById('hrow-'+idx);
+  const detail = document.getElementById('hdetail-'+idx);
+  const isOpen = detail.classList.contains('open');
+  detail.classList.toggle('open', !isOpen);
+  row.classList.toggle('expanded', !isOpen);
+};
+
+window.showAllHistory = function(){
+  historyExpanded = !historyExpanded;
+  renderHistoryRows(historyExpanded ? allHistoryDocs : allHistoryDocs.slice(0, HISTORY_PREVIEW));
+  document.getElementById('show-more-text').textContent = historyExpanded ? 'ย่อกลับ' : `ดูทั้งหมด ${allHistoryDocs.length} รายการ`;
+  const btn = document.getElementById('show-more-btn');
+  btn.querySelector('svg').style.transform = historyExpanded ? 'rotate(180deg)' : '';
+};
+
+function renderActiveCard(o){
+  const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+  const dateStr = dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+  const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const items = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+  const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
+  return `<div class="order-card active-order">
+    <div class="order-card-head">
+      <div>
+        <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
+        <div class="order-date">🕐 ${dateStr} ${timeStr}</div>
+        <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.</div>
+      </div>
+      <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${statusMap[o.status]||o.status}</span>
+    </div>
+    <div class="order-divider"></div>
+    <div class="order-items">${items}</div>
+    <div class="order-footer">
+      <div><div class="order-total-label">ยอดรวม</div><div class="order-total-val">${o.total} ฿</div></div>
+      <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
+    </div>
+  </div>`;
+}
+
+async function loadOrders(){
+  showLoading(true);
+  try {
+    // PRIMARY: query by phone without orderBy (no index needed)
+    const q=query(collection(db,'orders'),where('customerPhone','==',user.phone||''));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    docs.sort((a,b)=>(b.createdAt?.toDate?.()?.getTime?.()??0)-(a.createdAt?.toDate?.()?.getTime?.()??0));
+    renderOrders(docs);
+  } catch(e){
+    console.warn('primary query failed, trying fallback:', e);
+    try {
+      // FALLBACK: get all orders, filter in JS
+      const snap=await getDocs(collection(db,'orders'));
+      const docs=snap.docs.map(d=>({id:d.id,...d.data()}))
+        .filter(o=>o.customerPhone===(user.phone||''));
+      docs.sort((a,b)=>(b.createdAt?.toDate?.()?.getTime?.()??0)-(a.createdAt?.toDate?.()?.getTime?.()??0));
+      renderOrders(docs);
+    } catch(e2){
+      document.getElementById('orders-wrap').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">โหลดไม่ได้</div><div class="empty-sub">กรุณาลองใหม่อีกครั้ง</div></div>';
+    }
+  } finally { showLoading(false); }
+}
+
+window.reorder=function(items){
+  if(!items||!items.length){showToast('ไม่พบรายการ');return;}
+  let cart={};
+  try{cart=JSON.parse(localStorage.getItem('imkum_cart')||'{}');}catch(e){cart={};}
+  items.forEach(item=>{if(item.id)cart[item.id]=(cart[item.id]||0)+(item.qty||1);});
+  localStorage.setItem('imkum_cart',JSON.stringify(cart));
+  showToast('✅ เพิ่มลงตะกร้าแล้ว!');
+  setTimeout(()=>{window.location.href='index.html';},1500);
+};
+
+const STAMP_GOAL=10;
+function renderStampCard(count,total){
+  const grid=document.getElementById('stamps-grid');
+  if(!grid)return;
+  let dots='';
+  for(let i=0;i<STAMP_GOAL;i++) dots+=`<div class="stamp${i<count?' filled':''}">${i<count?'⭐':''}</div>`;
+  grid.innerHTML=dots;
+  document.getElementById('stamp-count-badge').textContent=`${count}/${STAMP_GOAL}`;
+  document.getElementById('stamp-progress').style.width=`${Math.min(100,(count/STAMP_GOAL)*100)}%`;
+  document.getElementById('stamp-msg').textContent=count>=STAMP_GOAL
+    ?'🎉 ครบแล้ว! แจ้งร้านเพื่อรับรางวัล'
+    :`อีก ${STAMP_GOAL-count} ครั้ง รับฟรี 1 เมนู! (สั่งแล้ว ${total} ครั้ง)`;
+}
+
+async function loadStamps(){
+  if(!user.phone){renderStampCard(0,0);return;}
+  try{
+    const sd=await getDoc(doc(db,'stamps',user.phone));
+    const d=sd.exists()?sd.data():{count:0,total:0};
+    renderStampCard(d.count||0,d.total||0);
+  }catch(e){
+    try{const c=JSON.parse(localStorage.getItem('imkum_stamps_'+user.phone)||'{"count":0,"total":0}');renderStampCard(c.count||0,c.total||0);}
+    catch{renderStampCard(0,0);}
+  }
+}
+
+loadOrders();
+loadStamps();
+
+// ============================
+// ====== CUSTOMER NOTIFICATIONS ======
+// ============================
+
+let custAudioCtx = null;
+let watchedOrders = {}; // {orderId: lastStatus}
+let custSoundEnabled = true;
+
+async function initCustomerNotifications() {
+  custSoundEnabled = localStorage.getItem('imkum_sound_cust') !== 'off';
+
+  // Register SW
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+    } catch(e) { console.warn('SW reg:', e); }
+  }
+
+  // ขออนุญาต notification
+  if ('Notification' in window && Notification.permission === 'default') {
+    // แสดง banner แทนการขอทันที
+    showNotifBanner();
+  }
+
+  // เริ่ม watch orders สำหรับ status change
+  startWatchingOrders();
+}
+
+function showNotifBanner() {
+  if (localStorage.getItem('imkum_notif_dismissed') === '1') return;
+  const banner = document.getElementById('notif-request-banner');
+  if (banner) banner.style.display = 'flex';
+}
+
+window.allowNotifications = async function() {
+  const banner = document.getElementById('notif-request-banner');
+  if (!('Notification' in window)) return;
+  const perm = await Notification.requestPermission();
+  if (banner) banner.style.display = 'none';
+  if (perm === 'granted') {
+    showToast('✅ เปิดการแจ้งเตือนแล้ว!');
+  }
+};
+
+window.dismissNotifBanner = function() {
+  const banner = document.getElementById('notif-request-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('imkum_notif_dismissed', '1');
+};
+
+function playCustSound(type) {
+  if (!custSoundEnabled) return;
+  try {
+    if (!custAudioCtx) custAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = custAudioCtx;
+    const freqs = type === 'ready' ? [700, 900, 1100] : [500, 650];
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+    });
+  } catch(e) {}
+}
+
+function showCustBrowserNotif(title, body, tag) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    new Notification(title, {
+      body, icon: '/logo.png', badge: '/logo.png', tag,
+      vibrate: [200, 100, 200]
+    });
+  } catch(e) {
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION', title, body, tag, url: '/orders.html'
+      });
+    }
+  }
+}
+
+async function startWatchingOrders() {
+  if (!user.phone) return;
+  // poll ทุก 30 วินาที
+  async function poll() {
+    try {
+      const q = query(collection(db,'orders'), where('customerPhone','==', user.phone));
+      const snap = await getDocs(q);
+      snap.docs.forEach(d => {
+        const o = { id: d.id, ...d.data() };
+        const prevStatus = watchedOrders[o.id];
+        if (prevStatus && prevStatus !== o.status) {
+          // status เปลี่ยน!
+          handleStatusChange(o, prevStatus, o.status);
+        }
+        watchedOrders[o.id] = o.status;
+      });
+    } catch(e) { console.warn('poll error:', e); }
+  }
+  await poll(); // ครั้งแรก
+  setInterval(poll, 30000); // ทุก 30 วิ
+}
+
+const statusTH = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };
+
+function handleStatusChange(order, oldStatus, newStatus) {
+  const statusIcon = { pending:'🟡', preparing:'🔵', ready:'🟢', done:'✅', cancelled:'❌' };
+  const icon = statusIcon[newStatus] || '📋';
+  const statusName = statusTH[newStatus] || newStatus;
+  let title = `${icon} ออเดอร์ #${order.id.slice(0,6).toUpperCase()}`;
+  let body = `สถานะ: ${statusName}`;
+
+  if (newStatus === 'ready') {
+    title = '🟢 อาหารพร้อมแล้ว!';
+    body = `มารับได้เลย ⏰ ${order.pickupTime || ''} น.`;
+    playCustSound('ready');
+  } else if (newStatus === 'preparing') {
+    title = '🔵 ร้านกำลังทำอาหาร';
+    body = 'ร้านรับออเดอร์แล้ว กำลังเตรียม!';
+    playCustSound('update');
+  } else if (newStatus === 'cancelled') {
+    title = '❌ ออเดอร์ถูกยกเลิก';
+    body = 'ออเดอร์ของคุณถูกยกเลิก';
+    playCustSound('update');
+  } else {
+    playCustSound('update');
+  }
+
+  showCustBrowserNotif(title, body, 'order-' + order.id);
+  showToast(`${icon} ${title}`);
+
+  // รีโหลดออเดอร์เพื่อแสดงสถานะล่าสุด
+  loadOrders();
+}
+
+// เริ่มระบบ
+initCustomerNotifications();
+
+</script>
+<!-- NOTIFICATION PERMISSION BANNER -->
+<div id="notif-request-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#3E2000,#7B3F00);padding:12px 16px;align-items:center;gap:10px;box-shadow:0 3px 12px rgba(0,0,0,0.2);">
+  <span style="font-size:20px">🔔</span>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:13px;font-weight:800;color:#FFC107;">รับการแจ้งเตือนสถานะออเดอร์</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);">เปิดรับแจ้งเตือนเพื่อทราบเมื่ออาหารพร้อม</div>
+  </div>
+  <button onclick="allowNotifications()" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#3E2000;cursor:pointer;white-space:nowrap;flex-shrink:0;">เปิด</button>
+  <button onclick="dismissNotifBanner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
+</div>
+
+</body>
+</html>
