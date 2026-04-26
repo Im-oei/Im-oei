@@ -237,66 +237,34 @@ window.customerLogin = async function() {
 };
 
 // ========== STAFF LOGIN ==========
-window.staffLogin = async function() {
+window.staffLogin = function() {
   const pwd = document.getElementById('staff-pwd').value;
   if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
-  showLoading(true);
-  try {
-    const timeoutPromise = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
-    const sDoc = await Promise.race([getDoc(doc(db, 'settings', 'roles')), timeoutPromise]);
-    const adminPwd = sDoc.exists() ? (sDoc.data().adminPassword || 'admin1234') : (localStorage.getItem('imkum_admin_pwd') || 'admin1234');
-    if(pwd === adminPwd){
-      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน' }));
-      sessionStorage.setItem('imkum_admin_auth','1');
-      window.location.href = 'admin.html';
-    } else {
-      showError('รหัสผ่านไม่ถูกต้อง');
-      document.getElementById('staff-pwd').value='';
-    }
-  } catch(e) {
-    // Fallback to localStorage
-    const adminPwd = localStorage.getItem('imkum_admin_pwd') || 'admin1234';
-    if(pwd === adminPwd){
-      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน' }));
-      sessionStorage.setItem('imkum_admin_auth','1');
-      window.location.href = 'admin.html';
-    } else {
-      showError('รหัสผ่านไม่ถูกต้อง');
-    }
-  } finally {
-    showLoading(false);
+  // ใช้ localStorage เท่านั้น ไม่ต้องรอ Firestore
+  const adminPwd = localStorage.getItem('imkum_admin_pwd') || 'admin1234';
+  if(pwd === adminPwd){
+    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน' }));
+    sessionStorage.setItem('imkum_admin_auth','1');
+    window.location.href = 'admin.html';
+  } else {
+    showError('รหัสผ่านไม่ถูกต้อง');
+    document.getElementById('staff-pwd').value='';
   }
 };
 
 // ========== OWNER LOGIN ==========
-window.ownerLogin = async function() {
+window.ownerLogin = function() {
   const pwd = document.getElementById('owner-pwd').value;
   if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
-  showLoading(true);
-  try {
-    // เพิ่ม timeout 5 วินาที กัน Firestore ค้าง
-    const timeoutPromise = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
-    const sDoc = await Promise.race([getDoc(doc(db, 'settings', 'roles')), timeoutPromise]);
-    const ownerPwd = sDoc.exists() ? (sDoc.data().ownerPassword || 'owner5678') : (localStorage.getItem('imkum_owner_pwd') || 'owner5678');
-    if(pwd === ownerPwd){
-      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน' }));
-      sessionStorage.setItem('imkum_admin_auth','1');
-      window.location.href = 'admin.html';
-    } else {
-      showError('รหัสผ่านไม่ถูกต้อง');
-      document.getElementById('owner-pwd').value='';
-    }
-  } catch(e) {
-    const ownerPwd = localStorage.getItem('imkum_owner_pwd') || 'owner5678';
-    if(pwd === ownerPwd){
-      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน' }));
-      sessionStorage.setItem('imkum_admin_auth','1');
-      window.location.href = 'admin.html';
-    } else {
-      showError('รหัสผ่านไม่ถูกต้อง');
-    }
-  } finally {
-    showLoading(false);
+  // ใช้ localStorage เท่านั้น ไม่ต้องรอ Firestore
+  const ownerPwd = localStorage.getItem('imkum_owner_pwd') || 'owner5678';
+  if(pwd === ownerPwd){
+    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน' }));
+    sessionStorage.setItem('imkum_admin_auth','1');
+    window.location.href = 'admin.html';
+  } else {
+    showError('รหัสผ่านไม่ถูกต้อง');
+    document.getElementById('owner-pwd').value='';
   }
 };
 

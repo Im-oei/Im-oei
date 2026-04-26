@@ -576,14 +576,21 @@ listenOrders();
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
-  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+  // ไม่ใช้ orderBy ใน query → ไม่ต้องการ Firestore Index
+  // เรียงลำดับ client-side แทน
+  const q = collection(db, 'orders');
   unsubOrders = onSnapshot(q,
     snap => {
-      allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      allOrders = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return tb - ta;
+        });
       updateSummary();
       renderOrders();
       if (document.getElementById('panel-stats').classList.contains('active')) renderStats();
-      // Show connected status
       const dot = document.getElementById('realtime-dot');
       const st = document.getElementById('realtime-status');
       if (dot) dot.style.background = 'var(--green)';
@@ -591,12 +598,10 @@ function listenOrders() {
     },
     err => {
       console.error('onSnapshot error:', err.code, err.message);
-      // Show error in status bar
       const dot = document.getElementById('realtime-dot');
       const st = document.getElementById('realtime-status');
       if (dot) { dot.style.background = 'var(--red)'; dot.style.animation = 'none'; }
       if (st) st.textContent = '⚠️ real-time ล้มเหลว: ' + (err.code || err.message) + ' — กำลัง fallback...';
-      // Show error in UI
       const container = document.getElementById('orders-list');
       container.innerHTML = `<div style="margin:16px;background:#FFEBEE;border-radius:12px;padding:14px;font-size:13px;color:#B71C1C">
         ⚠️ real-time ล้มเหลว: <b>${err.code || err.message}</b><br>
@@ -609,23 +614,21 @@ function listenOrders() {
 
 async function fallbackLoadOrders() {
   try {
-    // Try with orderBy first
-    const snap = await getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc')));
-    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap2 = await getDocs(collection(db, 'orders'));
+    allOrders = snap2.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => {
+        const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
+        const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||0);
+        return tb - ta;
+      });
     updateSummary();
     renderOrders();
-    showToast('โหลดออเดอร์แล้ว (fallback mode)');
-  } catch(e) {
-    // If index error, try without orderBy
+    showToast('โหลดออเดอร์แล้ว');
+  } catch(eUnused) {
     try {
       const snap2 = await getDocs(collection(db, 'orders'));
-      allOrders = snap2.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a,b) => {
-          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
-          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||0);
-          return tb - ta;
-        });
+      allOrders = [];
       updateSummary();
       renderOrders();
       showToast('โหลดออเดอร์แล้ว (no-index mode)');
@@ -1198,7 +1201,9 @@ window.savePasswords = async function() {
     if(adminPwd){ updates.adminPassword = adminPwd; localStorage.setItem('imkum_admin_pwd', adminPwd); }
     if(ownerPwd){ updates.ownerPassword = ownerPwd; localStorage.setItem('imkum_owner_pwd', ownerPwd); }
     if(Object.keys(updates).length){
-      await setDoc(doc(db, 'settings', 'roles'), updates, { merge: true });
+      // บันทึกลง localStorage เสมอ (หลัก)
+      // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
+      setDoc(doc(db, 'settings', 'roles'), updates, { merge: true }).catch(e => console.warn('Firestore roles write:', e.code));
       document.getElementById('set-admin-password').value = '';
       document.getElementById('set-owner-password').value = '';
       showToast('บันทึกรหัสผ่านแล้ว ✓');
