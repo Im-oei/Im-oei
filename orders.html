@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-.profile-hero{background:linear-gradient(135deg,rgba(62,32,0,0.82) 0%,rgba(123,63,0,0.75) 60%,rgba(255,140,0,0.7) 100%),url('hero.png') center/cover no-repeat;padding:28px 20px 70px;position:relative;overflow:hidden;}
+.profile-hero{background:linear-gradient(135deg,rgba(62,32,0,0.88) 0%,rgba(123,63,0,0.82) 60%,rgba(255,140,0,0.75) 100%);padding:28px 20px 70px;position:relative;overflow:hidden;}
 .profile-hero::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.05);top:-60px;right:-40px;}
 .profile-hero::after{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);bottom:20px;left:-30px;}
 .profile-back{color:rgba(255,255,255,0.85);text-decoration:none;display:inline-flex;align-items:center;margin-bottom:16px;position:relative;z-index:1;}
@@ -200,6 +200,19 @@ function showToast(msg){ const t=document.getElementById('toast'); t.textContent
 document.getElementById('user-name-display').textContent = user.name||'ลูกค้า';
 document.getElementById('user-phone-display').textContent = '📱 '+(user.phone||'-');
 
+// Set hero background ด้วย JS เพื่อให้ path ถูกต้องเสมอ
+(function(){
+  const hero = document.querySelector('.profile-hero');
+  const img = new Image();
+  const base = window.location.href.replace(/\/[^/]*$/, '/');
+  img.onload = function(){
+    hero.style.backgroundImage = `linear-gradient(135deg,rgba(62,32,0,0.82) 0%,rgba(123,63,0,0.75) 60%,rgba(255,140,0,0.7) 100%), url('${img.src}')`;
+    hero.style.backgroundSize = 'auto, cover';
+    hero.style.backgroundPosition = 'center, center';
+  };
+  img.src = base + 'hero.png';
+})();
+
 // โหลดรูป profile ถ้ามี
 if (user.photoURL) {
   const wrap = document.getElementById('profile-avatar-wrap');
@@ -222,7 +235,7 @@ const statusMap={pending:'รอรับ',preparing:'กำลังทำ',rea
 const statusCls={pending:'status-pending',preparing:'status-preparing',ready:'status-ready',done:'status-done',cancelled:'status-cancelled'};
 const statusIcon={pending:'🟡',preparing:'🔵',ready:'🟢',done:'✅',cancelled:'❌'};
 
-const HISTORY_PREVIEW = 10;
+const HISTORY_PREVIEW = 5;
 let allHistoryDocs = [];
 let historyExpanded = false;
 

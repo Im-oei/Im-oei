@@ -1306,7 +1306,7 @@ window.updateStatus = async function(id, status) {
     const statusName = statusTH[status] || status;
     const order = allOrders.find(o => o.id === id);
     const name = order?.customerName || order?.name || 'ลูกค้า';
-    addNotification({
+    if (window.addNotification) window.addNotification({
       icon,
       title: `${icon} อัพเดท: ${name}`,
       body: `สถานะ → ${statusName}`
@@ -1314,10 +1314,10 @@ window.updateStatus = async function(id, status) {
 
     // ถ้า ready → เล่นเสียงต่างออก
     if (status === 'ready') {
-      playNewOrderSound();
-      showBrowserNotif(`🟢 ${name} - พร้อมรับแล้ว!`, `สถานะ: ${statusName}`, 'status-' + id, '/admin.html');
+      if (window.playNewOrderSound) window.playNewOrderSound();
+      if (window.showBrowserNotif) window.showBrowserNotif(`🟢 ${name} - พร้อมรับแล้ว!`, `สถานะ: ${statusName}`, 'status-' + id, '/admin.html');
     } else {
-      playStatusSound();
+      if (window.playStatusSound) window.playStatusSound();
     }
 
     showToast(`${icon} อัพเดทสถานะ: ${statusName}`);
@@ -1784,164 +1784,6 @@ function showToast(msg) {
 }
 window.showToast = showToast;
 
-// ====== NOTIFICATION PANEL FUNCTIONS ======
-let notifList = [];
-
-function toggleNotifications() {
-  const panel = document.getElementById('notif-panel');
-  const overlay = document.getElementById('notif-overlay');
-  const isOpen = panel.classList.contains('open');
-  panel.classList.toggle('open', !isOpen);
-  overlay.classList.toggle('open', !isOpen);
-}
-window.toggleNotifications = toggleNotifications;
-
-function addNotification(notif) {
-  // notif = { icon, title, body }
-  const item = {
-    id: Date.now(),
-    icon: notif.icon || '🔔',
-    title: notif.title || '',
-    body: notif.body || '',
-    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-  };
-  notifList.unshift(item);
-  if (notifList.length > 50) notifList = notifList.slice(0, 50);
-  renderNotifList();
-  // แสดง badge
-  document.getElementById('notif-badge').style.display = 'block';
-}
-window.addNotification = addNotification;
-
-function renderNotifList() {
-  const el = document.getElementById('notif-list');
-  if (!el) return;
-  if (notifList.length === 0) {
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:#999;font-size:13px;">ยังไม่มีการแจ้งเตือน</div>';
-    return;
-  }
-  el.innerHTML = notifList.map(n => `
-    <div style="padding:12px 16px;border-bottom:1px solid #F5F5F5;display:flex;gap:10px;align-items:flex-start;">
-      <span style="font-size:20px;flex-shrink:0;">${n.icon}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:700;color:#3E2000;">${n.title}</div>
-        <div style="font-size:12px;color:#666;margin-top:2px;">${n.body}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:4px;">${n.time}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function clearNotifications() {
-  notifList = [];
-  renderNotifList();
-  document.getElementById('notif-badge').style.display = 'none';
-}
-window.clearNotifications = clearNotifications;
-
-function requestNotifPermission() {
-  if (!('Notification' in window)) {
-    showToast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
-    return;
-  }
-  Notification.requestPermission().then(perm => {
-    if (perm === 'granted') {
-      showToast('✅ อนุญาตการแจ้งเตือนแล้ว');
-      document.getElementById('notif-perm-banner').style.display = 'none';
-    } else {
-      showToast('❌ ไม่ได้รับอนุญาตการแจ้งเตือน');
-    }
-  });
-}
-window.requestNotifPermission = requestNotifPermission;
-
-function showBrowserNotif(title, body, tag, url) {
-  if (Notification.permission === 'granted') {
-    const n = new Notification(title, { body, tag, icon: '/logo.png' });
-    if (url) n.onclick = () => { window.focus(); };
-  }
-}
-window.showBrowserNotif = showBrowserNotif;
-
-// เสียงแจ้งเตือนออเดอร์ใหม่
-function playNewOrderSound() {
-  if (!isSoundEnabled()) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const freqs = [523, 659, 784, 1047];
-    freqs.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
-      osc.start(ctx.currentTime + i * 0.12);
-      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
-    });
-  } catch(e) {}
-}
-window.playNewOrderSound = playNewOrderSound;
-
-// เสียงอัพเดทสถานะ
-function playStatusSound() {
-  if (!isSoundEnabled()) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.35);
-  } catch(e) {}
-}
-window.playStatusSound = playStatusSound;
-
-// ตรวจออเดอร์ใหม่ และแจ้งเตือน
-let _lastKnownOrderIds = null;
-window._checkNewOrdersNotification = function(orders) {
-  const currentIds = new Set(orders.map(o => o.id));
-  if (_lastKnownOrderIds === null) {
-    _lastKnownOrderIds = currentIds;
-    return;
-  }
-  const newOrders = orders.filter(o => !_lastKnownOrderIds.has(o.id) && o.status === 'pending');
-  newOrders.forEach(o => {
-    const name = o.customerName || o.name || 'ลูกค้า';
-    addNotification({ icon: '🟡', title: `ออเดอร์ใหม่! ${name}`, body: `รายการ: ${(o.items||[]).map(i=>i.name).join(', ')}` });
-    playNewOrderSound();
-    showBrowserNotif(`🟡 ออเดอร์ใหม่ - ${name}`, `${(o.items||[]).map(i=>i.name).join(', ')}`, 'order-' + o.id, '/admin.html');
-  });
-  _lastKnownOrderIds = currentIds;
-};
-
-function saveSoundPref() {
-  const enabled = document.getElementById('notif-sound-toggle')?.checked;
-  try { localStorage.setItem('imkum_sound', enabled ? '1' : '0'); } catch(e) {}
-}
-window.saveSoundPref = saveSoundPref;
-
-function isSoundEnabled() {
-  try { return localStorage.getItem('imkum_sound') !== '0'; } catch(e) { return true; }
-}
-
-// ตรวจสอบ permission เมื่อโหลดหน้า
-(function checkNotifPermission() {
-  // โหลด sound preference
-  const toggle = document.getElementById('notif-sound-toggle');
-  if (toggle) toggle.checked = isSoundEnabled();
-  if (!('Notification' in window)) return;
-  const banner = document.getElementById('notif-permission-bar');
-  if (!banner) return;
-  if (Notification.permission === 'granted') { banner.style.display = 'none'; }
-  else { banner.style.display = 'flex'; }
-})();
-
 // ====== DANGER ZONE FUNCTIONS ======
 window.deleteCompletedOrders = async function() {
   if(!confirm('ลบออเดอร์ที่เสร็จแล้ว (done + cancelled) ทั้งหมดใช่ไหม?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้')) return;
@@ -1997,6 +1839,150 @@ window.resetAllData = async function() {
     showToast('❌ เกิดข้อผิดพลาด: '+e.message);
   } finally { showLoading(false); }
 };
+</script>
+
+<!-- ====== NOTIFICATION FUNCTIONS (non-module, global scope) ====== -->
+<script>
+let notifList = [];
+
+function toggleNotifications() {
+  const panel = document.getElementById('notif-panel');
+  const overlay = document.getElementById('notif-overlay');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  overlay.classList.toggle('open', !isOpen);
+}
+
+function addNotification(notif) {
+  const item = {
+    id: Date.now(),
+    icon: notif.icon || '🔔',
+    title: notif.title || '',
+    body: notif.body || '',
+    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+  };
+  notifList.unshift(item);
+  if (notifList.length > 50) notifList = notifList.slice(0, 50);
+  _renderNotifList();
+  const badge = document.getElementById('notif-badge');
+  if (badge) badge.style.display = 'block';
+}
+
+function _renderNotifList() {
+  const el = document.getElementById('notif-list');
+  if (!el) return;
+  if (notifList.length === 0) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:#999;font-size:13px;">ยังไม่มีการแจ้งเตือน</div>';
+    return;
+  }
+  el.innerHTML = notifList.map(n => `
+    <div style="padding:12px 16px;border-bottom:1px solid #F5F5F5;display:flex;gap:10px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">${n.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;color:#3E2000;">${n.title}</div>
+        <div style="font-size:12px;color:#666;margin-top:2px;">${n.body}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearNotifications() {
+  notifList = [];
+  _renderNotifList();
+  const badge = document.getElementById('notif-badge');
+  if (badge) badge.style.display = 'none';
+}
+
+function requestNotifPermission() {
+  if (!('Notification' in window)) {
+    if (window.showToast) showToast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
+    return;
+  }
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      if (window.showToast) showToast('✅ อนุญาตการแจ้งเตือนแล้ว');
+      const bar = document.getElementById('notif-permission-bar');
+      if (bar) bar.style.display = 'none';
+    } else {
+      if (window.showToast) showToast('❌ ไม่ได้รับอนุญาตการแจ้งเตือน');
+    }
+  });
+}
+
+function showBrowserNotif(title, body, tag, url) {
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    const n = new Notification(title, { body, tag, icon: 'logo.png' });
+    if (url) n.onclick = () => window.focus();
+  }
+}
+
+function _isSoundEnabled() {
+  try { return localStorage.getItem('imkum_sound') !== '0'; } catch(e) { return true; }
+}
+
+function saveSoundPref() {
+  const t = document.getElementById('notif-sound-toggle');
+  try { localStorage.setItem('imkum_sound', (t && t.checked) ? '1' : '0'); } catch(e) {}
+}
+
+function playNewOrderSound() {
+  if (!_isSoundEnabled()) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+    });
+  } catch(e) {}
+}
+
+function playStatusSound() {
+  if (!_isSoundEnabled()) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880; osc.type = 'sine';
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+  } catch(e) {}
+}
+
+let _lastKnownOrderIds = null;
+function _checkNewOrdersNotification(orders) {
+  const currentIds = new Set(orders.map(o => o.id));
+  if (_lastKnownOrderIds === null) { _lastKnownOrderIds = currentIds; return; }
+  orders.filter(o => !_lastKnownOrderIds.has(o.id) && o.status === 'pending').forEach(o => {
+    const name = o.customerName || o.name || 'ลูกค้า';
+    addNotification({ icon: '🟡', title: `ออเดอร์ใหม่! ${name}`, body: (o.items||[]).map(i=>i.name).join(', ') });
+    playNewOrderSound();
+    showBrowserNotif(`🟡 ออเดอร์ใหม่ - ${name}`, (o.items||[]).map(i=>i.name).join(', '), 'order-'+o.id);
+  });
+  _lastKnownOrderIds = currentIds;
+}
+// expose เพื่อให้ module script เรียกได้
+window._checkNewOrdersNotification = _checkNewOrdersNotification;
+window.addNotification = addNotification;
+window.playNewOrderSound = playNewOrderSound;
+window.playStatusSound = playStatusSound;
+window.showBrowserNotif = showBrowserNotif;
+
+// init เมื่อ DOM พร้อม
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('notif-sound-toggle');
+  if (toggle) toggle.checked = _isSoundEnabled();
+  if (typeof Notification !== 'undefined') {
+    const bar = document.getElementById('notif-permission-bar');
+    if (bar) bar.style.display = Notification.permission === 'granted' ? 'none' : 'flex';
+  }
+});
 </script>
 </body>
 </html>
