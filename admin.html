@@ -470,28 +470,49 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     </div>
 
     <!-- ====== DANGER ZONE ====== -->
-    <div class="settings-card" style="border:2px solid #FFEBEE;">
-      <h3 style="color:#B71C1C;">⚠️ Danger Zone</h3>
-      <p style="font-size:12px;color:#999;margin-bottom:14px;">การกระทำเหล่านี้ไม่สามารถย้อนกลับได้ กรุณาระวัง</p>
+    <div class="settings-card" style="border:none;padding:0;background:transparent;box-shadow:none;">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#1a0000,#3E0000);border-radius:16px 16px 0 0;padding:16px 18px;display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;background:rgba(255,80,80,0.2);border:1.5px solid rgba(255,80,80,0.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚠️</div>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:#FF5252;letter-spacing:.3px;">Danger Zone</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px;">การกระทำเหล่านี้ไม่สามารถย้อนกลับได้</div>
+        </div>
+      </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="background:#FFF8E1;border-radius:12px;padding:14px;">
-          <div style="font-size:14px;font-weight:700;color:#3E2000;margin-bottom:4px;">🧹 ลบออเดอร์ที่เสร็จแล้วทั้งหมด</div>
-          <div style="font-size:12px;color:#999;margin-bottom:10px;">ลบเฉพาะออเดอร์ที่มีสถานะ "รับแล้ว" หรือ "ยกเลิก"</div>
-          <button class="danger-btn-yellow" onclick="deleteCompletedOrders()">🗑️ ลบออเดอร์เก่า</button>
+      <!-- Cards -->
+      <div style="background:#1C0A0A;border-radius:0 0 16px 16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+
+        <!-- ลบออเดอร์เก่า -->
+        <div style="background:linear-gradient(135deg,#2A1A00,#3A2400);border:1px solid rgba(255,193,7,0.2);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:rgba(255,193,7,0.12);border:1.5px solid rgba(255,193,7,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🧹</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:#FFD54F;margin-bottom:2px;">ลบออเดอร์ที่เสร็จแล้ว</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4;">สถานะ "รับแล้ว" และ "ยกเลิก" จะถูกลบ</div>
+          </div>
+          <button onclick="deleteCompletedOrders()" style="background:linear-gradient(135deg,#F9A825,#F57F17);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#1A0A00;cursor:pointer;white-space:nowrap;flex-shrink:0;">ลบเก่า</button>
         </div>
 
-        <div style="background:#FFEBEE;border-radius:12px;padding:14px;">
-          <div style="font-size:14px;font-weight:700;color:#B71C1C;margin-bottom:4px;">🔥 ลบออเดอร์ทั้งหมด</div>
-          <div style="font-size:12px;color:#999;margin-bottom:10px;">ลบออเดอร์ทุกรายการออกจากระบบถาวร</div>
-          <button class="danger-btn-red" onclick="deleteAllOrders()">⚡ ลบทั้งหมด</button>
+        <!-- ลบออเดอร์ทั้งหมด -->
+        <div style="background:linear-gradient(135deg,#1F0808,#2D0D0D);border:1px solid rgba(255,82,82,0.25);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:rgba(255,82,82,0.12);border:1.5px solid rgba(255,82,82,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔥</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:#FF5252;margin-bottom:2px;">ลบออเดอร์ทั้งหมด</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4;">ลบทุกรายการออกจากระบบถาวร</div>
+          </div>
+          <button onclick="deleteAllOrders()" style="background:linear-gradient(135deg,#C62828,#B71C1C);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">ลบทั้งหมด</button>
         </div>
 
-        <div style="background:#FFEBEE;border-radius:12px;padding:14px;">
-          <div style="font-size:14px;font-weight:700;color:#B71C1C;margin-bottom:4px;">💣 รีเซ็ตข้อมูลทั้งระบบ</div>
-          <div style="font-size:12px;color:#999;margin-bottom:10px;">ลบออเดอร์ + แต้มสะสมลูกค้าทั้งหมด (เมนูยังอยู่)</div>
-          <button class="danger-btn-red" onclick="resetAllData()">🔄 รีเซ็ตทั้งระบบ</button>
+        <!-- รีเซ็ตระบบ -->
+        <div style="background:linear-gradient(135deg,#0D0020,#1A0030);border:1px solid rgba(179,0,255,0.2);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:rgba(179,0,255,0.1);border:1.5px solid rgba(179,0,255,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">💣</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:#CE93D8;margin-bottom:2px;">รีเซ็ตข้อมูลทั้งระบบ</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4;">ออเดอร์ + แต้มสะสมทั้งหมด (เมนูยังอยู่)</div>
+          </div>
+          <button onclick="resetAllData()" style="background:linear-gradient(135deg,#6A1B9A,#4A148C);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">รีเซ็ต</button>
         </div>
+
       </div>
     </div>
   </div>
