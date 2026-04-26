@@ -142,6 +142,22 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px); background: rgba(44,44,44,0.92); color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.28s; z-index: 600; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* BANNER MANAGEMENT */
+.banner-card{background:var(--white);border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;}
+.banner-card-img{width:100%;height:90px;object-fit:cover;display:block;background:#F0E8D8;}
+.banner-card-body{padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.banner-card-body .info{flex:1;min-width:0;}
+.banner-card-body .info .b-title{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.banner-card-body .info .b-order{font-size:12px;color:var(--text-sub);}
+.banner-card-toggle{width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;font-size:10px;font-weight:700;transition:background .2s;flex-shrink:0;}
+.btn-delete-red{background:#FFEBEE;color:#B71C1C;padding:7px 12px;border-radius:10px;border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+/* CATEGORY MANAGEMENT */
+.cat-admin-card{background:var(--white);border-radius:14px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:10px;}
+.cat-admin-card .cat-emoji{font-size:24px;width:40px;text-align:center;flex-shrink:0;}
+.cat-admin-card .info{flex:1;}
+.cat-admin-card .info .c-name{font-size:14px;font-weight:700;}
+.cat-admin-card .info .c-key{font-size:12px;color:var(--text-sub);}
+.section-sep{height:1px;background:#F0E8D8;margin:16px 0;}
 /* PHOTO UPLOAD */
 .photo-upload-area { border: 2px dashed #E0E0E0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
 .photo-upload-area:hover { border-color: var(--yellow); }
@@ -179,6 +195,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('orders', this)">📋 ออเดอร์</button>
   <button class="tab-btn" onclick="switchTab('menu', this)">🍽️ เมนู</button>
+  <button class="tab-btn" onclick="switchTab('banners', this)">📢 แบนเนอร์</button>
   <button class="tab-btn" onclick="switchTab('stats', this)">📊 สถิติ</button>
   <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ ตั้งค่า</button>
 </div>
@@ -206,13 +223,35 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 <!-- ====== MENU PANEL ====== -->
 <div id="panel-menu" class="panel">
   <div class="menu-admin-section">
-    <h3>จัดการเมนู</h3>
+    <!-- Category Management -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin-bottom:0">หมวดหมู่</h3>
+      <button class="action-btn btn-preparing" onclick="openAddCategory()" style="padding:8px 14px">+ เพิ่มหมวดหมู่</button>
+    </div>
+    <div id="cat-admin-list"></div>
+    <div class="section-sep"></div>
+    <!-- Menu Items -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin-bottom:0">รายการเมนู</h3>
+    </div>
     <div id="menu-admin-list"></div>
     <button class="add-item-btn" onclick="openAddItem()">+ เพิ่มเมนูใหม่</button>
   </div>
 </div>
 
-<!-- ====== STATS PANEL ====== -->
+<!-- ====== BANNERS PANEL ====== -->
+<div id="panel-banners" class="panel">
+  <div class="menu-admin-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin-bottom:0">📢 แบนเนอร์โปรโมชัน</h3>
+      <button class="action-btn btn-preparing" onclick="openAddBanner()">+ เพิ่มแบนเนอร์</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:12px">แบนเนอร์จะแสดงเป็น slider หน้าแรก เรียงตามลำดับที่กำหนด</p>
+    <div id="banners-list"></div>
+  </div>
+</div>
+
+
 <div id="panel-stats" class="panel">
   <div class="menu-admin-section">
     <h3>สถิติเมนูยอดนิยม</h3>
@@ -365,6 +404,71 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
   </div>
 </div>
 
+<!-- ====== MODAL: BANNER ====== -->
+<div class="modal-overlay" id="modal-banner">
+  <div class="modal-sheet">
+    <button class="modal-close" onclick="closeModal('modal-banner')">✕</button>
+    <h3 id="modal-banner-title">เพิ่มแบนเนอร์</h3>
+    <input type="hidden" id="banner-edit-id">
+    <div class="form-group">
+      <label>ชื่อ/หัวข้อ (ไม่บังคับ)</label>
+      <input type="text" class="form-input" id="banner-title" placeholder="เช่น โปรโมชันพิเศษ">
+    </div>
+    <div class="form-group">
+      <label>คำอธิบายย่อ (ไม่บังคับ)</label>
+      <input type="text" class="form-input" id="banner-subtitle" placeholder="เช่น ลด 20% ทุกเมนู">
+    </div>
+    <div class="form-group">
+      <label>ลำดับการแสดง (1 = แรกสุด)</label>
+      <input type="number" class="form-input" id="banner-order" placeholder="1" value="1" min="1">
+    </div>
+    <div class="form-group">
+      <label>รูปภาพ (URL)</label>
+      <input type="url" class="form-input" id="banner-img-url" placeholder="https://..." oninput="previewBannerModal()">
+      <img id="banner-modal-preview" class="banner-preview" style="display:none;margin-top:8px" alt="">
+    </div>
+    <div class="form-group">
+      <label>หรืออัพโหลดรูป</label>
+      <div class="photo-upload-area" onclick="document.getElementById('banner-upload-file').click()">
+        <div style="font-size:26px;margin-bottom:4px">📤</div>
+        <div style="font-size:12px;color:var(--text-sub)">แตะเพื่อเลือกรูป</div>
+      </div>
+      <input type="file" id="banner-upload-file" accept="image/*" style="display:none" onchange="uploadBannerModal(this)">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <label style="font-size:13px;font-weight:700;color:var(--text-sub)">เปิดใช้งาน</label>
+      <input type="checkbox" id="banner-active" checked style="width:20px;height:20px;accent-color:var(--yellow)">
+    </div>
+    <button class="save-btn" onclick="saveBannerItem()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- ====== MODAL: CATEGORY ====== -->
+<div class="modal-overlay" id="modal-category">
+  <div class="modal-sheet">
+    <button class="modal-close" onclick="closeModal('modal-category')">✕</button>
+    <h3 id="modal-cat-title">เพิ่มหมวดหมู่</h3>
+    <input type="hidden" id="cat-edit-key">
+    <div class="form-group">
+      <label>Key (ภาษาอังกฤษ ไม่มีช่องว่าง)</label>
+      <input type="text" class="form-input" id="cat-key" placeholder="เช่น rice, noodle, drink">
+    </div>
+    <div class="form-group">
+      <label>ชื่อหมวดหมู่</label>
+      <input type="text" class="form-input" id="cat-name" placeholder="เช่น ข้าวกล่อง">
+    </div>
+    <div class="form-group">
+      <label>Emoji</label>
+      <input type="text" class="form-input" id="cat-emoji" placeholder="🍚" maxlength="4">
+    </div>
+    <div class="form-group">
+      <label>ลำดับ (น้อย = แรก)</label>
+      <input type="number" class="form-input" id="cat-sort" placeholder="1" value="10" min="1">
+    </div>
+    <button class="save-btn" onclick="saveCategoryItem()">💾 บันทึก</button>
+  </div>
+</div>
+
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
@@ -410,6 +514,8 @@ function applyRoleUI() {
 // ====== STATE ======
 let allOrders = [];
 let allMenuItems = [];
+let allBanners = [];
+let allCategories = [];
 let currentFilter = 'all';
 let storeIsOpen = true;
 let unsubOrders = null;
@@ -419,6 +525,8 @@ if (!checkAuth()) { throw new Error('not authenticated'); }
 applyRoleUI();
 loadSettings();
 loadMenu();
+loadBanners();
+loadCategories();
 listenOrders();
 
 // ====== REALTIME ORDERS ======
@@ -552,12 +660,243 @@ function renderMenuAdmin() {
             <button class="icon-btn btn-edit" onclick="openEditItem('${item.id}')" title="แก้ไข">✏️</button>
             <button class="icon-btn btn-img" onclick="openImageModal('${item.id}')" title="รูปภาพ">🖼️</button>
             <button class="icon-btn btn-hide" onclick="toggleHide('${item.id}','${!item.hidden}')" title="${item.hidden?'แสดง':'ซ่อน'}">${item.hidden?'👁️':'🙈'}</button>
+            <button class="icon-btn" style="background:#FFEBEE" onclick="deleteMenuItem('${item.id}')" title="ลบ">🗑️</button>
           </div>
         </div>`;
     });
   });
   container.innerHTML = html;
+  renderCategoryAdmin();
 }
+
+function renderCategoryAdmin() {
+  const container = document.getElementById('cat-admin-list');
+  if (!container) return;
+  if (!allCategories.length) {
+    container.innerHTML = '<p style="font-size:13px;color:var(--text-sub);padding:8px 0">ยังไม่มีหมวดหมู่ (ใช้ค่า default)</p>';
+    return;
+  }
+  container.innerHTML = allCategories.map(c => `
+    <div class="cat-admin-card">
+      <div class="cat-emoji">${c.emoji||'🍽️'}</div>
+      <div class="info">
+        <div class="c-name">${c.name}</div>
+        <div class="c-key">key: ${c.key} | ลำดับ: ${c.sortOrder||0}</div>
+      </div>
+      <button class="icon-btn btn-edit" onclick="openEditCategory('${c.key}')" title="แก้ไข">✏️</button>
+      <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCategoryItem('${c.key}')" title="ลบ">🗑️</button>
+    </div>`).join('');
+}
+
+// ====== DELETE MENU ITEM ======
+window.deleteMenuItem = async function(id) {
+  if (!confirm('ลบเมนูนี้ออกจากระบบเลยใช่ไหม?')) return;
+  showLoading(true);
+  try {
+    await deleteDoc(doc(db, 'menu', id));
+    allMenuItems = allMenuItems.filter(i => i.id !== id);
+    renderMenuAdmin();
+    showToast('ลบเมนูแล้ว 🗑️');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+// ====== BANNERS ======
+async function loadBanners() {
+  try {
+    const snap = await getDocs(collection(db, 'banners'));
+    allBanners = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>(a.order||0)-(b.order||0));
+    renderBannersAdmin();
+  } catch(e) { console.log('banners load:', e.message); }
+}
+
+function renderBannersAdmin() {
+  const container = document.getElementById('banners-list');
+  if (!container) return;
+  if (!allBanners.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>ยังไม่มีแบนเนอร์</p></div>';
+    return;
+  }
+  container.innerHTML = allBanners.map(b => `
+    <div class="banner-card">
+      ${b.imageUrl ? `<img class="banner-card-img" src="${b.imageUrl}" alt="${b.title||''}">` : '<div class="banner-card-img" style="display:flex;align-items:center;justify-content:center;font-size:40px">🖼️</div>'}
+      <div class="banner-card-body">
+        <div class="info">
+          <div class="b-title">${b.title||'(ไม่มีชื่อ)'}</div>
+          <div class="b-order">ลำดับ: ${b.order||1} &nbsp;|&nbsp; ${b.active!==false?'✅ เปิด':'❌ ปิด'}</div>
+        </div>
+        <button class="icon-btn btn-edit" onclick="openEditBanner('${b.id}')" title="แก้ไข">✏️</button>
+        <button class="icon-btn" style="background:#FFEBEE" onclick="deleteBannerItem('${b.id}')" title="ลบ">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+window.openAddBanner = function() {
+  document.getElementById('banner-edit-id').value = '';
+  document.getElementById('modal-banner-title').textContent = 'เพิ่มแบนเนอร์';
+  ['banner-title','banner-subtitle','banner-img-url'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('banner-order').value = (allBanners.length + 1);
+  document.getElementById('banner-active').checked = true;
+  document.getElementById('banner-modal-preview').style.display = 'none';
+  document.getElementById('modal-banner').classList.add('show');
+};
+
+window.openEditBanner = function(id) {
+  const b = allBanners.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('banner-edit-id').value = id;
+  document.getElementById('modal-banner-title').textContent = 'แก้ไขแบนเนอร์';
+  document.getElementById('banner-title').value = b.title || '';
+  document.getElementById('banner-subtitle').value = b.subtitle || '';
+  document.getElementById('banner-order').value = b.order || 1;
+  document.getElementById('banner-img-url').value = b.imageUrl || '';
+  document.getElementById('banner-active').checked = b.active !== false;
+  const prev = document.getElementById('banner-modal-preview');
+  if (b.imageUrl) { prev.src = b.imageUrl; prev.style.display = 'block'; }
+  else prev.style.display = 'none';
+  document.getElementById('modal-banner').classList.add('show');
+};
+
+window.previewBannerModal = function() {
+  const url = document.getElementById('banner-img-url').value;
+  const img = document.getElementById('banner-modal-preview');
+  if (url) { img.src = url; img.style.display = 'block'; }
+  else img.style.display = 'none';
+};
+
+window.uploadBannerModal = function(input) {
+  const file = input.files[0]; if (!file) return;
+  showLoading(true);
+  compressImageToBase64(file, 600, compressed => {
+    document.getElementById('banner-img-url').value = compressed;
+    previewBannerModal();
+    showToast('โหลดรูปสำเร็จ');
+    showLoading(false);
+  });
+};
+
+window.saveBannerItem = async function() {
+  const id = document.getElementById('banner-edit-id').value;
+  const data = {
+    title: document.getElementById('banner-title').value.trim(),
+    subtitle: document.getElementById('banner-subtitle').value.trim(),
+    imageUrl: document.getElementById('banner-img-url').value.trim(),
+    order: parseInt(document.getElementById('banner-order').value) || 1,
+    active: document.getElementById('banner-active').checked,
+  };
+  showLoading(true);
+  try {
+    if (id) {
+      await updateDoc(doc(db, 'banners', id), data);
+      const idx = allBanners.findIndex(b => b.id === id);
+      if (idx >= 0) allBanners[idx] = { ...allBanners[idx], ...data };
+    } else {
+      const ref = await addDoc(collection(db, 'banners'), data);
+      allBanners.push({ id: ref.id, ...data });
+    }
+    allBanners.sort((a,b)=>(a.order||0)-(b.order||0));
+    renderBannersAdmin();
+    closeModal('modal-banner');
+    showToast('บันทึกแบนเนอร์แล้ว ✓');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+window.deleteBannerItem = async function(id) {
+  if (!confirm('ลบแบนเนอร์นี้ใช่ไหม?')) return;
+  showLoading(true);
+  try {
+    await deleteDoc(doc(db, 'banners', id));
+    allBanners = allBanners.filter(b => b.id !== id);
+    renderBannersAdmin();
+    showToast('ลบแบนเนอร์แล้ว');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+// ====== CATEGORIES ======
+async function loadCategories() {
+  try {
+    const snap = await getDocs(collection(db, 'categories'));
+    allCategories = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+    renderCategoryAdmin();
+    // Update category select in menu modal
+    updateCatSelect();
+  } catch(e) { console.log('categories load:', e.message); }
+}
+
+function updateCatSelect() {
+  const sel = document.getElementById('edit-catkey');
+  if (!sel || !allCategories.length) return;
+  sel.innerHTML = allCategories.map(c => `<option value="${c.key}">${c.emoji||''} ${c.name}</option>`).join('');
+}
+
+window.openAddCategory = function() {
+  document.getElementById('cat-edit-key').value = '';
+  document.getElementById('modal-cat-title').textContent = 'เพิ่มหมวดหมู่';
+  ['cat-key','cat-name','cat-emoji'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cat-sort').value = (allCategories.length + 1) * 10;
+  document.getElementById('cat-key').readOnly = false;
+  document.getElementById('modal-category').classList.add('show');
+};
+
+window.openEditCategory = function(key) {
+  const c = allCategories.find(x => x.key === key);
+  if (!c) return;
+  document.getElementById('cat-edit-key').value = key;
+  document.getElementById('modal-cat-title').textContent = 'แก้ไขหมวดหมู่';
+  document.getElementById('cat-key').value = c.key;
+  document.getElementById('cat-key').readOnly = true;
+  document.getElementById('cat-name').value = c.name || '';
+  document.getElementById('cat-emoji').value = c.emoji || '';
+  document.getElementById('cat-sort').value = c.sortOrder || 10;
+  document.getElementById('modal-category').classList.add('show');
+};
+
+window.saveCategoryItem = async function() {
+  const editKey = document.getElementById('cat-edit-key').value;
+  const key = document.getElementById('cat-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const name = document.getElementById('cat-name').value.trim();
+  const emoji = document.getElementById('cat-emoji').value.trim();
+  const sortOrder = parseInt(document.getElementById('cat-sort').value) || 10;
+  if (!key || !name) { showToast('กรุณากรอก Key และชื่อหมวดหมู่'); return; }
+  const data = { key, name, emoji, sortOrder, category: `${emoji} ${name}` };
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'categories', key), data);
+    if (editKey && editKey !== key) {
+      // key changed — delete old
+      await deleteDoc(doc(db, 'categories', editKey));
+      allCategories = allCategories.filter(c => c.key !== editKey);
+    }
+    const idx = allCategories.findIndex(c => c.key === key);
+    if (idx >= 0) allCategories[idx] = { id: key, ...data };
+    else allCategories.push({ id: key, ...data });
+    allCategories.sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+    renderCategoryAdmin();
+    updateCatSelect();
+    closeModal('modal-category');
+    showToast('บันทึกหมวดหมู่แล้ว ✓');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+window.deleteCategoryItem = async function(key) {
+  const inUse = allMenuItems.some(i => i.catKey === key);
+  if (inUse && !confirm(`หมวดหมู่นี้ยังมีเมนูอยู่ ลบหมวดหมู่ต่อไปใช่ไหม?\n(เมนูจะยังอยู่ แต่ถูกย้ายไปหมวด other)`)) return;
+  if (!inUse && !confirm('ลบหมวดหมู่นี้ใช่ไหม?')) return;
+  showLoading(true);
+  try {
+    await deleteDoc(doc(db, 'categories', key));
+    allCategories = allCategories.filter(c => c.key !== key);
+    renderCategoryAdmin();
+    updateCatSelect();
+    showToast('ลบหมวดหมู่แล้ว');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+
 
 // ====== SETTINGS ======
 async function loadSettings() {
@@ -639,6 +978,7 @@ window.switchTab = function(tab, btn) {
   document.getElementById('panel-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'stats') renderStats();
+  if (tab === 'banners') renderBannersAdmin();
 };
 
 window.filterOrders = function(status, btn) {

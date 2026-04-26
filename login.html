@@ -10,12 +10,13 @@
 :root{--yellow:#FFC107;--yellow-dark:#F5A623;--yellow-light:#FFF8E1;--orange:#FF8C00;--bg:#F7F3EE;--white:#FFFFFF;--text:#2C2C2C;--text-sub:#999;--green:#4CAF50;--red:#E53935;--shadow:0 4px 20px rgba(0,0,0,0.09)}
 html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--text)}
 
-.hero-top{background:linear-gradient(180deg,#FFC107 0%,#FFB300 100%);padding:40px 20px 60px;text-align:center;border-radius:0 0 40px 40px}
-.hero-logo{font-size:13px;font-weight:800;color:#5D3A00;letter-spacing:2px}
-.hero-mascot{font-size:80px;line-height:1;margin:12px 0 8px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.12));animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.hero-title{font-size:28px;font-weight:800;color:#3E2000}
-.hero-sub{font-size:13px;color:#5D3A00;font-weight:600;margin-top:4px}
+.hero-top{background:linear-gradient(160deg,#FFD740 0%,#FFA000 60%,#FF8C00 100%);padding:50px 20px 65px;text-align:center;border-radius:0 0 48px 48px;position:relative;overflow:hidden}
+.hero-top::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(255,255,255,0.18) 0%,transparent 60%);pointer-events:none}
+.hero-mascot{margin:0 0 10px;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.2));animation:float 3s ease-in-out infinite;display:inline-block}
+.hero-mascot img{width:160px;height:160px;object-fit:contain}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.hero-title{font-size:24px;font-weight:800;color:#3E2000}
+.hero-sub{font-size:13px;color:#6D3A00;font-weight:600;margin-top:4px;opacity:.9}
 
 .card-wrap{margin:-28px 16px 0;position:relative;z-index:10}
 .login-card{background:var(--white);border-radius:24px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);margin-bottom:16px}
@@ -71,8 +72,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 <body>
 
 <div class="hero-top">
-  <div class="hero-logo">IM-OEI</div>
-  <div class="hero-mascot"><img src="logo.png" alt="อิมเอ้ย" style="width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.15))"></div>
+  <div class="hero-mascot"><img src="logo.png" alt="อิมเอ้ย"></div>
   <div class="hero-title">อิ่มอิ่มทุกเช้า</div>
   <div class="hero-sub">เข้าสู่ระบบเพื่อสั่งอาหาร</div>
 </div>
