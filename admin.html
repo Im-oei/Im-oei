@@ -576,21 +576,14 @@ listenOrders();
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
-  // ไม่ใช้ orderBy ใน query → ไม่ต้องการ Firestore Index
-  // เรียงลำดับ client-side แทน
-  const q = collection(db, 'orders');
+  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   unsubOrders = onSnapshot(q,
     snap => {
-      allOrders = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => {
-          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-          return tb - ta;
-        });
+      allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       updateSummary();
       renderOrders();
       if (document.getElementById('panel-stats').classList.contains('active')) renderStats();
+      // Show connected status
       const dot = document.getElementById('realtime-dot');
       const st = document.getElementById('realtime-status');
       if (dot) dot.style.background = 'var(--green)';
@@ -598,10 +591,12 @@ function listenOrders() {
     },
     err => {
       console.error('onSnapshot error:', err.code, err.message);
+      // Show error in status bar
       const dot = document.getElementById('realtime-dot');
       const st = document.getElementById('realtime-status');
       if (dot) { dot.style.background = 'var(--red)'; dot.style.animation = 'none'; }
       if (st) st.textContent = '⚠️ real-time ล้มเหลว: ' + (err.code || err.message) + ' — กำลัง fallback...';
+      // Show error in UI
       const container = document.getElementById('orders-list');
       container.innerHTML = `<div style="margin:16px;background:#FFEBEE;border-radius:12px;padding:14px;font-size:13px;color:#B71C1C">
         ⚠️ real-time ล้มเหลว: <b>${err.code || err.message}</b><br>
@@ -614,21 +609,23 @@ function listenOrders() {
 
 async function fallbackLoadOrders() {
   try {
-    const snap2 = await getDocs(collection(db, 'orders'));
-    allOrders = snap2.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a,b) => {
-        const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
-        const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||0);
-        return tb - ta;
-      });
+    // Try with orderBy first
+    const snap = await getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc')));
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     updateSummary();
     renderOrders();
-    showToast('โหลดออเดอร์แล้ว');
-  } catch(eUnused) {
+    showToast('โหลดออเดอร์แล้ว (fallback mode)');
+  } catch(e) {
+    // If index error, try without orderBy
     try {
       const snap2 = await getDocs(collection(db, 'orders'));
-      allOrders = [];
+      allOrders = snap2.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a,b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||0);
+          return tb - ta;
+        });
       updateSummary();
       renderOrders();
       showToast('โหลดออเดอร์แล้ว (no-index mode)');
@@ -721,30 +718,11 @@ function renderOrderCard(o) {
 
 // ====== LOAD MENU ======
 async function loadMenu() {
-  try {
-    const timeout2 = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
-    const snap = await Promise.race([getDocs(collection(db, 'menu')), timeout2]);
-    allMenuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // ถ้าไม่มีเมนูใน Firestore ใช้ default แบบ local (ไม่ write ลง Firestore)
-    if (!allMenuItems.length) loadDefaultMenu();
-  } catch(e) {
-    console.warn('loadMenu error:', e.message);
-    loadDefaultMenu();
-  }
+  const snap = await getDocs(collection(db, 'menu'));
+  allMenuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // If empty, seed from defaults
+  if (!allMenuItems.length) await seedMenu();
   renderMenuAdmin();
-}
-
-function loadDefaultMenu() {
-  allMenuItems = [
-    { id:'tuna',          name:'ปูอัดทูน่า',     desc:'ปูอัด, ทูน่า, ผักสลัด',        emoji:'🥪', price:20, catKey:'sandwich', category:'🥪 แซนวิช', sortOrder:1 },
-    { id:'pork_salad',    name:'หมูหยองสลัด',    desc:'หมูหยอง, สลัด, มายองเนส',      emoji:'🥙', price:20, catKey:'sandwich', category:'🥪 แซนวิช', sortOrder:1 },
-    { id:'egg_sausage',   name:'ไข่ดาวไส้กรอก',  desc:'ไข่ดาว, ไส้กรอก, ซอส',         emoji:'🍳', price:20, catKey:'sandwich', category:'🥪 แซนวิช', sortOrder:1 },
-    { id:'shrimp',        name:'ไข่กุ้งสาหร่าย', desc:'ไข่กุ้ง, สาหร่าย, มายองเนส',  emoji:'🍤', price:20, catKey:'sandwich', category:'🥪 แซนวิช', sortOrder:1 },
-    { id:'chicken_rice',  name:'ข้าวไก่อบ',      desc:'ไก่อบ, ไข่ต้ม, ผัก',           emoji:'🍗', price:50, catKey:'rice',     category:'🍚 ข้าว',   sortOrder:2 },
-    { id:'chicken_lime',  name:'ข้าวไก่อบมะนาว', desc:'ไก่มะนาว, ข้าว, ผัก',          emoji:'🍋', price:50, catKey:'rice',     category:'🍚 ข้าว',   sortOrder:2 },
-    { id:'chicken_noodle',name:'หมี่ไก่ฉีก',    desc:'หมี่เหลือง, ไก่ฉีก, น้ำซุป',   emoji:'🍜', price:50, catKey:'noodle',   category:'🍜 หมี่',   sortOrder:3 },
-    { id:'pork_noodle',   name:'หมี่หมูแดง',     desc:'หมี่, หมูแดง, ไข่ต้ม',          emoji:'🥢', price:50, catKey:'noodle',   category:'🍜 หมี่',   sortOrder:3 },
-  ];
 }
 
 async function seedMenu() {
@@ -820,14 +798,14 @@ function renderCategoryAdmin() {
 // ====== DELETE MENU ITEM ======
 window.deleteMenuItem = async function(id) {
   if (!confirm('ลบเมนูนี้ออกจากระบบเลยใช่ไหม?')) return;
-  // ลบจาก local state ก่อนเสมอ
-  allMenuItems = allMenuItems.filter(i => i.id !== id);
-  renderMenuAdmin();
-  // พยายามลบจาก Firestore (อาจ fail ถ้า rules บล็อค)
-  deleteDoc(doc(db, 'menu', id)).then(()=>showToast('ลบเมนูแล้ว 🗑️')).catch(e=>{
-    console.warn('delete menu firestore:', e.code);
-    showToast('ลบออกจากหน้าจอแล้ว (Firestore rules บล็อค write)');
-  });
+  showLoading(true);
+  try {
+    await deleteDoc(doc(db, 'menu', id));
+    allMenuItems = allMenuItems.filter(i => i.id !== id);
+    renderMenuAdmin();
+    showToast('ลบเมนูแล้ว 🗑️');
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+  finally { showLoading(false); }
 };
 
 // ====== BANNERS ======
@@ -1035,9 +1013,7 @@ window.deleteCategoryItem = async function(key) {
 
 
 async function loadSettings() {
-  try {
-  const timeout = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
-  const d = await Promise.race([getDoc(doc(db, 'settings', 'store')), timeout]);
+  const d = await getDoc(doc(db, 'settings', 'store'));
   if (d.exists()) {
     const s = d.data();
     if (s.orderCutoff) document.getElementById('set-cutoff').value = s.orderCutoff;
@@ -1057,15 +1033,6 @@ async function loadSettings() {
     storeIsOpen = s.isOpen !== false;
     document.getElementById('store-open-toggle').checked = storeIsOpen;
     document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
-  }
-  } catch(e) {
-    console.warn('loadSettings error (ใช้ค่า default):', e.message);
-    const savedOpen = localStorage.getItem('imkum_store_open');
-    storeIsOpen = savedOpen !== 'false';
-    const tog = document.getElementById('store-open-toggle');
-    const lbl = document.getElementById('store-status-label');
-    if(tog) tog.checked = storeIsOpen;
-    if(lbl) lbl.textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
   }
 }
 
@@ -1214,9 +1181,7 @@ window.savePasswords = async function() {
     if(adminPwd){ updates.adminPassword = adminPwd; localStorage.setItem('imkum_admin_pwd', adminPwd); }
     if(ownerPwd){ updates.ownerPassword = ownerPwd; localStorage.setItem('imkum_owner_pwd', ownerPwd); }
     if(Object.keys(updates).length){
-      // บันทึกลง localStorage เสมอ (หลัก)
-      // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
-      setDoc(doc(db, 'settings', 'roles'), updates, { merge: true }).catch(e => console.warn('Firestore roles write:', e.code));
+      await setDoc(doc(db, 'settings', 'roles'), updates, { merge: true });
       document.getElementById('set-admin-password').value = '';
       document.getElementById('set-owner-password').value = '';
       showToast('บันทึกรหัสผ่านแล้ว ✓');
