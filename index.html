@@ -3,36 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>อิ่มอิ่ม ทุกเช้า</title>
+<title>อิ่มเอ้ย</title>
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-.banner-img-wrap { margin: 0 16px 6px; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-.banner-img-wrap img { width: 100%; height: 160px; object-fit: cover; display: block; }
-.closed-overlay { background: #f44336; color: #fff; text-align: center; padding: 14px 16px; margin: 10px 16px; border-radius: 14px; font-weight: 700; font-size: 15px; }
+.app-topbar{position:sticky;top:0;z-index:50;background:#fff;padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.app-topbar .brand{display:flex;align-items:center;gap:8px;}
+.app-topbar .brand img{width:38px;height:38px;border-radius:50%;object-fit:cover;}
+.brand-name{font-size:16px;font-weight:800;color:#3E2000;}
+.brand-sub{font-size:11px;color:#999;}
+.user-btn{width:38px;height:38px;border-radius:50%;background:#FFF8E1;border:2px solid #FFC107;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;}
+.hero-wrap img{width:100%;height:180px;object-fit:cover;display:block;}
+.search-wrap{margin:12px 16px 0;position:relative;}
+.search-wrap input{width:100%;padding:11px 16px 11px 42px;border-radius:14px;border:1.5px solid #F0E8D8;background:#fff;font-family:'Sarabun',sans-serif;font-size:14px;color:#2C2C2C;outline:none;box-shadow:0 2px 10px rgba(0,0,0,0.06);transition:border-color .2s;}
+.search-wrap input:focus{border-color:#FFC107;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;}
+.order-time-banner{background:#fff;margin:12px 16px;padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(255,193,7,0.15);border-left:3px solid #FFC107;}
+.order-time-banner .clock-icon{font-size:20px;}
+.order-time-banner .time-text strong{font-size:13px;font-weight:700;color:#2C2C2C;display:block;}
+.order-time-banner .time-text span{font-size:11px;color:#999;}
+.cat-tabs-wrap{padding:0 16px 4px;overflow-x:auto;scrollbar-width:none;display:flex;gap:8px;}
+.cat-tabs-wrap::-webkit-scrollbar{display:none;}
+.cat-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid #E8E8E8;background:#fff;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#666;cursor:pointer;white-space:nowrap;transition:all .18s;}
+.cat-tab.active{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 3px 10px rgba(255,193,7,0.4);}
+.section-title{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;}
+.section-title .left{display:flex;align-items:center;gap:6px;}
+.section-title .icon{font-size:18px;}
+.section-title span{font-size:17px;font-weight:800;color:#2C2C2C;}
+.section-title .see-all{font-size:12px;font-weight:700;color:#FFC107;}
+.featured-row{display:flex;gap:12px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none;}
+.featured-row::-webkit-scrollbar{display:none;}
+.featured-card{flex-shrink:0;width:140px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,0.09);cursor:pointer;position:relative;transition:transform .18s;}
+.featured-card:active{transform:scale(0.97);}
+.featured-card .badge{position:absolute;top:7px;left:7px;background:#FF8C00;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.featured-card .fc-img{width:100%;height:100px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;}
+.featured-card .fc-img img{width:100%;height:100%;object-fit:cover;}
+.featured-card .fc-info{padding:8px 10px 38px;}
+.featured-card .fc-name{font-size:13px;font-weight:700;}
+.featured-card .fc-price{font-size:13px;font-weight:800;color:#FF8C00;margin-top:3px;}
+.featured-card .fc-add{position:absolute;bottom:8px;right:8px;width:30px;height:30px;border-radius:50%;background:#FFC107;border:none;cursor:pointer;font-size:22px;font-weight:700;color:#3E2000;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,193,7,0.5);transition:transform .15s;}
+.featured-card .fc-add:active{transform:scale(0.85);}
+.cat-section{margin-bottom:6px;}
+.cat-header{padding:10px 16px 8px;display:flex;align-items:center;gap:8px;}
+.cat-header .cat-name{font-size:16px;font-weight:800;color:#2C2C2C;}
+.cat-header .cat-line{flex:1;height:1.5px;background:linear-gradient(to right,#FFC107,transparent);border-radius:2px;}
+.card{background:#fff;margin:0 16px 8px;padding:12px 14px;border-radius:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.card .food-img{width:64px;height:64px;border-radius:14px;background:#F5EFE6;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;}
+.card .food-img img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.card .left{flex:1;min-width:0;}
+.card .name{font-size:15px;font-weight:700;}
+.card .desc{font-size:12px;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .price-tag{font-size:14px;font-weight:800;color:#FF8C00;margin-top:5px;}
+.card .qty{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.btn{width:30px;height:30px;border-radius:50%;border:1.5px solid #E0E0E0;background:#fff;font-size:18px;font-weight:700;color:#2C2C2C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.btn.plus{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 2px 8px rgba(255,193,7,0.45);}
+.btn:active{transform:scale(0.88);}
+.qty-num{font-size:15px;font-weight:700;min-width:18px;text-align:center;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;align-items:stretch;box-shadow:0 -3px 20px rgba(0,0,0,0.09);z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 12px;font-size:11px;font-weight:700;color:#bbb;cursor:pointer;gap:3px;}
+.nav-item.active{color:#FFC107;}
+.nav-item .nav-icon{font-size:22px;}
+.nav-cart{flex:1.6;background:linear-gradient(135deg,#FFC107,#F5A623);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 4px 12px;gap:1px;cursor:pointer;position:relative;}
+.nav-cart .nav-icon{font-size:22px;}
+.nav-cart .nav-label{font-size:11px;font-weight:800;color:#3E2000;}
+.nav-cart .cart-badge{position:absolute;top:6px;right:calc(50% - 20px);background:#E53935;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.nav-total{font-size:12px;font-weight:800;color:#3E2000;}
+.pb-footer{padding-bottom:85px;}
+.banner-img-wrap{margin:0 16px 10px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);}
+.banner-img-wrap img{width:100%;height:120px;object-fit:cover;display:block;}
+.closed-overlay{background:#f44336;color:#fff;text-align:center;padding:12px 16px;margin:8px 16px;border-radius:12px;font-weight:700;font-size:14px;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .28s;z-index:200;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.no-results{text-align:center;padding:40px 20px;color:#bbb;font-size:15px;}
 </style>
 </head>
 <body>
 
-<div class="hero" style="padding:0;border-radius:0;background:none;position:relative;display:block;">
-  <!-- user badge overlay -->
-  <div id="user-badge" onclick="goProfile()" style="cursor:pointer;position:absolute;top:12px;right:12px;z-index:10;">
-    <div id="badge-loggedin" style="display:none;align-items:center;gap:7px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.3);border-radius:22px;padding:5px 13px 5px 7px">
-      <span id="user-avatar" style="font-size:19px;line-height:1">😊</span>
-      <span id="user-display" style="font-size:13px;font-weight:800;color:#fff;letter-spacing:0.2px">ลูกค้า</span>
-    </div>
-    <div id="badge-guest" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.95);border-radius:22px;padding:6px 14px 6px 8px;box-shadow:0 2px 12px rgba(0,0,0,0.2)">
-      <span style="font-size:15px;line-height:1">🔑</span>
-      <span style="font-size:13px;font-weight:800;color:#B8860B;letter-spacing:0.3px">เข้าสู่ระบบ</span>
+<div class="app-topbar">
+  <div class="brand">
+    <img src="logo.png" alt="logo">
+    <div>
+      <div class="brand-name">อิ่มเอ้ย</div>
+      <div class="brand-sub">อร่อยง่ายๆ ใกล้บ้านคุณ</div>
     </div>
   </div>
-  <!-- hero image -->
-  <img src="hero.png" alt="อิ่มเอ้ย" id="hero-logo-img"
-    style="width:100%;height:220px;display:block;object-fit:cover;object-position:center;">
+  <div class="user-btn" id="user-badge" onclick="goProfile()">
+    <span id="user-avatar">👤</span>
+  </div>
 </div>
 
-<div id="closed-banner" style="display:none"></div>
+<div class="hero-wrap">
+  <img src="hero.png" alt="อิ่มเอ้ย">
+</div>
+
+<div class="search-wrap">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="search-input" placeholder="ค้นหาเมนูอาหาร..." oninput="onSearch(this.value)">
+</div>
 
 <div class="order-time-banner">
   <span class="clock-icon">🕐</span>
@@ -42,251 +110,225 @@
   </div>
 </div>
 
+<div id="closed-banner" style="display:none"></div>
 <div id="banner-section"></div>
 
-<div class="section-title"><span class="icon">🔥</span><span>เมนูแนะนำ</span></div>
+<div class="cat-tabs-wrap" id="cat-tabs"></div>
+
+<div class="section-title">
+  <div class="left"><span class="icon">🔥</span><span>เมนูแนะนำ</span></div>
+</div>
 <div class="featured-row" id="featured-row"></div>
 
 <div id="menu-list" class="pb-footer"></div>
 
-<div class="footer">
-  <div class="cart-summary" onclick="location.href='cart.html'">
-    <div class="cart-icon-wrap">
-      <span class="cart-emoji">🛒</span>
-      <div class="cart-badge" id="cart-count">0</div>
-    </div>
-    <div class="cart-amount">
-      <strong id="home-total">0 บาท</strong>
-      <span>ดูรายการ</span>
-    </div>
+<div class="bottom-nav">
+  <div class="nav-item active">
+    <span class="nav-icon">🏠</span>
+    <span>หน้าหลัก</span>
   </div>
-  <button class="order-btn" id="order-btn" onclick="location.href='cart.html'" disabled>สั่งซื้อ</button>
+  <div class="nav-cart" onclick="location.href='cart.html'">
+    <span class="nav-icon">🛒</span>
+    <div class="cart-badge" id="cart-count">0</div>
+    <span class="nav-total" id="home-total">0 บาท</span>
+    <span class="nav-label">ตะกร้า</span>
+  </div>
+  <div class="nav-item" onclick="goProfile()">
+    <span class="nav-icon">👤</span>
+    <span>โปรไฟล์</span>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== AUTH HELPERS =====
 function getUser(){ try{ return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
 function goProfile(){
-  const u = getUser();
+  var u=getUser();
   if(!u){ window.location.href='login.html'; return; }
   if(u.role==='admin'||u.role==='owner'){ window.location.href='admin.html'; return; }
-  // Customer: show order history
   window.location.href='orders.html';
 }
 function updateUserBadge(){
-  const u = getUser();
-  const loggedIn = document.getElementById('badge-loggedin');
-  const guest = document.getElementById('badge-guest');
-  const avatar = document.getElementById('user-avatar');
-  const display = document.getElementById('user-display');
-  if(!u){
-    if(loggedIn) loggedIn.style.display='none';
-    if(guest) guest.style.display='flex';
-    return;
-  }
-  if(loggedIn) loggedIn.style.display='flex';
-  if(guest) guest.style.display='none';
-  if(u.role==='owner'){ avatar.textContent='👑'; display.textContent='เจ้าของร้าน'; }
-  else if(u.role==='admin'){ avatar.textContent='🧑‍🍳'; display.textContent='แอดมิน'; }
-  else { avatar.textContent='😊'; display.textContent=u.name||'ลูกค้า'; }
+  var u=getUser(); var av=document.getElementById('user-avatar');
+  if(!u){ av.textContent='👤'; return; }
+  if(u.role==='owner') av.textContent='👑';
+  else if(u.role==='admin') av.textContent='🧑‍🍳';
+  else av.textContent='😊';
 }
 updateUserBadge();
 
-// ถ้าลูกค้ายังไม่ล็อกอิน ให้ redirect ไปล็อกอินก่อนกด order
-window._checkLoginForOrder = function(){
-  const u = getUser();
-  if(!u || u.role==='customer') return true; // ok (customer or guest will be handled at cart)
-  return true;
-};
-</script>
-
-<script>
-// ===== MENU DATA =====
-var MENU = [
-  { category:"🥪 แซนวิช", catKey:"sandwich", price:20, items:[
-    { id:"tuna",         name:"ปูอัดทูน่า",     desc:"ปูอัด, ทูน่า, ผักสลัด",        emoji:"🥪", price:20 },
-    { id:"pork_salad",   name:"หมูหยองสลัด",    desc:"หมูหยอง, สลัด, มายองเนส",      emoji:"🥙", price:20 },
-    { id:"egg_sausage",  name:"ไข่ดาวไส้กรอก",  desc:"ไข่ดาว, ไส้กรอก, ซอส",         emoji:"🍳", price:20 },
-    { id:"shrimp",       name:"ไข่กุ้งสาหร่าย", desc:"ไข่กุ้ง, สาหร่าย, มายองเนส",  emoji:"🍤", price:20 },
+var MENU=[
+  {category:"🥪 แซนวิช",catKey:"sandwich",items:[
+    {id:"tuna",name:"ปูอัดทูน่า",desc:"ปูอัด, ทูน่า, ผักสลัด",emoji:"🥪",price:20},
+    {id:"pork_salad",name:"หมูหยองสลัด",desc:"หมูหยอง, สลัด, มายองเนส",emoji:"🥙",price:20},
+    {id:"egg_sausage",name:"ไข่ดาวไส้กรอก",desc:"ไข่ดาว, ไส้กรอก, ซอส",emoji:"🍳",price:20},
+    {id:"shrimp",name:"ไข่กุ้งสาหร่าย",desc:"ไข่กุ้ง, สาหร่าย, มายองเนส",emoji:"🍤",price:20},
   ]},
-  { category:"🍚 ข้าว", catKey:"rice", price:50, items:[
-    { id:"chicken_rice",  name:"ข้าวไก่อบ",      desc:"ไก่อบ, ไข่ต้ม, ผัก",   emoji:"🍗", price:50 },
-    { id:"chicken_lime",  name:"ข้าวไก่อบมะนาว", desc:"ไก่มะนาว, ข้าว, ผัก",  emoji:"🍋", price:50 },
+  {category:"🍚 ข้าว",catKey:"rice",items:[
+    {id:"chicken_rice",name:"ข้าวไก่อบ",desc:"ไก่อบ, ไข่ต้ม, ผัก",emoji:"🍗",price:50},
+    {id:"chicken_lime",name:"ข้าวไก่อบมะนาว",desc:"ไก่มะนาว, ข้าว, ผัก",emoji:"🍋",price:50},
   ]},
-  { category:"🍜 หมี่", catKey:"noodle", price:50, items:[
-    { id:"chicken_noodle", name:"หมี่ไก่ฉีก", desc:"หมี่เหลือง, ไก่ฉีก, น้ำซุป", emoji:"🍜", price:50 },
-    { id:"pork_noodle",    name:"หมี่หมูแดง", desc:"หมี่, หมูแดง, ไข่ต้ม",        emoji:"🥢", price:50 },
+  {category:"🍜 หมี่",catKey:"noodle",items:[
+    {id:"chicken_noodle",name:"หมี่ไก่ฉีก",desc:"หมี่เหลือง, ไก่ฉีก, น้ำซุป",emoji:"🍜",price:50},
+    {id:"pork_noodle",name:"หมี่หมูแดง",desc:"หมี่, หมูแดง, ไข่ต้ม",emoji:"🥢",price:50},
   ]}
 ];
-var ALL_ITEMS = [].concat.apply([], MENU.map(function(c){ return c.items; }));
-var FEATURED_IDS = ["tuna","chicken_noodle","egg_sausage"];
+var ALL_ITEMS=[].concat.apply([],MENU.map(function(c){return c.items;}));
+var FEATURED_IDS=["tuna","chicken_noodle","egg_sausage"];
+var currentCat='all'; var currentSearch='';
 
-// ===== CART =====
-var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
-function saveCart(){ localStorage.setItem('imkum_cart', JSON.stringify(cart)); }
-
+var cart=JSON.parse(localStorage.getItem('imkum_cart')||'{}');
+function saveCart(){localStorage.setItem('imkum_cart',JSON.stringify(cart));}
 function add(id){
-  var item = ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
+  var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
   if(!item) return;
-  cart[id] = (cart[id]||0)+1;
-  saveCart(); render();
-  showToast('เพิ่มลงตะกร้าแล้ว 🛒');
+  cart[id]=(cart[id]||0)+1; saveCart(); render();
+  showToast('เพิ่ม '+item.name+' ลงตะกร้า 🛒');
 }
 function remove(id){
-  if((cart[id]||0)>0){ cart[id]--; if(!cart[id]) delete cart[id]; saveCart(); render(); }
+  if((cart[id]||0)>0){cart[id]--;if(!cart[id])delete cart[id];saveCart();render();}
 }
 function getTotal(){
   var sum=0;
   Object.keys(cart).forEach(function(id){
-    var item=ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
+    var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
     if(item) sum+=item.price*cart[id];
   });
   return sum;
 }
-function getCount(){ var s=0; Object.values(cart).forEach(function(v){ s+=v; }); return s; }
-
+function getCount(){var s=0;Object.values(cart).forEach(function(v){s+=v;});return s;}
 function render(){
   ALL_ITEMS.forEach(function(item){
     var el=document.getElementById('qty-'+item.id);
     if(el) el.textContent=cart[item.id]||0;
   });
-  var total=getTotal(), count=getCount();
-  var totalEl=document.getElementById('home-total');
-  var countEl=document.getElementById('cart-count');
-  var btn=document.getElementById('order-btn');
-  if(totalEl) totalEl.textContent=total+' บาท';
-  if(countEl) countEl.textContent=count;
-  if(btn && !btn.dataset.closed) btn.disabled=count===0;
+  var t=getTotal(),c=getCount();
+  var te=document.getElementById('home-total');
+  var ce=document.getElementById('cart-count');
+  if(te) te.textContent=t+' บาท';
+  if(ce) ce.textContent=c;
 }
-
 function showToast(msg){
   var t=document.getElementById('toast');
   if(!t) return;
   t.textContent=msg; t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); },2200);
+  setTimeout(function(){t.classList.remove('show');},2200);
 }
-
-// ===== ADMIN LOGIN REMOVED - use login.html =====
-window.openAdminLogin=function(){ window.location.href='login.html'; };
-window.closeAdminModal=function(){};
-window.togglePwd=function(){};
-window.doAdminLogin=function(){ window.location.href='login.html'; };
-
 function foodImg(item){
-  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
-  return item.emoji||'🍽️';
+  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy">';
+  return '<span style="font-size:32px">'+(item.emoji||'🍽️')+'</span>';
 }
-
+function buildTabs(){
+  var wrap=document.getElementById('cat-tabs');
+  wrap.innerHTML='<div class="cat-tab active" onclick="filterCat(\'all\',this)">🍽️ ทั้งหมด</div>';
+  MENU.forEach(function(cat){
+    var vis=cat.items.filter(function(i){return !i.hidden;});
+    if(!vis.length) return;
+    wrap.innerHTML+='<div class="cat-tab" onclick="filterCat(\''+cat.catKey+'\',this)">'+cat.category+'</div>';
+  });
+}
+function filterCat(key,el){
+  currentCat=key;
+  document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+  if(el) el.classList.add('active');
+  buildMenuList();
+}
+function onSearch(val){currentSearch=val.toLowerCase().trim();buildMenuList();}
 function buildFeatured(){
   var row=document.getElementById('featured-row');
   row.innerHTML='';
   FEATURED_IDS.forEach(function(fid){
-    var item=ALL_ITEMS.filter(function(i){ return i.id===fid; })[0];
+    var item=ALL_ITEMS.filter(function(i){return i.id===fid;})[0];
     if(!item||item.hidden) return;
-    row.innerHTML+='<div class="featured-card">'+
-      '<div class="badge">BEST</div>'+
-      '<div class="fc-img">'+foodImg(item)+'</div>'+
-      '<div class="fc-info">'+
-        '<div class="fc-name">'+item.name+'</div>'+
-        '<div class="fc-price">'+item.price+' บาท</div>'+
-      '</div>'+
-      '<button class="fc-add" onclick="add(\''+item.id+'\')">+</button>'+
-    '</div>';
+    row.innerHTML+=
+      '<div class="featured-card">'+
+        '<div class="badge">BEST</div>'+
+        '<div class="fc-img">'+foodImg(item)+'</div>'+
+        '<div class="fc-info">'+
+          '<div class="fc-name">'+item.name+'</div>'+
+          '<div class="fc-price">'+item.price+' บาท</div>'+
+        '</div>'+
+        '<button class="fc-add" onclick="add(\''+item.id+'\')">+</button>'+
+      '</div>';
   });
 }
-
 function buildMenuList(){
   var list=document.getElementById('menu-list');
-  list.innerHTML='';
+  list.innerHTML=''; var hasAny=false;
   MENU.forEach(function(cat){
-    var vis=cat.items.filter(function(i){ return !i.hidden; });
-    if(!vis.length) return;
-    list.innerHTML+='<div class="cat-header"><span class="cat-name">'+cat.category+'</span><span class="cat-price">('+cat.price+' บาท)</span></div>';
-    vis.forEach(function(item){
-      list.innerHTML+='<div class="card">'+
-        '<div class="food-img">'+foodImg(item)+'</div>'+
-        '<div class="left">'+
-          '<div class="name">'+item.name+'</div>'+
-          '<div class="desc">'+(item.desc||'')+'</div>'+
-        '</div>'+
-        '<div class="qty">'+
-          '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
-          '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
-          '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'+
-        '</div>'+
-      '</div>';
+    if(currentCat!=='all'&&currentCat!==cat.catKey) return;
+    var vis=cat.items.filter(function(i){
+      if(i.hidden) return false;
+      if(currentSearch) return i.name.toLowerCase().includes(currentSearch)||(i.desc||'').toLowerCase().includes(currentSearch);
+      return true;
     });
+    if(!vis.length) return;
+    hasAny=true;
+    list.innerHTML+='<div class="cat-section"><div class="cat-header"><span class="cat-name">'+cat.category+'</span><div class="cat-line"></div></div>';
+    vis.forEach(function(item){
+      list.innerHTML+=
+        '<div class="card">'+
+          '<div class="food-img">'+foodImg(item)+'</div>'+
+          '<div class="left">'+
+            '<div class="name">'+item.name+'</div>'+
+            '<div class="desc">'+(item.desc||'')+'</div>'+
+            '<div class="price-tag">'+item.price+' บาท</div>'+
+          '</div>'+
+          '<div class="qty">'+
+            '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
+            '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
+            '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'+
+          '</div>'+
+        '</div>';
+    });
+    list.innerHTML+='</div>';
   });
+  if(!hasAny) list.innerHTML='<div class="no-results">😔 ไม่พบเมนูที่ค้นหา</div>';
 }
 
-// ===== RENDER NOW (ไม่รอ Firebase) =====
-buildFeatured();
-buildMenuList();
-render();
+buildTabs(); buildFeatured(); buildMenuList(); render();
+window.openAdminLogin=function(){window.location.href='login.html';};
+window.closeAdminModal=function(){};
+window.doAdminLogin=function(){window.location.href='login.html';};
 </script>
 
-<!-- Firebase: เพิ่ม/อัพเดทข้อมูล หลังจาก UI โชว์แล้ว -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-async function syncFirestore() {
-  try {
-    const app = initializeApp({
-      apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-      authDomain: "im-oei.firebaseapp.com",
-      projectId: "im-oei"
-    });
-    const db = getFirestore(app);
-
-    // Settings
-    const sDoc = await getDoc(doc(db, 'settings', 'store'));
-    if (sDoc.exists()) {
-      const s = sDoc.data();
-      if (s.orderCutoff) document.getElementById('cutoff-text').textContent = 'รับออเดอร์ถึง ' + s.orderCutoff + ' น.';
-      if (s.pickupStart && s.pickupEnd) document.getElementById('pickup-text').textContent = 'รับอาหาร ' + s.pickupStart + ' - ' + s.pickupEnd + ' น.';
-      if (s.bannerUrl) document.getElementById('banner-section').innerHTML = '<div class="banner-img-wrap"><img src="' + s.bannerUrl + '" alt="banner"></div>';
-      if (s.heroLogoUrl) {
-        // hero image is now static hero.png - skip override
-      } else if (s.heroLogoRef) {
-        // hero image is now static hero.png - skip override
-        if (false) {
-        }
+async function syncFirestore(){
+  try{
+    const app=initializeApp({apiKey:"AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",authDomain:"im-oei.firebaseapp.com",projectId:"im-oei"});
+    const db=getFirestore(app);
+    const sDoc=await getDoc(doc(db,'settings','store'));
+    if(sDoc.exists()){
+      const s=sDoc.data();
+      if(s.orderCutoff) document.getElementById('cutoff-text').textContent='รับออเดอร์ถึง '+s.orderCutoff+' น.';
+      if(s.pickupStart&&s.pickupEnd) document.getElementById('pickup-text').textContent='รับอาหาร '+s.pickupStart+' - '+s.pickupEnd+' น.';
+      if(s.bannerUrl) document.getElementById('banner-section').innerHTML='<div class="banner-img-wrap"><img src="'+s.bannerUrl+'" alt="banner"></div>';
+      if(s.isOpen===false){
+        document.getElementById('closed-banner').style.display='block';
+        document.getElementById('closed-banner').innerHTML='<div class="closed-overlay">🔴 ร้านปิดรับออเดอร์แล้ว กรุณามาใหม่วันพรุ่งนี้</div>';
       }
-      if (s.isOpen === false) {
-        document.getElementById('closed-banner').style.display = 'block';
-        document.getElementById('closed-banner').innerHTML = '<div class="closed-overlay">🔴 ร้านปิดรับออเดอร์แล้ว กรุณามาใหม่วันพรุ่งนี้</div>';
-        const btn = document.getElementById('order-btn');
-        btn.disabled = true; btn.textContent = 'ปิดรับออเดอร์'; btn.dataset.closed = '1';
-      }
-      if (s.featuredIds) FEATURED_IDS = s.featuredIds;
+      if(s.featuredIds){FEATURED_IDS=s.featuredIds;buildFeatured();}
     }
-
-    // Menu from Firestore
-    const mSnap = await getDocs(collection(db, 'menu'));
-    if (!mSnap.empty) {
-      const catMap = {};
-      const catOrder = ['sandwich','rice','noodle','drink','other'];
-      mSnap.forEach(d => {
-        const data = Object.assign({ id: d.id }, d.data());
-        if (data.hidden) return;
-        const k = data.catKey || 'other';
-        if (!catMap[k]) catMap[k] = { category: data.category || k, catKey: k, price: data.price || 0, items: [], sortOrder: catOrder.indexOf(k) };
+    const mSnap=await getDocs(collection(db,'menu'));
+    if(!mSnap.empty){
+      const catMap={};
+      const catOrder=['sandwich','rice','noodle','drink','other'];
+      mSnap.forEach(d=>{
+        const data=Object.assign({id:d.id},d.data());
+        if(data.hidden) return;
+        const k=data.catKey||'other';
+        if(!catMap[k]) catMap[k]={category:data.category||k,catKey:k,items:[],sortOrder:catOrder.indexOf(k)};
         catMap[k].items.push(data);
       });
-      MENU = Object.values(catMap).sort((a,b) => (a.sortOrder||99)-(b.sortOrder||99));
-      ALL_ITEMS = [].concat(...MENU.map(c => c.items));
-      buildFeatured();
-      buildMenuList();
-      render();
+      MENU=Object.values(catMap).sort((a,b)=>(a.sortOrder||99)-(b.sortOrder||99));
+      ALL_ITEMS=[].concat(...MENU.map(c=>c.items));
+      buildTabs(); buildFeatured(); buildMenuList(); render();
     }
-  } catch(e) {
-    console.log('Firebase sync skipped:', e.message);
-  }
+  }catch(e){console.log('Firebase sync skipped:',e.message);}
 }
-
 syncFirestore();
 </script>
 </body>
