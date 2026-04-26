@@ -315,6 +315,7 @@ window.placeOrder = async function() {
     const ref = await addDoc(collection(db, 'orders'), {
       items: orderItems, total, note, customerName, pickupTime,
       customerPhone: phone,
+      userId: localStorage.getItem('imkum_userId') || null,
       status: 'pending',
       isPreorder: isNextDay || false,
       deliveryDate: deliveryDate,

@@ -180,7 +180,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const sess = sessionStorage.getItem('imkum_user');
 if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
@@ -210,7 +210,7 @@ document.getElementById('user-phone-display').textContent = '📱 '+(user.phone|
     hero.style.backgroundSize = 'auto, cover';
     hero.style.backgroundPosition = 'center, center';
   };
-  img.src = base + 'hero.png';
+  img.src = base + 'hero.webp';
 })();
 
 // โหลดรูป profile ถ้ามี
@@ -432,6 +432,11 @@ async function initCustomerNotifications() {
   if ('Notification' in window && Notification.permission === 'default') {
     // แสดง banner แทนการขอทันที
     showNotifBanner();
+  } else if (Notification.permission === 'granted') {
+    // เคยให้สิทธิ์แล้ว → subscribe push ถ้ายังไม่ได้ทำ
+    if ('serviceWorker' in navigator && VAPID_PUBLIC_KEY !== 'BGZbGcsIuEzA5enjkAmik_kuZwvAsNGpsuEUj_p3TpJVaRSq0KnkxUlcthSnCT_rpZC4tg7eTQPq1v1FrArd3j0') {
+      navigator.serviceWorker.ready.then(subscribeToPush);
+    }
   }
 
   // เริ่ม watch orders สำหรับ status change
@@ -444,6 +449,39 @@ function showNotifBanner() {
   if (banner) banner.style.display = 'flex';
 }
 
+// ===== WEB PUSH CONFIG =====
+// TODO: แทนที่ด้วย VAPID Public Key จาก Firebase Console
+// Project Settings → Cloud Messaging → Web Push certificates → Generate key pair
+const VAPID_PUBLIC_KEY = 'BGZbGcsIuEzA5enjkAmik_kuZwvAsNGpsuEUj_p3TpJVaRSq0KnkxUlcthSnCT_rpZC4tg7eTQPq1v1FrArd3j0';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPush(swReg) {
+  try {
+    const sub = await swReg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    // บันทึก subscription ลง Firestore ผูกกับ phone
+    const subData = sub.toJSON();
+    const { setDoc, doc: fsDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await setDoc(fsDoc(db, 'pushSubscriptions', user.phone), {
+      phone: user.phone,
+      name: user.name || '',
+      subscription: subData,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    console.log('✅ Push subscribed');
+  } catch(e) {
+    console.warn('Push subscribe failed:', e);
+  }
+}
+
 window.allowNotifications = async function() {
   const banner = document.getElementById('notif-request-banner');
   if (!('Notification' in window)) return;
@@ -451,6 +489,11 @@ window.allowNotifications = async function() {
   if (banner) banner.style.display = 'none';
   if (perm === 'granted') {
     showToast('✅ เปิดการแจ้งเตือนแล้ว!');
+    // Subscribe Web Push
+    if ('serviceWorker' in navigator && VAPID_PUBLIC_KEY !== 'BGZbGcsIuEzA5enjkAmik_kuZwvAsNGpsuEUj_p3TpJVaRSq0KnkxUlcthSnCT_rpZC4tg7eTQPq1v1FrArd3j0') {
+      const swReg = await navigator.serviceWorker.ready;
+      await subscribeToPush(swReg);
+    }
   }
 };
 
@@ -496,26 +539,21 @@ function showCustBrowserNotif(title, body, tag) {
   }
 }
 
-async function startWatchingOrders() {
+function startWatchingOrders() {
   if (!user.phone) return;
-  // poll ทุก 30 วินาที
-  async function poll() {
-    try {
-      const q = query(collection(db,'orders'), where('customerPhone','==', user.phone));
-      const snap = await getDocs(q);
-      snap.docs.forEach(d => {
-        const o = { id: d.id, ...d.data() };
-        const prevStatus = watchedOrders[o.id];
-        if (prevStatus && prevStatus !== o.status) {
-          // status เปลี่ยน!
-          handleStatusChange(o, prevStatus, o.status);
-        }
-        watchedOrders[o.id] = o.status;
-      });
-    } catch(e) { console.warn('poll error:', e); }
-  }
-  await poll(); // ครั้งแรก
-  setInterval(poll, 30000); // ทุก 30 วิ
+  const q = query(collection(db,'orders'), where('customerPhone','==', user.phone));
+  // real-time listener แทน polling
+  onSnapshot(q, (snap) => {
+    snap.docs.forEach(d => {
+      const o = { id: d.id, ...d.data() };
+      const prevStatus = watchedOrders[o.id];
+      if (prevStatus && prevStatus !== o.status) {
+        // status เปลี่ยน!
+        handleStatusChange(o, prevStatus, o.status);
+      }
+      watchedOrders[o.id] = o.status;
+    });
+  }, (e) => { console.warn('onSnapshot error:', e); });
 }
 
 const statusTH = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };

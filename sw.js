@@ -1,5 +1,5 @@
-// Service Worker v19 - อิ่มเอ้ย PWA + Push Notifications
-const CACHE_NAME = 'im-oei-v19';
+// Service Worker v20 - อิ่มเอ้ย PWA + Push Notifications
+const CACHE_NAME = 'im-oei-v20';
 
 self.addEventListener('install', e => { self.skipWaiting(); });
 

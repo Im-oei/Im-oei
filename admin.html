@@ -1300,6 +1300,46 @@ window.filterOrders = function(status, btn) {
   renderOrders();
 };
 
+// ===== NOTIFICATION CONFIG =====
+// TODO 1: ใส่ VAPID Private Key และ FCM Server Key จาก Firebase Console
+//   Project Settings → Cloud Messaging → Server key (Legacy) หรือใช้ Admin SDK
+// TODO 2: ใส่ LINE Channel Access Token
+//   LINE Developers → Messaging API → Channel access token
+const PUSH_SERVER_URL = ''; // URL ของ backend ที่ส่ง Web Push (ถ้าใช้ Cloud Functions)
+const LINE_CHANNEL_TOKEN = 'YOUR_LINE_CHANNEL_ACCESS_TOKEN_HERE';
+
+// ส่ง Web Push ผ่าน Firestore trigger
+// flow: admin updateStatus → เขียน pushQueue → Cloud Function อ่านแล้วส่ง push
+async function sendWebPushViaFirestore(phone, title, body, url) {
+  try {
+    // ดึง subscription ของลูกค้า
+    const subSnap = await getDoc(doc(db, 'pushSubscriptions', phone));
+    if (!subSnap.exists()) return; // ลูกค้ายังไม่ได้ subscribe
+    // เขียน push job ลง Firestore → Cloud Function จะ pick up และส่งให้
+    await addDoc(collection(db, 'pushQueue'), {
+      phone, title, body, url,
+      subscription: subSnap.data().subscription,
+      sentAt: null,
+      createdAt: new Date().toISOString()
+    });
+    console.log('✅ Push queued for', phone);
+  } catch(e) { console.warn('pushQueue write failed:', e); }
+}
+
+// ส่ง LINE Message ตรงๆ จาก browser (ต้องมี CORS proxy หรือ Cloud Function)
+// flow: admin updateStatus → เขียน lineQueue → Cloud Function อ่านแล้วส่ง LINE
+async function sendLineMessageViaFirestore(lineUserId, title, body) {
+  if (!lineUserId) return;
+  try {
+    await addDoc(collection(db, 'lineQueue'), {
+      lineUserId, title, body,
+      sentAt: null,
+      createdAt: new Date().toISOString()
+    });
+    console.log('✅ LINE queued for', lineUserId);
+  } catch(e) { console.warn('lineQueue write failed:', e); }
+}
+
 window.updateStatus = async function(id, status) {
   showLoading(true);
   try {
@@ -1312,6 +1352,9 @@ window.updateStatus = async function(id, status) {
     const statusName = statusTH[status] || status;
     const order = allOrders.find(o => o.id === id);
     const name = order?.customerName || order?.name || 'ลูกค้า';
+    const phone = order?.customerPhone || '';
+    const lineUserId = order?.lineUserId || '';
+
     if (window.addNotification) window.addNotification({
       icon,
       title: `${icon} อัพเดท: ${name}`,
@@ -1324,6 +1367,31 @@ window.updateStatus = async function(id, status) {
       if (window.showBrowserNotif) window.showBrowserNotif(`🟢 ${name} - พร้อมรับแล้ว!`, `สถานะ: ${statusName}`, 'status-' + id, '/admin.html');
     } else {
       if (window.playStatusSound) window.playStatusSound();
+    }
+
+    // ===== ส่งแจ้งเตือนลูกค้า =====
+    // สร้างข้อความตามสถานะ
+    let custTitle = `${icon} ออเดอร์ #${id.slice(0,6).toUpperCase()}`;
+    let custBody = `สถานะ: ${statusName}`;
+    if (status === 'ready') {
+      custTitle = '🟢 อาหารพร้อมแล้ว!';
+      custBody = `${name} — มารับได้เลย${order?.pickupTime ? ' ⏰ '+order.pickupTime+' น.' : ''}`;
+    } else if (status === 'preparing') {
+      custTitle = '🔵 ร้านกำลังทำอาหาร';
+      custBody = `${name} — ร้านรับออเดอร์แล้ว กำลังเตรียม!`;
+    } else if (status === 'cancelled') {
+      custTitle = '❌ ออเดอร์ถูกยกเลิก';
+      custBody = `${name} — ออเดอร์ของคุณถูกยกเลิก`;
+    }
+
+    // 1) Web Push (ผ่าน Firestore Queue → Cloud Function)
+    if (phone) {
+      await sendWebPushViaFirestore(phone, custTitle, custBody, '/orders.html');
+    }
+
+    // 2) LINE Message (ผ่าน Firestore Queue → Cloud Function)
+    if (lineUserId) {
+      await sendLineMessageViaFirestore(lineUserId, custTitle, custBody);
     }
 
     showToast(`${icon} อัพเดทสถานะ: ${statusName}`);
