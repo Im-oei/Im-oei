@@ -33,6 +33,18 @@
 .order-note{padding:4px 16px 6px;font-size:12px;color:#999}
 .bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px 14px;background:#fff;box-shadow:0 -3px 16px rgba(0,0,0,0.08);z-index:100}
 .order-btn-main{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4)}
+/* STAMP CARD */
+.stamp-card-wrap{margin:0 16px 14px;}
+.stamp-card{background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:16px;padding:14px 16px;box-shadow:0 4px 16px rgba(255,107,53,0.3);}
+.stamp-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stamp-card-header .sc-title{font-size:14px;font-weight:800;color:#fff;}
+.stamp-card-header .sc-pts{font-size:13px;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.15);padding:3px 10px;border-radius:20px;}
+.stamps-grid{display:flex;gap:7px;flex-wrap:wrap;}
+.stamp{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+.stamp.filled{background:rgba(255,255,255,0.9);border-color:rgba(255,255,255,0.9);}
+.stamp-msg{font-size:11px;color:rgba(255,255,255,0.8);margin-top:8px;}
+.stamp-loading{font-size:12px;color:rgba(255,255,255,0.7);text-align:center;padding:10px 0;}
+.section-label{padding:4px 16px 6px;font-size:13px;font-weight:800;color:#666;}
 </style>
 </head>
 <body>
@@ -44,6 +56,8 @@
 </div>
 
 <div id="user-info-wrap"></div>
+<div class="stamp-card-wrap" id="stamp-card-wrap"></div>
+<div class="section-label">📋 ออเดอร์ของฉัน</div>
 <div id="orders-wrap" style="padding-top:4px;padding-bottom:80px"></div>
 
 <div class="bottom-bar">
@@ -55,7 +69,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // AUTH CHECK
 const sess = sessionStorage.getItem('imkum_user');
@@ -153,7 +167,51 @@ window.reorder = function(items) {
   setTimeout(()=>{ window.location.href='index.html'; }, 1500);
 };
 
+// ====== STAMP CARD ======
+const STAMP_GOAL = 10;
+function renderStampCard(count, total) {
+  const wrap = document.getElementById('stamp-card-wrap');
+  if (!wrap) return;
+  let dots = '';
+  for (let i = 0; i < STAMP_GOAL; i++) {
+    dots += `<div class="stamp${i < count ? ' filled' : ''}">${i < count ? '⭐' : ''}</div>`;
+  }
+  const msg = count >= STAMP_GOAL
+    ? '🎉 ครบแล้ว! แจ้งร้านเพื่อรับรางวัล'
+    : `อีก ${STAMP_GOAL - count} ครั้ง รับฟรี 1 เมนู! (สั่งแล้ว ${total} ครั้ง)`;
+  wrap.innerHTML = `<div class="stamp-card">
+    <div class="stamp-card-header">
+      <div class="sc-title">⭐ สะสมแต้ม</div>
+      <div class="sc-pts">${count}/${STAMP_GOAL}</div>
+    </div>
+    <div class="stamps-grid">${dots}</div>
+    <div class="stamp-msg">${msg}</div>
+  </div>`;
+}
+
+async function loadStamps() {
+  const wrap = document.getElementById('stamp-card-wrap');
+  if (!wrap || !user.phone) return;
+  wrap.innerHTML = '<div class="stamp-card"><div class="stamp-loading">⭐ กำลังโหลดแต้ม...</div></div>';
+  try {
+    const stampDoc = await getDoc(doc(db, 'stamps', user.phone));
+    if (stampDoc.exists()) {
+      const d = stampDoc.data();
+      renderStampCard(d.count || 0, d.total || 0);
+    } else {
+      renderStampCard(0, 0);
+    }
+  } catch(e) {
+    // fallback to localStorage
+    try {
+      const cached = JSON.parse(localStorage.getItem('imkum_stamps_' + user.phone) || '{"count":0,"total":0}');
+      renderStampCard(cached.count || 0, cached.total || 0);
+    } catch { renderStampCard(0, 0); }
+  }
+}
+
 loadOrders();
+loadStamps();
 </script>
 </body>
 </html>

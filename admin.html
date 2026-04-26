@@ -745,7 +745,7 @@ window.deleteMenuItem = async function(id) {
     allMenuItems = allMenuItems.filter(i => i.id !== id);
     renderMenuAdmin();
     showToast('ลบเมนูแล้ว 🗑️');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -827,6 +827,10 @@ window.uploadBannerModal = function(input) {
 
 window.saveBannerItem = async function() {
   const id = document.getElementById('banner-edit-id').value;
+  const imgVal2 = document.getElementById('banner-img-url').value;
+  if (imgVal2 && imgVal2.startsWith('data:') && imgVal2.length > 700000) {
+    showToast('❌ รูปภาพใหญ่เกินไป กรุณาเลือกรูปใหม่'); return;
+  }
   const data = {
     title: document.getElementById('banner-title').value.trim(),
     subtitle: document.getElementById('banner-subtitle').value.trim(),
@@ -849,7 +853,7 @@ window.saveBannerItem = async function() {
     renderBannersAdmin();
     closeModal('modal-banner');
     showToast('บันทึกแบนเนอร์แล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -861,7 +865,7 @@ window.deleteBannerItem = async function(id) {
     allBanners = allBanners.filter(b => b.id !== id);
     renderBannersAdmin();
     showToast('ลบแบนเนอร์แล้ว');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -928,7 +932,7 @@ window.saveCategoryItem = async function() {
     updateCatSelect();
     closeModal('modal-category');
     showToast('บันทึกหมวดหมู่แล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -943,7 +947,7 @@ window.deleteCategoryItem = async function(key) {
     renderCategoryAdmin();
     updateCatSelect();
     showToast('ลบหมวดหมู่แล้ว');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1063,7 +1067,7 @@ window.updateStatus = async function(id, status) {
   try {
     await updateDoc(doc(db, 'orders', id), { status });
     showToast('อัพเดทสถานะแล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1071,7 +1075,7 @@ window.deleteOrder = async function(id) {
   if (!confirm('ลบออเดอร์นี้ใช่ไหม?')) return;
   showLoading(true);
   try { await deleteDoc(doc(db, 'orders', id)); showToast('ลบออเดอร์แล้ว'); }
-  catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1091,7 +1095,7 @@ window.saveSettings = async function() {
       pickupEnd: document.getElementById('set-pickup-end').value,
     }, { merge: true });
     showToast('บันทึกการตั้งค่าแล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1101,7 +1105,7 @@ window.saveBanner = async function() {
     const url = document.getElementById('set-banner-url').value;
     await setDoc(doc(db, 'settings', 'store'), { bannerUrl: url }, { merge: true });
     showToast('บันทึก Banner แล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1125,7 +1129,7 @@ window.savePasswords = async function() {
     } else {
       showToast('ไม่มีรหัสผ่านที่ต้องบันทึก');
     }
-  } catch(e){ showToast('เกิดข้อผิดพลาด'); }
+  } catch(e){ console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1156,11 +1160,12 @@ function compressImageToBase64(file, maxSizeKB, callback) {
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      let quality = 0.85;
+      let quality = 0.82;
       let w = img.width, h = img.height;
-      // max dimension 600px
-      if (w > 600 || h > 600) {
-        const ratio = Math.min(600/w, 600/h);
+      // max dimension 500px to keep well under Firestore 1MB doc limit
+      const MAX_DIM = 500;
+      if (w > MAX_DIM || h > MAX_DIM) {
+        const ratio = Math.min(MAX_DIM/w, MAX_DIM/h);
         w = Math.round(w * ratio); h = Math.round(h * ratio);
       }
       const canvas = document.createElement('canvas');
@@ -1168,10 +1173,18 @@ function compressImageToBase64(file, maxSizeKB, callback) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
       let result = canvas.toDataURL('image/jpeg', quality);
-      // shrink quality until under limit
-      while (result.length > maxSizeKB * 1024 && quality > 0.2) {
-        quality -= 0.1;
+      // shrink quality until under limit (target maxSizeKB in base64 chars)
+      while (result.length > maxSizeKB * 1024 && quality > 0.15) {
+        quality -= 0.08;
         result = canvas.toDataURL('image/jpeg', quality);
+      }
+      // If still too large, shrink dimensions further
+      if (result.length > maxSizeKB * 1024) {
+        const ratio2 = Math.sqrt((maxSizeKB * 1024) / result.length);
+        canvas.width = Math.round(w * ratio2);
+        canvas.height = Math.round(h * ratio2);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        result = canvas.toDataURL('image/jpeg', 0.7);
       }
       callback(result);
     };
@@ -1197,8 +1210,8 @@ window.saveHeroLogo = async function() {
     const url = document.getElementById('set-hero-logo-url').value;
     if (!url) { showToast('กรุณาเลือกรูปก่อน'); return; }
     // Firestore doc limit ~1MB — store in separate doc if large
-    if (url.length > 900000) {
-      // store in separate larger doc
+    // Firestore doc limit ~1MB. Use separate doc if needed.
+    if (url.length > 600000) {
       await setDoc(doc(db, 'settings', 'heroLogo'), { heroLogoUrl: url });
       await setDoc(doc(db, 'settings', 'store'), { heroLogoRef: 'heroLogo' }, { merge: true });
     } else {
@@ -1211,13 +1224,13 @@ window.saveHeroLogo = async function() {
 
 window.uploadBannerFile = function(input) {
   const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('set-banner-url').value = e.target.result;
+  showLoading(true);
+  compressImageToBase64(file, 600, compressed => {
+    document.getElementById('set-banner-url').value = compressed;
     previewBanner();
-    showToast('โหลดรูปสำเร็จ (base64)');
-  };
-  reader.readAsDataURL(file);
+    showToast('โหลดรูปสำเร็จ (' + Math.round(compressed.length/1024) + ' KB)');
+    showLoading(false);
+  });
 };
 
 // ====== MENU ITEM EDIT ======
@@ -1256,19 +1269,24 @@ window.previewEditImg = function() {
 
 window.uploadItemPhoto = function(input) {
   const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('edit-image-url').value = e.target.result;
+  showLoading(true);
+  compressImageToBase64(file, 500, compressed => {
+    document.getElementById('edit-image-url').value = compressed;
     previewEditImg();
-    showToast('โหลดรูปสำเร็จ');
-  };
-  reader.readAsDataURL(file);
+    showToast('โหลดรูปสำเร็จ (' + Math.round(compressed.length/1024) + ' KB)');
+    showLoading(false);
+  });
 };
 
 window.saveMenuItem = async function() {
   const id = document.getElementById('edit-item-id').value;
   const name = document.getElementById('edit-name').value.trim();
   if (!name) { showToast('กรุณากรอกชื่อเมนู'); return; }
+  // Guard: Firestore doc limit ~900KB total. Base64 images must be well under that.
+  const imgVal = document.getElementById('edit-image-url').value;
+  if (imgVal && imgVal.startsWith('data:') && imgVal.length > 700000) {
+    showToast('❌ รูปภาพใหญ่เกินไป กรุณาเลือกรูปใหม่'); return;
+  }
   const catKey = document.getElementById('edit-catkey').value;
   const catLabels = { sandwich:'🥪 แซนวิช', rice:'🍚 ข้าว', noodle:'🍜 หมี่', drink:'🥤 เครื่องดื่ม', other:'🍽️ อื่นๆ' };
   const data = {
@@ -1307,7 +1325,7 @@ window.toggleHide = async function(id, setHidden) {
     if (item) item.hidden = hidden;
     renderMenuAdmin();
     showToast(hidden ? 'ซ่อนเมนูแล้ว 🙈' : 'แสดงเมนูแล้ว 👁️');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1331,13 +1349,13 @@ window.previewImgModal = function() {
 
 window.quickUploadPhoto = function(input) {
   const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('img-url-input').value = e.target.result;
+  showLoading(true);
+  compressImageToBase64(file, 500, compressed => {
+    document.getElementById('img-url-input').value = compressed;
     previewImgModal();
-    showToast('โหลดรูปสำเร็จ');
-  };
-  reader.readAsDataURL(file);
+    showToast('โหลดรูปสำเร็จ (' + Math.round(compressed.length/1024) + ' KB)');
+    showLoading(false);
+  });
 };
 
 window.saveItemImage = async function() {
@@ -1351,7 +1369,7 @@ window.saveItemImage = async function() {
     renderMenuAdmin();
     closeModal('modal-image');
     showToast('บันทึกรูปภาพแล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1409,7 +1427,7 @@ window.lookupStamp = async function() {
           </div>
         </div>`;
     }
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1425,7 +1443,7 @@ window.addStamp = async function(phone) {
     await setDoc(stampRef, { count, total, phone, updatedAt: serverTimestamp() });
     showToast('เพิ่มแต้มแล้ว: '+count+'/10');
     lookupStamp();
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1439,7 +1457,7 @@ window.resetStamp = async function(phone) {
     await setDoc(stampRef, { count: 0, total, phone, updatedAt: serverTimestamp() }, { merge: true });
     showToast('🎁 ใช้รางวัลแล้ว แต้มถูก Reset!');
     lookupStamp();
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1450,7 +1468,7 @@ window.saveStampConfig = async function() {
   try {
     await setDoc(doc(db, 'settings', 'stamps'), { goal, reward, updatedAt: serverTimestamp() });
     showToast('บันทึกตั้งค่าแต้มแล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1478,7 +1496,7 @@ window.saveFeaturedItems = async function() {
     await setDoc(doc(db, 'settings', 'store'), { featuredIds: ids }, { merge: true });
     currentFeaturedIds = ids;
     showToast('บันทึกเมนูแนะนำแล้ว ✓ ('+ids.length+' เมนู)');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
@@ -1489,7 +1507,7 @@ window.savePreorderSetting = async function() {
   try {
     await setDoc(doc(db, 'settings', 'store'), { preorderEnabled: enabled }, { merge: true });
     showToast(enabled ? '📅 เปิด Pre-order แล้ว' : '❌ ปิด Pre-order แล้ว');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
 
