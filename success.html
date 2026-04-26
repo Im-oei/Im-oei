@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>สั่งซื้อสำเร็จ - อิ่มอิ่ม</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="success">
+  <div class="success-confetti">🎉 🎊 🎉</div>
+  <div class="success-check">✓</div>
+  <h2>สั่งซื้อสำเร็จ!</h2>
+  <p>ขอบคุณที่อุดหนุนนะคะ 😊</p>
+
+  <div class="order-summary-card">
+    <div class="summary-row"><span class="key">เลขที่ออเดอร์</span><span class="val" id="s-id">-</span></div>
+    <div class="summary-row"><span class="key">ชื่อผู้สั่ง</span><span class="val" id="s-name">-</span></div>
+    <div class="summary-row"><span class="key">เวลารับอาหาร</span><span class="val" id="s-time">07:30 น.</span></div>
+    <div class="summary-row"><span class="key">วันที่สั่ง</span><span class="val" id="s-date">-</span></div>
+    <div class="summary-row"><span class="key">ยอดรวม</span><span class="val orange" id="s-total">0 บาท</span></div>
+  </div>
+
+  <p class="success-note">เราจะเตรียมอาหารให้พร้อม<br>รอรับได้ตามเวลาที่เลือกไว้เลยค่ะ</p>
+
+  <div class="success-btns">
+    <a class="btn-primary" href="index.html">กลับหน้าหลัก</a>
+    <a class="btn-secondary" href="index.html">สั่งเพิ่มอีก</a>
+  </div>
+</div>
+
+<script>
+const order = JSON.parse(localStorage.getItem('imkum_last_order') || '{}');
+const now = new Date();
+document.getElementById('s-id').textContent = order.orderId ? '#' + order.orderId.slice(0,8).toUpperCase() : '#??????';
+document.getElementById('s-name').textContent = order.customerName || '-';
+document.getElementById('s-time').textContent = (order.pickupTime || '07:30') + ' น.';
+document.getElementById('s-date').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'}) + ' ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.';
+document.getElementById('s-total').textContent = (order.total || 0) + ' บาท';
+</script>
+</body>
+</html>
