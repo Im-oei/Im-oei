@@ -66,7 +66,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.28s;z-index:600;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
-  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- LIFF SDK removed - ใช้ชื่อ-เบอร์แทน -->
 </head>
 <body>
 
@@ -103,11 +103,11 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
           oninput="this.value=this.value.replace(/\D/g,'')">
         <div class="phone-hint">ใช้สำหรับติดตามออเดอร์ ไม่มีการส่ง SMS</div>
       </div>
-      <button class="line-btn" onclick="loginWithLine()">
+      <button class="line-btn" onclick="loginWithLine()" style="display:none;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.02 2 11c0 3.67 2.17 6.88 5.38 8.65-.08.38-.52 2.44-.6 2.8 0 0-.01.08.04.11.05.03.11.01.11.01.47-.07 5.47-3.59 6.41-4.22.41.06.83.09 1.26.09C18.52 18.44 23 15.42 23 11S18.52 2 12 2z"/></svg>
         เข้าสู่ระบบด้วย LINE
       </button>
-      <div class="line-divider">หรือ</div>
+      <div class="line-divider" style="display:none;">หรือ</div>
       <button class="login-btn" onclick="customerLogin()">🛒 เข้าสู่ระบบด้วยชื่อ-เบอร์</button>
     </div>
 
@@ -181,7 +181,7 @@ const LIFF_ID = 'YOUR_LIFF_ID_HERE';
 
 window.loginWithLine = async function() {
   if(!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID_HERE'){
-    showError('กรุณาตั้งค่า LIFF ID ก่อนใช้งาน LINE Login');
+    showError('ปิดการใช้งาน LINE Login กรุณาใช้ชื่อ-เบอร์แทน');
     return;
   }
   showLoading(true);
@@ -196,17 +196,12 @@ window.loginWithLine = async function() {
     const lineId = profile.userId;
     const avatar = profile.pictureUrl || '';
 
-    // บันทึกลง Firestore
-    const custRef = doc(db, 'customers', 'line_' + lineId);
-    const now = new Date().toISOString();
-    const custDoc = await getDoc(custRef);
-    if(!custDoc.exists()){
-      await setDoc(custRef, { name, lineId, avatar, createdAt: now, lastLogin: now, loginType: 'line' });
-    } else {
-      await setDoc(custRef, { name, avatar, lastLogin: now }, { merge: true });
-    }
     sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, lineId, avatar }));
     localStorage.setItem('imkum_name', name);
+    // บันทึกลง Firestore แบบ background
+    const custRef = doc(db, 'customers', 'line_' + lineId);
+    const now = new Date().toISOString();
+    setDoc(custRef, { name, lineId, avatar, lastLogin: now, loginType: 'line' }, { merge: true }).catch(()=>{});
     window.location.href = 'index.html';
   } catch(e) {
     console.error(e);
@@ -225,23 +220,18 @@ window.customerLogin = async function() {
 
   showLoading(true);
   try {
-    // ตรวจสอบหรือสร้าง customer record ใน Firestore
-    const custRef = doc(db, 'customers', phone);
-    const custDoc = await getDoc(custRef);
-    const now = new Date().toISOString();
-    if(!custDoc.exists()){
-      await setDoc(custRef, { name, phone, createdAt: now, lastLogin: now });
-    } else {
-      await setDoc(custRef, { name, lastLogin: now }, { merge: true });
-    }
-    // บันทึก session
+    // บันทึก session ทันที (ไม่รอ Firestore)
     sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone }));
     localStorage.setItem('imkum_name', name);
     localStorage.setItem('imkum_phone', phone);
+    // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
+    const now = new Date().toISOString();
+    setDoc(doc(db, 'customers', phone), { name, phone, lastLogin: now }, { merge: true }).catch(()=>{});
     window.location.href = 'index.html';
   } catch(e) {
     console.error(e);
-    showError('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    // ถ้า error ก็ยังเข้าได้ เพราะ session บันทึกไปแล้ว
+    window.location.href = 'index.html';
   } finally {
     showLoading(false);
   }

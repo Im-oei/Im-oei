@@ -576,6 +576,15 @@ async function loadSettings() {
       document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
       const logoImg = document.getElementById('hero-logo-preview-img');
       logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
+    } else if (s.heroLogoRef) {
+      // stored in separate doc
+      const logoDoc = await getDoc(doc(db, 'settings', s.heroLogoRef));
+      if (logoDoc.exists() && logoDoc.data().heroLogoUrl) {
+        const url = logoDoc.data().heroLogoUrl;
+        document.getElementById('set-hero-logo-url').value = url;
+        const logoImg = document.getElementById('hero-logo-preview-img');
+        logoImg.src = url; logoImg.style.display = 'block';
+      }
     }
     storeIsOpen = s.isOpen !== false;
     document.getElementById('store-open-toggle').checked = storeIsOpen;
@@ -731,24 +740,62 @@ window.previewHeroLogo = function() {
   else { img.style.display = 'none'; }
 };
 
-window.uploadHeroLogoFile = function(input) {
-  const file = input.files[0]; if (!file) return;
+// compress image to base64 under ~800KB
+function compressImageToBase64(file, maxSizeKB, callback) {
   const reader = new FileReader();
   reader.onload = e => {
-    document.getElementById('set-hero-logo-url').value = e.target.result;
-    previewHeroLogo();
-    showToast('โหลดรูป Logo สำเร็จ');
+    const img = new Image();
+    img.onload = () => {
+      let quality = 0.85;
+      let w = img.width, h = img.height;
+      // max dimension 600px
+      if (w > 600 || h > 600) {
+        const ratio = Math.min(600/w, 600/h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      let result = canvas.toDataURL('image/jpeg', quality);
+      // shrink quality until under limit
+      while (result.length > maxSizeKB * 1024 && quality > 0.2) {
+        quality -= 0.1;
+        result = canvas.toDataURL('image/jpeg', quality);
+      }
+      callback(result);
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+window.uploadHeroLogoFile = function(input) {
+  const file = input.files[0]; if (!file) return;
+  showLoading(true);
+  compressImageToBase64(file, 800, compressed => {
+    document.getElementById('set-hero-logo-url').value = compressed;
+    previewHeroLogo();
+    showToast('โหลดรูป Logo สำเร็จ (บีบอัดแล้ว)');
+    showLoading(false);
+  });
 };
 
 window.saveHeroLogo = async function() {
   showLoading(true);
   try {
     const url = document.getElementById('set-hero-logo-url').value;
-    await setDoc(doc(db, 'settings', 'store'), { heroLogoUrl: url }, { merge: true });
+    if (!url) { showToast('กรุณาเลือกรูปก่อน'); return; }
+    // Firestore doc limit ~1MB — store in separate doc if large
+    if (url.length > 900000) {
+      // store in separate larger doc
+      await setDoc(doc(db, 'settings', 'heroLogo'), { heroLogoUrl: url });
+      await setDoc(doc(db, 'settings', 'store'), { heroLogoRef: 'heroLogo' }, { merge: true });
+    } else {
+      await setDoc(doc(db, 'settings', 'store'), { heroLogoUrl: url }, { merge: true });
+    }
     showToast('บันทึก Logo แล้ว ✓');
-  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาด: ' + e.message); }
   finally { showLoading(false); }
 };
 

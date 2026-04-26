@@ -15,24 +15,21 @@
 </head>
 <body>
 
-<div class="hero">
-  <div class="hero-top">
-    <span class="hero-logo">IM-OEI</span>
-    <div id="user-badge" onclick="goProfile()" style="cursor:pointer;position:relative">
-      <!-- logged-in state -->
-      <div id="badge-loggedin" style="display:none;align-items:center;gap:7px;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.5);border-radius:22px;padding:5px 13px 5px 7px">
-        <span id="user-avatar" style="font-size:19px;line-height:1">😊</span>
-        <span id="user-display" style="font-size:13px;font-weight:800;color:#3E2000;letter-spacing:0.2px">ลูกค้า</span>
-      </div>
-      <!-- guest state -->
-      <div id="badge-guest" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.95);border-radius:22px;padding:6px 14px 6px 8px;box-shadow:0 2px 12px rgba(0,0,0,0.12)">
-        <span style="font-size:15px;line-height:1">🔑</span>
-        <span style="font-size:13px;font-weight:800;color:#B8860B;letter-spacing:0.3px">เข้าสู่ระบบ</span>
-      </div>
+<div class="hero" style="padding:0;border-radius:0;background:none;position:relative;display:block;">
+  <!-- user badge overlay -->
+  <div id="user-badge" onclick="goProfile()" style="cursor:pointer;position:absolute;top:12px;right:12px;z-index:10;">
+    <div id="badge-loggedin" style="display:none;align-items:center;gap:7px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.3);border-radius:22px;padding:5px 13px 5px 7px">
+      <span id="user-avatar" style="font-size:19px;line-height:1">😊</span>
+      <span id="user-display" style="font-size:13px;font-weight:800;color:#fff;letter-spacing:0.2px">ลูกค้า</span>
+    </div>
+    <div id="badge-guest" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.95);border-radius:22px;padding:6px 14px 6px 8px;box-shadow:0 2px 12px rgba(0,0,0,0.2)">
+      <span style="font-size:15px;line-height:1">🔑</span>
+      <span style="font-size:13px;font-weight:800;color:#B8860B;letter-spacing:0.3px">เข้าสู่ระบบ</span>
     </div>
   </div>
-  <div class="hero-mascot"><img id="hero-logo-img" src="logo.png" alt="อิมเอ้ย" style="width:140px;height:140px;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.15));animation:float 3s ease-in-out infinite"></div>
-  <div class="hero-spacer"></div>
+  <!-- hero image -->
+  <img src="hero.png" alt="อิ่มเอ้ย" id="hero-logo-img"
+    style="width:100%;height:220px;display:block;object-fit:cover;object-position:center;">
 </div>
 
 <div id="closed-banner" style="display:none"></div>
@@ -252,8 +249,11 @@ async function syncFirestore() {
       if (s.pickupStart && s.pickupEnd) document.getElementById('pickup-text').textContent = 'รับอาหาร ' + s.pickupStart + ' - ' + s.pickupEnd + ' น.';
       if (s.bannerUrl) document.getElementById('banner-section').innerHTML = '<div class="banner-img-wrap"><img src="' + s.bannerUrl + '" alt="banner"></div>';
       if (s.heroLogoUrl) {
-        const heroLogo = document.getElementById('hero-logo-img');
-        if (heroLogo) { heroLogo.src = s.heroLogoUrl; }
+        // hero image is now static hero.png - skip override
+      } else if (s.heroLogoRef) {
+        // hero image is now static hero.png - skip override
+        if (false) {
+        }
       }
       if (s.isOpen === false) {
         document.getElementById('closed-banner').style.display = 'block';
