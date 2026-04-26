@@ -142,6 +142,97 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px); background: rgba(44,44,44,0.92); color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.28s; z-index: 600; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+
+/* ====== NOTIFICATION PANEL ====== */
+.notif-panel {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: min(340px, 100vw);
+  background: #fff; z-index: 800;
+  box-shadow: -4px 0 30px rgba(0,0,0,0.15);
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+}
+.notif-panel.open { transform: translateX(0); }
+.notif-panel-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  z-index: 799; opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+}
+.notif-panel-overlay.open { opacity: 1; pointer-events: all; }
+.notif-panel-head {
+  padding: 16px 16px 14px;
+  background: linear-gradient(135deg,#3E2000,#7B3F00);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-panel-head h3 { font-size: 16px; font-weight: 800; color: #FFC107; }
+.notif-close-btn {
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  width: 30px; height: 30px; border-radius: 50%; font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.notif-permission-bar {
+  background: #FFF3E0; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; color: #5D3A00;
+}
+.notif-permission-bar button {
+  background: linear-gradient(135deg,#FFC107,#F5A623);
+  border: none; border-radius: 8px; padding: 7px 14px;
+  font-family: 'Sarabun', sans-serif; font-size: 12px;
+  font-weight: 800; color: #3E2000; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0;
+}
+.notif-sound-row {
+  padding: 12px 16px; border-bottom: 1px solid #F0E8D8;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 700; color: #3E2000;
+}
+.notif-toggle-switch {
+  position: relative; width: 44px; height: 24px;
+}
+.notif-toggle-switch input { opacity: 0; width: 0; height: 0; }
+.notif-toggle-switch .slider {
+  position: absolute; inset: 0; background: #DDD;
+  border-radius: 24px; cursor: pointer; transition: .3s;
+}
+.notif-toggle-switch .slider::before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; left: 3px; top: 3px;
+  background: white; border-radius: 50%; transition: .3s;
+}
+.notif-toggle-switch input:checked + .slider { background: #4CAF50; }
+.notif-toggle-switch input:checked + .slider::before { transform: translateX(20px); }
+.notif-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+.notif-item {
+  padding: 12px 16px; border-bottom: 1px solid #F5F0E8;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.notif-item.unread { background: #FFFBF0; }
+.notif-item-icon {
+  font-size: 22px; width: 36px; height: 36px;
+  border-radius: 50%; background: #FFF8E1;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.notif-item-body { flex: 1; min-width: 0; }
+.notif-item-title { font-size: 13px; font-weight: 800; color: #2C2C2C; }
+.notif-item-sub { font-size: 12px; color: #999; margin-top: 2px; }
+.notif-item-time { font-size: 11px; color: #CCC; margin-top: 4px; }
+.notif-empty { text-align: center; padding: 50px 20px; color: #CCC; }
+.notif-empty-icon { font-size: 50px; opacity: .4; margin-bottom: 10px; }
+.notif-clear-btn {
+  margin: 10px 16px; padding: 10px;
+  border-radius: 10px; border: 1.5px solid #EEE;
+  background: #fff; color: #999; font-family: 'Sarabun', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; width: calc(100% - 32px);
+}
+/* DANGER ZONE BUTTONS */
+.danger-btn-yellow { background: linear-gradient(135deg,#FFC107,#F5A623); color: #3E2000; border: none; border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; }
+.danger-btn-yellow:active { opacity: .8; }
+.danger-btn-red { background: linear-gradient(135deg,#E53935,#B71C1C); color: #fff; border: none; border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 10px rgba(183,28,28,0.3); }
+.danger-btn-red:active { opacity: .8; }
+
 /* BANNER MANAGEMENT */
 .banner-card{background:var(--white);border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;}
 .banner-card-img{width:100%;height:90px;object-fit:cover;display:block;background:#F0E8D8;}
@@ -187,6 +278,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
         <span class="slider"></span>
       </label>
     </div>
+    <button id="notif-bell-btn" onclick="toggleNotifications()" title="แจ้งเตือน" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;position:relative;">🔔<span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;background:#FF4444;border-radius:50%;border:2px solid #3E2000;"></span></button>
     <button onclick="doLogout()" title="ออกจากระบบ" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;">🚪</button>
   </div>
 </div>
@@ -371,10 +463,64 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       </div>
       <button class="save-btn" onclick="savePasswords()">💾 บันทึกรหัสผ่าน</button>
     </div>
+
+    <!-- ====== DANGER ZONE ====== -->
+    <div class="settings-card" style="border:2px solid #FFEBEE;">
+      <h3 style="color:#B71C1C;">⚠️ Danger Zone</h3>
+      <p style="font-size:12px;color:#999;margin-bottom:14px;">การกระทำเหล่านี้ไม่สามารถย้อนกลับได้ กรุณาระวัง</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:#FFF8E1;border-radius:12px;padding:14px;">
+          <div style="font-size:14px;font-weight:700;color:#3E2000;margin-bottom:4px;">🧹 ลบออเดอร์ที่เสร็จแล้วทั้งหมด</div>
+          <div style="font-size:12px;color:#999;margin-bottom:10px;">ลบเฉพาะออเดอร์ที่มีสถานะ "รับแล้ว" หรือ "ยกเลิก"</div>
+          <button class="danger-btn-yellow" onclick="deleteCompletedOrders()">🗑️ ลบออเดอร์เก่า</button>
+        </div>
+
+        <div style="background:#FFEBEE;border-radius:12px;padding:14px;">
+          <div style="font-size:14px;font-weight:700;color:#B71C1C;margin-bottom:4px;">🔥 ลบออเดอร์ทั้งหมด</div>
+          <div style="font-size:12px;color:#999;margin-bottom:10px;">ลบออเดอร์ทุกรายการออกจากระบบถาวร</div>
+          <button class="danger-btn-red" onclick="deleteAllOrders()">⚡ ลบทั้งหมด</button>
+        </div>
+
+        <div style="background:#FFEBEE;border-radius:12px;padding:14px;">
+          <div style="font-size:14px;font-weight:700;color:#B71C1C;margin-bottom:4px;">💣 รีเซ็ตข้อมูลทั้งระบบ</div>
+          <div style="font-size:12px;color:#999;margin-bottom:10px;">ลบออเดอร์ + แต้มสะสมลูกค้าทั้งหมด (เมนูยังอยู่)</div>
+          <button class="danger-btn-red" onclick="resetAllData()">🔄 รีเซ็ตทั้งระบบ</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ====== MODAL: EDIT ITEM ====== -->
+
+<!-- ====== NOTIFICATION PANEL ====== -->
+<div class="notif-panel-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-panel-head">
+    <h3>🔔 การแจ้งเตือน</h3>
+    <button class="notif-close-btn" onclick="toggleNotifications()">✕</button>
+  </div>
+  <div id="notif-permission-bar" class="notif-permission-bar" style="display:none">
+    <span>🔕 ยังไม่ได้อนุญาต Push</span>
+    <button onclick="requestNotifPermission()">อนุญาต</button>
+  </div>
+  <div class="notif-sound-row">
+    <span>🔊 เสียงแจ้งเตือน</span>
+    <label class="notif-toggle-switch">
+      <input type="checkbox" id="notif-sound-toggle" checked onchange="saveSoundPref()">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty">
+      <div class="notif-empty-icon">🔔</div>
+      <div>ยังไม่มีการแจ้งเตือน</div>
+    </div>
+  </div>
+  <button class="notif-clear-btn" onclick="clearNotifications()">🗑️ ล้างการแจ้งเตือนทั้งหมด</button>
+</div>
+
+<!-- MODAL: EDIT ITEM -->
 <div class="modal-overlay" id="modal-edit">
   <div class="modal-sheet">
     <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
@@ -573,6 +719,7 @@ loadMenu();
 loadBanners();
 loadCategories();
 listenOrders();
+initAdminNotifications();
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
@@ -591,6 +738,10 @@ function listenOrders() {
       updateSummary();
       renderOrders();
       if (document.getElementById('panel-stats').classList.contains('active')) renderStats();
+      // ตรวจออเดอร์ใหม่ → แจ้งเตือน
+      if (typeof window._checkNewOrdersNotification === 'function') {
+        window._checkNewOrdersNotification(allOrders);
+      }
       const dot = document.getElementById('realtime-dot');
       const st = document.getElementById('realtime-status');
       if (dot) dot.style.background = 'var(--green)';
@@ -1147,7 +1298,29 @@ window.updateStatus = async function(id, status) {
   showLoading(true);
   try {
     await updateDoc(doc(db, 'orders', id), { status });
-    showToast('อัพเดทสถานะแล้ว ✓');
+
+    // แจ้งเตือน admin เอง
+    const statusTH = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };
+    const statusIcon = { pending:'🟡', preparing:'🔵', ready:'🟢', done:'✅', cancelled:'❌' };
+    const icon = statusIcon[status] || '📋';
+    const statusName = statusTH[status] || status;
+    const order = allOrders.find(o => o.id === id);
+    const name = order?.customerName || order?.name || 'ลูกค้า';
+    addNotification({
+      icon,
+      title: `${icon} อัพเดท: ${name}`,
+      body: `สถานะ → ${statusName}`
+    });
+
+    // ถ้า ready → เล่นเสียงต่างออก
+    if (status === 'ready') {
+      playNewOrderSound();
+      showBrowserNotif(`🟢 ${name} - พร้อมรับแล้ว!`, `สถานะ: ${statusName}`, 'status-' + id, '/admin.html');
+    } else {
+      playStatusSound();
+    }
+
+    showToast(`${icon} อัพเดทสถานะ: ${statusName}`);
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
 };
@@ -1610,6 +1783,62 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 window.showToast = showToast;
+
+// ====== DANGER ZONE FUNCTIONS ======
+window.deleteCompletedOrders = async function() {
+  if(!confirm('ลบออเดอร์ที่เสร็จแล้ว (done + cancelled) ทั้งหมดใช่ไหม?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+  showLoading(true);
+  try {
+    const snap = await getDocs(collection(db,'orders'));
+    const toDelete = snap.docs.filter(d=>['done','cancelled'].includes(d.data().status));
+    if(toDelete.length===0){ showToast('ไม่มีออเดอร์ที่เสร็จแล้ว'); return; }
+    const batch = [];
+    for(const d of toDelete){ batch.push(deleteDoc(doc(db,'orders',d.id))); }
+    await Promise.all(batch);
+    showToast(`🗑️ ลบแล้ว ${toDelete.length} ออเดอร์`);
+    setTimeout(()=>location.reload(), 1500);
+  } catch(e) {
+    console.error(e);
+    showToast('❌ เกิดข้อผิดพลาด: '+e.message);
+  } finally { showLoading(false); }
+};
+
+window.deleteAllOrders = async function() {
+  const confirmText = prompt('พิมพ์ "ลบทั้งหมด" เพื่อยืนยันการลบออเดอร์ทุกรายการ:');
+  if(confirmText !== 'ลบทั้งหมด'){ showToast('ยกเลิก: ข้อความไม่ตรงกัน'); return; }
+  showLoading(true);
+  try {
+    const snap = await getDocs(collection(db,'orders'));
+    if(snap.empty){ showToast('ไม่มีออเดอร์ในระบบ'); return; }
+    const batch = snap.docs.map(d=>deleteDoc(doc(db,'orders',d.id)));
+    await Promise.all(batch);
+    showToast(`🔥 ลบออเดอร์ทั้งหมด ${snap.size} รายการแล้ว`);
+    setTimeout(()=>location.reload(), 1500);
+  } catch(e) {
+    console.error(e);
+    showToast('❌ เกิดข้อผิดพลาด: '+e.message);
+  } finally { showLoading(false); }
+};
+
+window.resetAllData = async function() {
+  const confirmText = prompt('พิมพ์ "รีเซ็ตระบบ" เพื่อยืนยันการลบออเดอร์ + แต้มสะสมทั้งหมด:');
+  if(confirmText !== 'รีเซ็ตระบบ'){ showToast('ยกเลิก: ข้อความไม่ตรงกัน'); return; }
+  showLoading(true);
+  try {
+    // Delete all orders
+    const ordersSnap = await getDocs(collection(db,'orders'));
+    const orderBatch = ordersSnap.docs.map(d=>deleteDoc(doc(db,'orders',d.id)));
+    // Delete all stamps
+    const stampsSnap = await getDocs(collection(db,'stamps'));
+    const stampBatch = stampsSnap.docs.map(d=>deleteDoc(doc(db,'stamps',d.id)));
+    await Promise.all([...orderBatch, ...stampBatch]);
+    showToast(`✅ รีเซ็ตแล้ว: ${ordersSnap.size} ออเดอร์, ${stampsSnap.size} แต้ม`);
+    setTimeout(()=>location.reload(), 2000);
+  } catch(e) {
+    console.error(e);
+    showToast('❌ เกิดข้อผิดพลาด: '+e.message);
+  } finally { showLoading(false); }
+};
 </script>
 </body>
 </html>

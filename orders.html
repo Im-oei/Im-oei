@@ -7,58 +7,100 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-.order-hist-card{background:#fff;margin:8px 16px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,0.06);overflow:hidden}
-.order-hist-head{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.order-hist-id{font-size:13px;font-weight:800;color:#2C2C2C}
-.order-hist-meta{font-size:12px;color:#999;margin-top:2px}
-.order-hist-items{padding:0 16px 10px;border-top:1px solid #F5F5F5}
-.order-hist-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px dashed #F0F0F0}
-.order-hist-row:last-child{border-bottom:none}
-.order-hist-total{padding:10px 16px;background:#FFF8E1;display:flex;justify-content:space-between;align-items:center}
-.order-hist-total .label{font-size:13px;font-weight:700}
-.order-hist-total .val{font-size:18px;font-weight:800;color:#FF8C00}
-.status-badge{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
-.status-pending{background:#FFF3E0;color:#E65100}
-.status-preparing{background:#E3F2FD;color:#1565C0}
-.status-ready{background:#E8F5E9;color:#2E7D32}
-.status-done{background:#F3E5F5;color:#6A1B9A}
-.status-cancelled{background:#FFEBEE;color:#B71C1C}
-.user-info-card{background:#fff;margin:16px;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.06);display:flex;align-items:center;gap:14px}
-.user-avatar-big{font-size:40px;width:60px;height:60px;border-radius:50%;background:#FFF8E1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.user-name{font-size:17px;font-weight:800}
-.user-phone{font-size:13px;color:#999;margin-top:2px}
-.logout-btn{margin-left:auto;padding:8px 14px;border-radius:10px;border:none;background:#FFEBEE;color:#B71C1C;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
-.reorder-btn{width:100%;padding:11px 16px;background:linear-gradient(135deg,#FFC107,#F5A623);border:none;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:800;color:#3E2000;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border-top:1px solid #FFE082;transition:opacity .15s}
-.reorder-btn:active{opacity:.8}
-.order-note{padding:4px 16px 6px;font-size:12px;color:#999}
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px 14px;background:#fff;box-shadow:0 -3px 16px rgba(0,0,0,0.08);z-index:100}
-.order-btn-main{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4)}
-/* STAMP CARD */
-.stamp-card-wrap{margin:0 16px 14px;}
-.stamp-card{background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:16px;padding:14px 16px;box-shadow:0 4px 16px rgba(255,107,53,0.3);}
-.stamp-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.stamp-card-header .sc-title{font-size:14px;font-weight:800;color:#fff;}
-.stamp-card-header .sc-pts{font-size:13px;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.15);padding:3px 10px;border-radius:20px;}
-.stamps-grid{display:flex;gap:7px;flex-wrap:wrap;}
-.stamp{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
-.stamp.filled{background:rgba(255,255,255,0.9);border-color:rgba(255,255,255,0.9);}
-.stamp-msg{font-size:11px;color:rgba(255,255,255,0.8);margin-top:8px;}
-.stamp-loading{font-size:12px;color:rgba(255,255,255,0.7);text-align:center;padding:10px 0;}
-.section-label{padding:4px 16px 6px;font-size:13px;font-weight:800;color:#666;}
+.profile-hero{background:linear-gradient(135deg,#3E2000 0%,#7B3F00 60%,#FF8C00 100%);padding:28px 20px 70px;position:relative;overflow:hidden;}
+.profile-hero::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.05);top:-60px;right:-40px;}
+.profile-hero::after{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);bottom:20px;left:-30px;}
+.profile-back{color:rgba(255,255,255,0.85);font-size:26px;text-decoration:none;display:inline-block;margin-bottom:16px;position:relative;z-index:1;}
+.profile-user-row{display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
+.profile-avatar{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;}
+.profile-info{flex:1;}
+.profile-name{font-size:20px;font-weight:800;color:#fff;line-height:1.2;}
+.profile-phone{font-size:13px;color:rgba(255,255,255,0.7);margin-top:3px;}
+.profile-logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:12px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.stamp-card-float{margin:-40px 16px 0;position:relative;z-index:10;}
+.stamp-card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 30px rgba(0,0,0,0.12);}
+.stamp-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.stamp-title{font-size:15px;font-weight:800;color:#3E2000;}
+.stamp-badge{background:linear-gradient(135deg,#FF6B35,#FF8C00);color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;}
+.stamps-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.stamp{width:32px;height:32px;border-radius:50%;border:2px solid #EEE;background:#F9F9F9;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;}
+.stamp.filled{border-color:#FFB300;background:#FFF8E1;}
+.stamp-progress-bar{margin-top:12px;background:#F0E8D8;border-radius:10px;height:7px;overflow:hidden;}
+.stamp-progress-fill{height:100%;background:linear-gradient(90deg,#FFC107,#FF8C00);border-radius:10px;transition:width .6s ease;}
+.stamp-msg{font-size:12px;color:#999;margin-top:8px;text-align:center;}
+.sec-label{padding:20px 16px 8px;font-size:14px;font-weight:800;color:#3E2000;display:flex;align-items:center;gap:6px;}
+.sec-count{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:4px;}
+.order-card{background:#fff;margin:0 16px 12px;border-radius:18px;box-shadow:0 2px 14px rgba(0,0,0,0.07);overflow:hidden;border:1.5px solid #F5EDE0;transition:transform .15s;}
+.order-card:active{transform:scale(0.99);}
+.order-card-head{padding:14px 16px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.order-id{font-size:12px;font-weight:800;color:#FF8C00;letter-spacing:.5px;}
+.order-date{font-size:12px;color:#BBB;margin-top:2px;}
+.order-pickup{display:inline-flex;align-items:center;gap:4px;background:#FFF8E1;color:#5D3A00;font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-top:5px;}
+.status-badge{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.status-pending{background:#FFF3E0;color:#E65100;}
+.status-preparing{background:#E3F2FD;color:#1565C0;}
+.status-ready{background:#E8F5E9;color:#2E7D32;}
+.status-done{background:#F3E5F5;color:#6A1B9A;}
+.status-cancelled{background:#FFEBEE;color:#B71C1C;}
+.order-divider{height:1px;background:#F5F0E8;margin:0 16px;}
+.order-items{padding:10px 16px;}
+.order-item-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px dashed #F0E8D8;}
+.order-item-row:last-child{border-bottom:none;}
+.order-item-name{color:#444;}
+.order-item-price{font-weight:700;color:#3E2000;}
+.order-footer{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.order-total-label{font-size:12px;font-weight:700;color:#888;}
+.order-total-val{font-size:20px;font-weight:800;color:#FF8C00;}
+.reorder-btn{background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:9px 18px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 3px 10px rgba(255,193,7,0.35);transition:all .15s;white-space:nowrap;}
+.reorder-btn:active{transform:scale(0.94);opacity:.85;}
+.empty-state{text-align:center;padding:60px 30px;color:#CCC;}
+.empty-icon{font-size:60px;opacity:.5;margin-bottom:14px;}
+.empty-text{font-size:15px;font-weight:700;color:#BBB;}
+.empty-sub{font-size:13px;color:#CCC;margin-top:6px;}
+.empty-btn{display:inline-block;margin-top:20px;background:linear-gradient(135deg,#FFC107,#F5A623);color:#3E2000;font-weight:800;padding:13px 30px;border-radius:14px;text-decoration:none;font-size:15px;box-shadow:0 4px 14px rgba(255,193,7,0.4);}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px 18px;background:#fff;box-shadow:0 -3px 16px rgba(0,0,0,0.08);z-index:100;}
+.order-btn-main{width:100%;padding:15px;border-radius:16px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 16px rgba(255,193,7,0.4);}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s;}
+.loading-overlay.show{opacity:1;pointer-events:all;}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid #FFE082;border-top-color:#F5A623;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .28s;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
-<body>
+<body style="background:#F7F3EE;padding-bottom:80px;">
 
-<div class="top-bar">
-  <a class="back-btn" href="index.html">‹</a>
-  <h2>ออเดอร์ของฉัน</h2>
-  <span style="width:28px"></span>
+<div class="profile-hero">
+  <a class="profile-back" href="index.html">‹</a>
+  <div class="profile-user-row">
+    <div class="profile-avatar">😊</div>
+    <div class="profile-info">
+      <div class="profile-name" id="user-name-display">ลูกค้า</div>
+      <div class="profile-phone" id="user-phone-display">📱 -</div>
+    </div>
+    <button class="profile-logout" onclick="doLogout()">🚪 ออก</button>
+  </div>
 </div>
 
-<div id="user-info-wrap"></div>
-<div class="stamp-card-wrap" id="stamp-card-wrap"></div>
-<div class="section-label">📋 ออเดอร์ของฉัน</div>
-<div id="orders-wrap" style="padding-top:4px;padding-bottom:80px"></div>
+<div class="stamp-card-float">
+  <div class="stamp-card">
+    <div class="stamp-card-top">
+      <div class="stamp-title">⭐ สะสมแต้ม</div>
+      <div class="stamp-badge" id="stamp-count-badge">0/10</div>
+    </div>
+    <div class="stamps-grid" id="stamps-grid"></div>
+    <div class="stamp-progress-bar">
+      <div class="stamp-progress-fill" id="stamp-progress" style="width:0%"></div>
+    </div>
+    <div class="stamp-msg" id="stamp-msg">กำลังโหลดแต้ม...</div>
+  </div>
+</div>
+
+<div class="sec-label">
+  📋 ออเดอร์ของฉัน
+  <span class="sec-count" id="order-count" style="display:none">0</span>
+</div>
+<div id="orders-wrap"></div>
 
 <div class="bottom-bar">
   <button class="order-btn-main" onclick="location.href='index.html'">🛒 สั่งอาหารเพิ่ม</button>
@@ -69,34 +111,25 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// AUTH CHECK
 const sess = sessionStorage.getItem('imkum_user');
 if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
 const user = JSON.parse(sess);
 if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html'; throw new Error('wrong role'); }
 
 const app = initializeApp({
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei"
+  apiKey:"AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
+  authDomain:"im-oei.firebaseapp.com",
+  projectId:"im-oei"
 });
 const db = getFirestore(app);
 
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
-// RENDER USER INFO
-document.getElementById('user-info-wrap').innerHTML = `
-  <div class="user-info-card">
-    <div class="user-avatar-big">😊</div>
-    <div>
-      <div class="user-name">${user.name||'ลูกค้า'}</div>
-      <div class="user-phone">📱 ${user.phone||'-'}</div>
-    </div>
-    <button class="logout-btn" onclick="doLogout()">🚪 ออก</button>
-  </div>`;
+document.getElementById('user-name-display').textContent = user.name||'ลูกค้า';
+document.getElementById('user-phone-display').textContent = '📱 '+(user.phone||'-');
 
 window.doLogout = function(){
   if(!confirm('ออกจากระบบใช่ไหม?')) return;
@@ -105,113 +138,263 @@ window.doLogout = function(){
   window.location.href='login.html';
 };
 
-// LOAD ORDERS
+const statusMap={pending:'รอรับ',preparing:'กำลังทำ',ready:'พร้อมรับ',done:'รับแล้ว',cancelled:'ยกเลิก'};
+const statusCls={pending:'status-pending',preparing:'status-preparing',ready:'status-ready',done:'status-done',cancelled:'status-cancelled'};
+const statusIcon={pending:'🟡',preparing:'🔵',ready:'🟢',done:'✅',cancelled:'❌'};
+
+function renderOrders(docs){
+  const wrap=document.getElementById('orders-wrap');
+  if(!docs.length){
+    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีออเดอร์</div><div class="empty-sub">สั่งอาหารครั้งแรกของคุณได้เลย!</div><a href="index.html" class="empty-btn">🛒 ดูเมนู</a></div>`;
+    document.getElementById('order-count').style.display='none';
+    return;
+  }
+  const cnt=document.getElementById('order-count');
+  cnt.textContent=docs.length; cnt.style.display='inline';
+  let html='';
+  docs.forEach(o=>{
+    const dt=o.createdAt?.toDate?o.createdAt.toDate():new Date();
+    const dateStr=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+    const timeStr=dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    const items=(o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+    const itemsJson=JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
+    html+=`<div class="order-card">
+      <div class="order-card-head">
+        <div>
+          <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
+          <div class="order-date">🕐 ${dateStr} ${timeStr}</div>
+          <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.</div>
+        </div>
+        <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${statusMap[o.status]||o.status}</span>
+      </div>
+      <div class="order-divider"></div>
+      <div class="order-items">${items}</div>
+      <div class="order-footer">
+        <div><div class="order-total-label">ยอดรวม</div><div class="order-total-val">${o.total} ฿</div></div>
+        <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
+      </div>
+    </div>`;
+  });
+  wrap.innerHTML=html;
+}
+
 async function loadOrders(){
   showLoading(true);
-  const wrap = document.getElementById('orders-wrap');
   try {
-    const q = query(
-      collection(db,'orders'),
-      where('customerPhone','==', user.phone||''),
-      orderBy('createdAt','desc')
-    );
-    const snap = await getDocs(q);
-    if(snap.empty){
-      wrap.innerHTML='<div style="text-align:center;padding:60px 20px;color:#999"><div style="font-size:50px;opacity:.4;margin-bottom:12px">📋</div><div style="font-size:14px">ยังไม่มีออเดอร์</div><a href="index.html" style="display:inline-block;margin-top:16px;background:#FFC107;color:#3E2000;font-weight:800;padding:12px 28px;border-radius:14px;text-decoration:none;font-size:15px">สั่งอาหารเลย</a></div>';
-      return;
-    }
-    const statusMap={pending:'รอรับ',preparing:'กำลังทำ',ready:'พร้อมรับ',done:'รับแล้ว',cancelled:'ยกเลิก'};
-    const statusClass={pending:'status-pending',preparing:'status-preparing',ready:'status-ready',done:'status-done',cancelled:'status-cancelled'};
-    let html='';
-    snap.docs.forEach(d=>{
-      const o=d.data();
-      const dt=o.createdAt?.toDate?o.createdAt.toDate():new Date();
-      const dateStr=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
-      const timeStr=dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-      const items=(o.items||[]).map(i=>`<div class="order-hist-row"><span>${i.name} × ${i.qty}</span><span style="font-weight:700">${i.subtotal} บาท</span></div>`).join('');
-      const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
-      html+=`<div class="order-hist-card">
-        <div class="order-hist-head">
-          <div>
-            <div class="order-hist-id">#${d.id.slice(0,8).toUpperCase()}</div>
-            <div class="order-hist-meta">${dateStr} ${timeStr} &nbsp;|&nbsp; 🕐 ${o.pickupTime||'07:30'} น.</div>
-          </div>
-          <span class="status-badge ${statusClass[o.status]||''}">${statusMap[o.status]||o.status}</span>
-        </div>
-        <div class="order-hist-items">${items}</div>
-        <div class="order-hist-total"><span class="label">รวม</span><span class="val">${o.total} บาท</span></div>
-        <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
-      </div>`;
-    });
-    wrap.innerHTML=html;
+    // PRIMARY: query by phone without orderBy (no index needed)
+    const q=query(collection(db,'orders'),where('customerPhone','==',user.phone||''));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    docs.sort((a,b)=>(b.createdAt?.toDate?.()?.getTime?.()??0)-(a.createdAt?.toDate?.()?.getTime?.()??0));
+    renderOrders(docs);
   } catch(e){
-    console.error(e);
-    wrap.innerHTML='<div style="text-align:center;padding:40px;color:#999">ไม่สามารถโหลดออเดอร์ได้</div>';
+    console.warn('primary query failed, trying fallback:', e);
+    try {
+      // FALLBACK: get all orders, filter in JS
+      const snap=await getDocs(collection(db,'orders'));
+      const docs=snap.docs.map(d=>({id:d.id,...d.data()}))
+        .filter(o=>o.customerPhone===(user.phone||''));
+      docs.sort((a,b)=>(b.createdAt?.toDate?.()?.getTime?.()??0)-(a.createdAt?.toDate?.()?.getTime?.()??0));
+      renderOrders(docs);
+    } catch(e2){
+      document.getElementById('orders-wrap').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">โหลดไม่ได้</div><div class="empty-sub">กรุณาลองใหม่อีกครั้ง</div></div>';
+    }
   } finally { showLoading(false); }
 }
 
-// REORDER function
-window.reorder = function(items) {
-  if(!items||!items.length){ showToast('ไม่พบรายการ'); return; }
-  // Load existing cart
-  let cart = {};
-  try { cart = JSON.parse(localStorage.getItem('imkum_cart')||'{}'); } catch(e){ cart={}; }
-  // Add items to cart by itemId
-  items.forEach(item=>{
-    if(item.id){
-      cart[item.id] = (cart[item.id]||0) + (item.qty||1);
-    }
-  });
-  localStorage.setItem('imkum_cart', JSON.stringify(cart));
-  showToast('✅ เพิ่มลงตะกร้าแล้ว! ไปดูตะกร้าได้เลย');
-  setTimeout(()=>{ window.location.href='index.html'; }, 1500);
+window.reorder=function(items){
+  if(!items||!items.length){showToast('ไม่พบรายการ');return;}
+  let cart={};
+  try{cart=JSON.parse(localStorage.getItem('imkum_cart')||'{}');}catch(e){cart={};}
+  items.forEach(item=>{if(item.id)cart[item.id]=(cart[item.id]||0)+(item.qty||1);});
+  localStorage.setItem('imkum_cart',JSON.stringify(cart));
+  showToast('✅ เพิ่มลงตะกร้าแล้ว!');
+  setTimeout(()=>{window.location.href='index.html';},1500);
 };
 
-// ====== STAMP CARD ======
-const STAMP_GOAL = 10;
-function renderStampCard(count, total) {
-  const wrap = document.getElementById('stamp-card-wrap');
-  if (!wrap) return;
-  let dots = '';
-  for (let i = 0; i < STAMP_GOAL; i++) {
-    dots += `<div class="stamp${i < count ? ' filled' : ''}">${i < count ? '⭐' : ''}</div>`;
-  }
-  const msg = count >= STAMP_GOAL
-    ? '🎉 ครบแล้ว! แจ้งร้านเพื่อรับรางวัล'
-    : `อีก ${STAMP_GOAL - count} ครั้ง รับฟรี 1 เมนู! (สั่งแล้ว ${total} ครั้ง)`;
-  wrap.innerHTML = `<div class="stamp-card">
-    <div class="stamp-card-header">
-      <div class="sc-title">⭐ สะสมแต้ม</div>
-      <div class="sc-pts">${count}/${STAMP_GOAL}</div>
-    </div>
-    <div class="stamps-grid">${dots}</div>
-    <div class="stamp-msg">${msg}</div>
-  </div>`;
+const STAMP_GOAL=10;
+function renderStampCard(count,total){
+  const grid=document.getElementById('stamps-grid');
+  if(!grid)return;
+  let dots='';
+  for(let i=0;i<STAMP_GOAL;i++) dots+=`<div class="stamp${i<count?' filled':''}">${i<count?'⭐':''}</div>`;
+  grid.innerHTML=dots;
+  document.getElementById('stamp-count-badge').textContent=`${count}/${STAMP_GOAL}`;
+  document.getElementById('stamp-progress').style.width=`${Math.min(100,(count/STAMP_GOAL)*100)}%`;
+  document.getElementById('stamp-msg').textContent=count>=STAMP_GOAL
+    ?'🎉 ครบแล้ว! แจ้งร้านเพื่อรับรางวัล'
+    :`อีก ${STAMP_GOAL-count} ครั้ง รับฟรี 1 เมนู! (สั่งแล้ว ${total} ครั้ง)`;
 }
 
-async function loadStamps() {
-  const wrap = document.getElementById('stamp-card-wrap');
-  if (!wrap || !user.phone) return;
-  wrap.innerHTML = '<div class="stamp-card"><div class="stamp-loading">⭐ กำลังโหลดแต้ม...</div></div>';
-  try {
-    const stampDoc = await getDoc(doc(db, 'stamps', user.phone));
-    if (stampDoc.exists()) {
-      const d = stampDoc.data();
-      renderStampCard(d.count || 0, d.total || 0);
-    } else {
-      renderStampCard(0, 0);
-    }
-  } catch(e) {
-    // fallback to localStorage
-    try {
-      const cached = JSON.parse(localStorage.getItem('imkum_stamps_' + user.phone) || '{"count":0,"total":0}');
-      renderStampCard(cached.count || 0, cached.total || 0);
-    } catch { renderStampCard(0, 0); }
+async function loadStamps(){
+  if(!user.phone){renderStampCard(0,0);return;}
+  try{
+    const sd=await getDoc(doc(db,'stamps',user.phone));
+    const d=sd.exists()?sd.data():{count:0,total:0};
+    renderStampCard(d.count||0,d.total||0);
+  }catch(e){
+    try{const c=JSON.parse(localStorage.getItem('imkum_stamps_'+user.phone)||'{"count":0,"total":0}');renderStampCard(c.count||0,c.total||0);}
+    catch{renderStampCard(0,0);}
   }
 }
 
 loadOrders();
 loadStamps();
+
+// ============================
+// ====== CUSTOMER NOTIFICATIONS ======
+// ============================
+
+let custAudioCtx = null;
+let watchedOrders = {}; // {orderId: lastStatus}
+let custSoundEnabled = true;
+
+async function initCustomerNotifications() {
+  custSoundEnabled = localStorage.getItem('imkum_sound_cust') !== 'off';
+
+  // Register SW
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+    } catch(e) { console.warn('SW reg:', e); }
+  }
+
+  // ขออนุญาต notification
+  if ('Notification' in window && Notification.permission === 'default') {
+    // แสดง banner แทนการขอทันที
+    showNotifBanner();
+  }
+
+  // เริ่ม watch orders สำหรับ status change
+  startWatchingOrders();
+}
+
+function showNotifBanner() {
+  if (localStorage.getItem('imkum_notif_dismissed') === '1') return;
+  const banner = document.getElementById('notif-request-banner');
+  if (banner) banner.style.display = 'flex';
+}
+
+window.allowNotifications = async function() {
+  const banner = document.getElementById('notif-request-banner');
+  if (!('Notification' in window)) return;
+  const perm = await Notification.requestPermission();
+  if (banner) banner.style.display = 'none';
+  if (perm === 'granted') {
+    showToast('✅ เปิดการแจ้งเตือนแล้ว!');
+  }
+};
+
+window.dismissNotifBanner = function() {
+  const banner = document.getElementById('notif-request-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('imkum_notif_dismissed', '1');
+};
+
+function playCustSound(type) {
+  if (!custSoundEnabled) return;
+  try {
+    if (!custAudioCtx) custAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = custAudioCtx;
+    const freqs = type === 'ready' ? [700, 900, 1100] : [500, 650];
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+    });
+  } catch(e) {}
+}
+
+function showCustBrowserNotif(title, body, tag) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    new Notification(title, {
+      body, icon: '/logo.png', badge: '/logo.png', tag,
+      vibrate: [200, 100, 200]
+    });
+  } catch(e) {
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION', title, body, tag, url: '/orders.html'
+      });
+    }
+  }
+}
+
+async function startWatchingOrders() {
+  if (!user.phone) return;
+  // poll ทุก 30 วินาที
+  async function poll() {
+    try {
+      const q = query(collection(db,'orders'), where('customerPhone','==', user.phone));
+      const snap = await getDocs(q);
+      snap.docs.forEach(d => {
+        const o = { id: d.id, ...d.data() };
+        const prevStatus = watchedOrders[o.id];
+        if (prevStatus && prevStatus !== o.status) {
+          // status เปลี่ยน!
+          handleStatusChange(o, prevStatus, o.status);
+        }
+        watchedOrders[o.id] = o.status;
+      });
+    } catch(e) { console.warn('poll error:', e); }
+  }
+  await poll(); // ครั้งแรก
+  setInterval(poll, 30000); // ทุก 30 วิ
+}
+
+const statusTH = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };
+
+function handleStatusChange(order, oldStatus, newStatus) {
+  const statusIcon = { pending:'🟡', preparing:'🔵', ready:'🟢', done:'✅', cancelled:'❌' };
+  const icon = statusIcon[newStatus] || '📋';
+  const statusName = statusTH[newStatus] || newStatus;
+  let title = `${icon} ออเดอร์ #${order.id.slice(0,6).toUpperCase()}`;
+  let body = `สถานะ: ${statusName}`;
+
+  if (newStatus === 'ready') {
+    title = '🟢 อาหารพร้อมแล้ว!';
+    body = `มารับได้เลย ⏰ ${order.pickupTime || ''} น.`;
+    playCustSound('ready');
+  } else if (newStatus === 'preparing') {
+    title = '🔵 ร้านกำลังทำอาหาร';
+    body = 'ร้านรับออเดอร์แล้ว กำลังเตรียม!';
+    playCustSound('update');
+  } else if (newStatus === 'cancelled') {
+    title = '❌ ออเดอร์ถูกยกเลิก';
+    body = 'ออเดอร์ของคุณถูกยกเลิก';
+    playCustSound('update');
+  } else {
+    playCustSound('update');
+  }
+
+  showCustBrowserNotif(title, body, 'order-' + order.id);
+  showToast(`${icon} ${title}`);
+
+  // รีโหลดออเดอร์เพื่อแสดงสถานะล่าสุด
+  loadOrders();
+}
+
+// เริ่มระบบ
+initCustomerNotifications();
+
 </script>
+<!-- NOTIFICATION PERMISSION BANNER -->
+<div id="notif-request-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#3E2000,#7B3F00);padding:12px 16px;align-items:center;gap:10px;box-shadow:0 3px 12px rgba(0,0,0,0.2);">
+  <span style="font-size:20px">🔔</span>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:13px;font-weight:800;color:#FFC107;">รับการแจ้งเตือนสถานะออเดอร์</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);">เปิดรับแจ้งเตือนเพื่อทราบเมื่ออาหารพร้อม</div>
+  </div>
+  <button onclick="allowNotifications()" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#3E2000;cursor:pointer;white-space:nowrap;flex-shrink:0;">เปิด</button>
+  <button onclick="dismissNotifBanner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
+</div>
+
 </body>
 </html>
