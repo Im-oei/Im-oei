@@ -82,6 +82,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .btn-delete    { background: #F5F5F5; color: #999; margin-left: auto; }
 
 .pickup-time-tag { display: inline-flex; align-items: center; gap: 4px; background: var(--yellow-light); padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; color: #5D3A00; }
+.order-location-tag { display: inline-flex; align-items: center; gap: 4px; background: #E3F2FD; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 700; color: #1565C0; margin-top: 4px; }
 
 /* REALTIME PULSE */
 .realtime-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
@@ -104,6 +105,15 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .btn-hide  { background: #FFF3E0; }
 .btn-img   { background: #F3E5F5; }
 .hidden-badge { background: #EEE; color: #999; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+/* SOLD OUT TOGGLE */
+.soldout-toggle-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.soldout-label { font-size: 11px; font-weight: 700; color: var(--text-sub); white-space: nowrap; }
+.soldout-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.soldout-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.soldout-switch .sl { position: absolute; inset: 0; background: #4CAF50; border-radius: 24px; cursor: pointer; transition: .25s; }
+.soldout-switch .sl::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .25s; }
+.soldout-switch input:checked + .sl { background: #E53935; }
+.soldout-switch input:checked + .sl::before { transform: translateX(20px); }
 .add-item-btn { width: 100%; padding: 14px; border-radius: 14px; border: 2px dashed var(--yellow); background: var(--yellow-light); font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 700; color: #5D3A00; cursor: pointer; transition: all 0.2s; }
 .add-item-btn:active { background: var(--yellow); }
 
@@ -126,6 +136,37 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .modal-overlay.show .modal-sheet { transform: translateY(0); }
 .modal-sheet h3 { font-size: 18px; font-weight: 800; margin-bottom: 16px; text-align: center; }
 .modal-close { float: right; font-size: 22px; cursor: pointer; color: var(--text-sub); background: none; border: none; padding: 0; }
+
+/* DANGER DIALOG */
+.danger-dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 600; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.danger-dialog-overlay.show { opacity: 1; pointer-events: all; }
+.danger-dialog { background: var(--white); border-radius: 24px; width: 100%; max-width: 360px; overflow: hidden; transform: scale(0.88) translateY(20px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.danger-dialog-overlay.show .danger-dialog { transform: scale(1) translateY(0); }
+.danger-dialog-header { padding: 28px 24px 20px; text-align: center; }
+.danger-dialog-icon { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 16px; }
+.danger-dialog-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.danger-dialog-desc { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+.danger-dialog-input-wrap { padding: 0 24px 20px; }
+.danger-dialog-input-label { font-size: 12px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px; display: block; }
+.danger-dialog-input { width: 100%; border: 2px solid #E8E8E8; border-radius: 12px; padding: 12px 14px; font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); background: #F8F8F8; outline: none; transition: border-color 0.2s; box-sizing: border-box; text-align: center; letter-spacing: 1px; }
+.danger-dialog-input:focus { border-color: #FF5252; background: #FFF5F5; }
+.danger-dialog-input.matched { border-color: #4CAF50; background: #F5FFF5; }
+.danger-dialog-actions { display: flex; border-top: 1.5px solid #F0F0F0; }
+.danger-dialog-actions button { flex: 1; padding: 16px; font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: all 0.15s; }
+.danger-dialog-actions button:active { opacity: 0.8; }
+.danger-dialog-cancel { background: transparent; color: var(--text-sub); border-right: 1.5px solid #F0F0F0 !important; }
+.danger-dialog-cancel:hover { background: #F8F8F8; }
+.danger-dialog-confirm { color: #fff; }
+.danger-dialog-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Danger items in settings-card */
+.danger-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 14px; margin-bottom: 10px; }
+.danger-item:last-child { margin-bottom: 0; }
+.danger-item .d-icon { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.danger-item .d-info { flex: 1; min-width: 0; }
+.danger-item .d-title { font-size: 14px; font-weight: 800; margin-bottom: 3px; }
+.danger-item .d-desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; }
+.danger-item .d-btn { border: none; border-radius: 10px; padding: 9px 16px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+.danger-item .d-btn:active { transform: scale(0.95); }
 
 /* EMPTY STATE */
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); }
@@ -470,54 +511,80 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     </div>
 
     <!-- ====== DANGER ZONE ====== -->
-    <div class="settings-card" style="border:none;padding:0;background:transparent;box-shadow:none;">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#1a0000,#3E0000);border-radius:16px 16px 0 0;padding:16px 18px;display:flex;align-items:center;gap:10px;">
-        <div style="width:36px;height:36px;background:rgba(255,80,80,0.2);border:1.5px solid rgba(255,80,80,0.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚠️</div>
-        <div>
-          <div style="font-size:15px;font-weight:800;color:#FF5252;letter-spacing:.3px;">Danger Zone</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px;">การกระทำเหล่านี้ไม่สามารถย้อนกลับได้</div>
+    <div class="settings-card">
+      <h3>⚠️ Danger Zone</h3>
+
+      <!-- ลบออเดอร์เก่า -->
+      <div class="danger-item" style="background:#FFFBF0;border:1.5px solid #FFE082;">
+        <div class="d-icon" style="background:#FFF3CD;">🧹</div>
+        <div class="d-info">
+          <div class="d-title" style="color:#B8860B;">ลบออเดอร์ที่เสร็จแล้ว</div>
+          <div class="d-desc">สถานะ "รับแล้ว" และ "ยกเลิก" จะถูกลบ</div>
         </div>
+        <button class="d-btn" onclick="openDangerDialog('completed')" style="background:linear-gradient(135deg,#F9A825,#F57F17);color:#1A0A00;">ลบเก่า</button>
       </div>
 
-      <!-- Cards -->
-      <div style="background:#1C0A0A;border-radius:0 0 16px 16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
-
-        <!-- ลบออเดอร์เก่า -->
-        <div style="background:linear-gradient(135deg,#2A1A00,#3A2400);border:1px solid rgba(255,193,7,0.2);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
-          <div style="width:42px;height:42px;background:rgba(255,193,7,0.12);border:1.5px solid rgba(255,193,7,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🧹</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:800;color:#FFD54F;margin-bottom:2px;">ลบออเดอร์ที่เสร็จแล้ว</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4;">สถานะ "รับแล้ว" และ "ยกเลิก" จะถูกลบ</div>
-          </div>
-          <button onclick="deleteCompletedOrders()" style="background:linear-gradient(135deg,#F9A825,#F57F17);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#1A0A00;cursor:pointer;white-space:nowrap;flex-shrink:0;">ลบเก่า</button>
+      <!-- ลบออเดอร์ทั้งหมด -->
+      <div class="danger-item" style="background:#FFF5F5;border:1.5px solid #FFCDD2;">
+        <div class="d-icon" style="background:#FFEBEE;">🔥</div>
+        <div class="d-info">
+          <div class="d-title" style="color:#C62828;">ลบออเดอร์ทั้งหมด</div>
+          <div class="d-desc">ลบทุกรายการออกจากระบบถาวร</div>
         </div>
+        <button class="d-btn" onclick="openDangerDialog('all')" style="background:linear-gradient(135deg,#E53935,#B71C1C);color:#fff;box-shadow:0 3px 10px rgba(183,28,28,0.25);">ลบทั้งหมด</button>
+      </div>
 
-        <!-- ลบออเดอร์ทั้งหมด -->
-        <div style="background:linear-gradient(135deg,#1F0808,#2D0D0D);border:1px solid rgba(255,82,82,0.25);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
-          <div style="width:42px;height:42px;background:rgba(255,82,82,0.12);border:1.5px solid rgba(255,82,82,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔥</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:800;color:#FF5252;margin-bottom:2px;">ลบออเดอร์ทั้งหมด</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4;">ลบทุกรายการออกจากระบบถาวร</div>
-          </div>
-          <button onclick="deleteAllOrders()" style="background:linear-gradient(135deg,#C62828,#B71C1C);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">ลบทั้งหมด</button>
+      <!-- รีเซ็ตระบบ -->
+      <div class="danger-item" style="background:#F9F5FF;border:1.5px solid #E1BEE7;">
+        <div class="d-icon" style="background:#F3E5F5;">💣</div>
+        <div class="d-info">
+          <div class="d-title" style="color:#6A1B9A;">รีเซ็ตข้อมูลทั้งระบบ</div>
+          <div class="d-desc">ออเดอร์ + แต้มสะสมทั้งหมด (เมนูยังอยู่)</div>
         </div>
-
-        <!-- รีเซ็ตระบบ -->
-        <div style="background:linear-gradient(135deg,#0D0020,#1A0030);border:1px solid rgba(179,0,255,0.2);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
-          <div style="width:42px;height:42px;background:rgba(179,0,255,0.1);border:1.5px solid rgba(179,0,255,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">💣</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:800;color:#CE93D8;margin-bottom:2px;">รีเซ็ตข้อมูลทั้งระบบ</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4;">ออเดอร์ + แต้มสะสมทั้งหมด (เมนูยังอยู่)</div>
-          </div>
-          <button onclick="resetAllData()" style="background:linear-gradient(135deg,#6A1B9A,#4A148C);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">รีเซ็ต</button>
-        </div>
-
+        <button class="d-btn" onclick="openDangerDialog('reset')" style="background:linear-gradient(135deg,#7B1FA2,#4A148C);color:#fff;box-shadow:0 3px 10px rgba(106,27,154,0.25);">รีเซ็ต</button>
       </div>
     </div>
   </div>
 </div>
 
+
+<!-- ====== DANGER DIALOGS ====== -->
+<div class="danger-dialog-overlay" id="danger-dialog-overlay">
+  <div class="danger-dialog">
+    <div class="danger-dialog-header">
+      <div class="danger-dialog-icon" id="dd-icon-wrap">
+        <span id="dd-icon">🧹</span>
+      </div>
+      <div class="danger-dialog-title" id="dd-title">ลบออเดอร์ที่เสร็จแล้ว</div>
+      <div class="danger-dialog-desc" id="dd-desc">การกระทำนี้ไม่สามารถย้อนกลับได้</div>
+    </div>
+    <div class="danger-dialog-input-wrap" id="dd-input-wrap" style="display:none">
+      <label class="danger-dialog-input-label" id="dd-input-label">พิมพ์เพื่อยืนยัน</label>
+      <input class="danger-dialog-input" type="text" id="dd-input" autocomplete="off" placeholder="">
+    </div>
+    <div class="danger-dialog-actions">
+      <button class="danger-dialog-cancel" onclick="closeDangerDialog()">ยกเลิก</button>
+      <button class="danger-dialog-confirm" id="dd-confirm-btn" onclick="confirmDangerAction()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== GENERAL CONFIRM DIALOG ====== -->
+<div class="danger-dialog-overlay" id="confirm-dialog-overlay">
+  <div class="danger-dialog">
+    <div class="danger-dialog-header">
+      <div class="danger-dialog-icon" id="cd-icon-wrap" style="background:#FFF3E0;border:2px solid #FFE0B2;">
+        <span id="cd-icon">🗑️</span>
+      </div>
+      <div class="danger-dialog-title" id="cd-title">ยืนยันการลบ</div>
+      <div class="danger-dialog-desc" id="cd-desc">คุณแน่ใจหรือไม่?</div>
+    </div>
+    <div class="danger-dialog-actions">
+      <button class="danger-dialog-cancel" onclick="closeConfirmDialog()">ยกเลิก</button>
+      <button class="danger-dialog-confirm" id="cd-confirm-btn" onclick="_confirmDialogResolve(true)" style="background:linear-gradient(135deg,#E53935,#B71C1C);color:#fff;">ยืนยัน</button>
+    </div>
+  </div>
+</div>
 
 <!-- ====== NOTIFICATION PANEL ====== -->
 <div class="notif-panel-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
@@ -863,13 +930,22 @@ function renderOrderCard(o) {
     done: ``, cancelled: ``
   }[o.status] || '';
 
+  // Logo: ใช้ logo ที่โหลดมาแล้ว หรือ fallback เป็น emoji
+  const logoHtml = window._storeLogo
+    ? `<img src="${window._storeLogo}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" alt="logo">`
+    : `<span style="font-size:24px;flex-shrink:0;">🍱</span>`;
+
   return `
     <div class="order-card" id="order-${o.id}">
       <div class="order-head">
-        <div>
-          <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
-          <div class="order-name">👤 ${o.customerName || 'ไม่ระบุชื่อ'}</div>
-          <div class="order-meta">${dateStr} เวลา ${timeStr} &nbsp;|&nbsp; <span class="pickup-time-tag">🕐 ${o.pickupTime || '07:30'} น.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;">
+          ${logoHtml}
+          <div style="flex:1;min-width:0;">
+            <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
+            <div class="order-name">👤 ${o.customerName || 'ไม่ระบุชื่อ'}</div>
+            <div class="order-meta">${dateStr} เวลา ${timeStr} &nbsp;|&nbsp; <span class="pickup-time-tag">🕐 ${o.pickupTime || '07:30'} น.</span></div>
+            ${o.pickupLocationName ? `<div class="order-location-tag">📍 ${o.pickupLocationName}</div>` : ''}
+          </div>
         </div>
         <span class="status-badge ${statusClass[o.status]}">${statusMap[o.status]||o.status}</span>
       </div>
@@ -954,6 +1030,13 @@ function renderMenuAdmin() {
             <button class="icon-btn btn-edit" onclick="openEditItem('${item.id}')" title="แก้ไข">✏️</button>
             <button class="icon-btn btn-img" onclick="openImageModal('${item.id}')" title="รูปภาพ">🖼️</button>
             <button class="icon-btn btn-hide" onclick="toggleHide('${item.id}','${!item.hidden}')" title="${item.hidden?'แสดง':'ซ่อน'}">${item.hidden?'👁️':'🙈'}</button>
+            <div class="soldout-toggle-wrap" title="สลับ หมด / มีอยู่">
+              <span class="soldout-label" style="color:${item.soldOut?'#E53935':'#4CAF50'}">${item.soldOut?'หมด':'มี'}</span>
+              <label class="soldout-switch">
+                <input type="checkbox" ${item.soldOut?'checked':''} onchange="toggleSoldOut('${item.id}',this.checked)">
+                <span class="sl"></span>
+              </label>
+            </div>
             <button class="icon-btn" style="background:#FFEBEE" onclick="deleteMenuItem('${item.id}')" title="ลบ">🗑️</button>
           </div>
         </div>`;
@@ -986,7 +1069,8 @@ function renderCategoryAdmin() {
 
 // ====== DELETE MENU ITEM ======
 window.deleteMenuItem = async function(id) {
-  if (!confirm('ลบเมนูนี้ออกจากระบบเลยใช่ไหม?')) return;
+  var ok = await showConfirmDialog({ icon:'🗑️', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบเมนูนี้?', desc:'เมนูจะถูกลบออกจากระบบถาวร\nไม่สามารถย้อนกลับได้', confirmText:'ลบเมนู', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
   // ลบจาก local state ก่อนเสมอ
   allMenuItems = allMenuItems.filter(i => i.id !== id);
   renderMenuAdmin();
@@ -1106,7 +1190,8 @@ window.saveBannerItem = async function() {
 };
 
 window.deleteBannerItem = async function(id) {
-  if (!confirm('ลบแบนเนอร์นี้ใช่ไหม?')) return;
+  var ok = await showConfirmDialog({ icon:'🖼️', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบแบนเนอร์?', desc:'แบนเนอร์นี้จะถูกลบออกถาวร', confirmText:'ลบแบนเนอร์', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
   showLoading(true);
   try {
     await deleteDoc(doc(db, 'banners', id));
@@ -1186,8 +1271,11 @@ window.saveCategoryItem = async function() {
 
 window.deleteCategoryItem = async function(key) {
   const inUse = allMenuItems.some(i => i.catKey === key);
-  if (inUse && !confirm(`หมวดหมู่นี้ยังมีเมนูอยู่ ลบหมวดหมู่ต่อไปใช่ไหม?\n(เมนูจะยังอยู่ แต่ถูกย้ายไปหมวด other)`)) return;
-  if (!inUse && !confirm('ลบหมวดหมู่นี้ใช่ไหม?')) return;
+  var desc = inUse
+    ? 'หมวดหมู่นี้ยังมีเมนูอยู่\nเมนูจะถูกย้ายไปหมวด "other" โดยอัตโนมัติ'
+    : 'หมวดหมู่จะถูกลบออกถาวร';
+  var ok = await showConfirmDialog({ icon:'📂', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบหมวดหมู่?', desc, confirmText:'ลบหมวดหมู่', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
   showLoading(true);
   try {
     await deleteDoc(doc(db, 'categories', key));
@@ -1219,6 +1307,7 @@ async function loadSettings() {
       document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
       const logoImg = document.getElementById('hero-logo-preview-img');
       logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
+      window._storeLogo = s.heroLogoUrl; // ใช้ใน order card
     }
     if (s.featuredIds) currentFeaturedIds = s.featuredIds;
     storeIsOpen = s.isOpen !== false;
@@ -1421,7 +1510,8 @@ window.updateStatus = async function(id, status) {
 };
 
 window.deleteOrder = async function(id) {
-  if (!confirm('ลบออเดอร์นี้ใช่ไหม?')) return;
+  var ok = await showConfirmDialog({ icon:'🧾', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบออเดอร์นี้?', desc:'ออเดอร์จะถูกลบออกถาวร', confirmText:'ลบออเดอร์', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
   showLoading(true);
   try { await deleteDoc(doc(db, 'orders', id)); showToast('ลบออเดอร์แล้ว'); }
   catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
@@ -1484,8 +1574,9 @@ window.savePasswords = async function() {
   finally { showLoading(false); }
 };
 
-window.doLogout = function() {
-  if(!confirm('ออกจากระบบใช่ไหม?')) return;
+window.doLogout = async function() {
+  var ok = await showConfirmDialog({ icon:'👋', iconBg:'#F3F4F6', iconBorder:'#E5E7EB', title:'ออกจากระบบ?', desc:'คุณต้องการออกจากระบบแอดมินใช่ไหม?', confirmText:'ออกจากระบบ', confirmColor:'linear-gradient(135deg,#546E7A,#37474F)', confirmTextColor:'#fff' });
+  if (!ok) return;
   try { sessionStorage.removeItem('imkum_user'); } catch(e) {}
   try { sessionStorage.removeItem('imkum_admin_auth'); } catch(e) {}
   try { localStorage.removeItem('imkum_admin_auth'); } catch(e) {}
@@ -1692,6 +1783,16 @@ window.toggleHide = async function(id, setHidden) {
   finally { showLoading(false); }
 };
 
+window.toggleSoldOut = async function(id, soldOut) {
+  try {
+    await updateDoc(doc(db, 'menu', id), { soldOut });
+    const item = allMenuItems.find(i => i.id === id);
+    if (item) item.soldOut = soldOut;
+    renderMenuAdmin();
+    showToast(soldOut ? '🔴 ทำเครื่องหมาย "หมด" แล้ว' : '🟢 เปิดให้สั่งได้แล้ว');
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+};
+
 // ====== IMAGE MODAL ======
 window.openImageModal = function(id) {
   const item = allMenuItems.find(i => i.id === id);
@@ -1738,31 +1839,66 @@ window.saveItemImage = async function() {
 
 // ====== NOTIFY CUSTOMER (LINE / Push) ======
 window.notifyCustomer = async function(orderId, name, pickupTime) {
-  const msg = `🍱 อิ่มเอ้ย\nสวัสดีคุณ ${name}!\nออเดอร์ของคุณพร้อมแล้ว 🟢\nรับได้เลยที่ร้าน ⏰ ${pickupTime} น.`;
+  const orderEl = document.getElementById('order-' + orderId);
+  const locTag = orderEl ? orderEl.querySelector('.order-location-tag') : null;
+  const locName = locTag ? locTag.textContent.replace('📍 ','').trim() : '';
+  const msg = '🍱 อิ่มเอ้ย\nสวัสดีคุณ ' + name + '!\nออเดอร์ของคุณพร้อมแล้ว 🟢\nรับได้เลย ⏰ ' + pickupTime + ' น.' + (locName ? '\n📍 จุดรับ: ' + locName : '');
+  openNotifyDialog(name, msg);
+};
 
-  // Check if browser supports share / clipboard
-  if (navigator.share) {
-    try {
-      await navigator.share({ text: msg });
-      showToast('แชร์ข้อความแจ้งลูกค้าแล้ว ✓');
-      return;
-    } catch {}
+function openNotifyDialog(name, msg) {
+  var existing = document.getElementById('notify-dialog-overlay');
+  if (!existing) {
+    var el = document.createElement('div');
+    el.id = 'notify-dialog-overlay';
+    el.className = 'danger-dialog-overlay';
+    el.innerHTML = '<div class="danger-dialog" style="max-width:400px">' +
+      '<div class="danger-dialog-header" style="padding-bottom:12px">' +
+        '<div class="danger-dialog-icon" style="background:#E8F5E9;border:2px solid #C8E6C9">💬</div>' +
+        '<div class="danger-dialog-title" id="nd-title">แจ้งลูกค้า</div>' +
+        '<div class="danger-dialog-desc" style="font-size:12px;color:#999;margin-top:4px">แก้ไขและเลือกช่องทางส่ง</div>' +
+      '</div>' +
+      '<div style="margin:0 20px 16px">' +
+        '<textarea id="nd-msg" rows="5" style="width:100%;border:1.5px solid #E8E8E8;border-radius:12px;padding:12px;font-family:\'Sarabun\',sans-serif;font-size:14px;line-height:1.7;color:#2C2C2C;background:#F8F8F8;outline:none;resize:none;box-sizing:border-box"></textarea>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;padding:0 20px 24px">' +
+        '<button onclick="ndCopy()" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:\'Sarabun\',sans-serif;font-size:15px;font-weight:800;color:#3E2000;cursor:pointer">📋 คัดลอกข้อความ</button>' +
+        '<button onclick="ndLine()" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#06C755,#00B248);font-family:\'Sarabun\',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">💚 ส่งผ่าน LINE</button>' +
+        '<button onclick="ndWhatsApp()" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#25D366,#128C7E);font-family:\'Sarabun\',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer">📱 ส่งผ่าน WhatsApp</button>' +
+        '<button onclick="ndClose()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid #E8E8E8;background:#fff;font-family:\'Sarabun\',sans-serif;font-size:14px;font-weight:700;color:#999;cursor:pointer">ปิด</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(el);
   }
-  // Fallback: copy to clipboard
+  document.getElementById('nd-title').textContent = '💬 แจ้งคุณ ' + name;
+  document.getElementById('nd-msg').value = msg;
+  document.getElementById('notify-dialog-overlay').classList.add('show');
+}
+
+window.ndCopy = async function() {
+  const msg = document.getElementById('nd-msg').value;
   try {
     await navigator.clipboard.writeText(msg);
-    showToast('📋 คัดลอกข้อความแล้ว! ส่งให้ลูกค้าได้เลย');
+    showToast('📋 คัดลอกแล้ว! ส่งให้ลูกค้าได้เลย');
+    ndClose();
   } catch {
-    prompt('คัดลอกข้อความนี้ส่งให้ลูกค้า:', msg);
+    document.getElementById('nd-msg').select();
+    showToast('กด Ctrl+C หรือ Long press เพื่อคัดลอก');
   }
-
-  // Also try LINE URL scheme
-  const lineUrl = 'https://line.me/R/msg/text/?' + encodeURIComponent(msg);
-  setTimeout(() => {
-    if (confirm('เปิด LINE เพื่อส่งข้อความ?')) {
-      window.open(lineUrl, '_blank');
-    }
-  }, 500);
+};
+window.ndLine = function() {
+  const msg = document.getElementById('nd-msg').value;
+  window.open('https://line.me/R/msg/text/?' + encodeURIComponent(msg), '_blank');
+  ndClose();
+};
+window.ndWhatsApp = function() {
+  const msg = document.getElementById('nd-msg').value;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+  ndClose();
+};
+window.ndClose = function() {
+  var el = document.getElementById('notify-dialog-overlay');
+  if (el) el.classList.remove('show');
 };
 
 // ====== STAMP MANAGEMENT ======
@@ -1811,7 +1947,8 @@ window.addStamp = async function(phone) {
 };
 
 window.resetStamp = async function(phone) {
-  if (!confirm('ยืนยันใช้รางวัล แล้ว Reset แต้มลูกค้า?')) return;
+  var ok = await showConfirmDialog({ icon:'⭐', iconBg:'#FFFDE7', iconBorder:'#FFF9C4', title:'ใช้รางวัล & รีเซ็ตแต้ม?', desc:'แต้มสะสมของลูกค้าจะถูกรีเซ็ตเป็น 0\nยืนยันว่าลูกค้าได้รับรางวัลแล้ว', confirmText:'ยืนยันรับรางวัล', confirmColor:'linear-gradient(135deg,#F9A825,#F57F17)', confirmTextColor:'#1A0A00' });
+  if (!ok) return;
   showLoading(true);
   try {
     const stampRef = doc(db, 'stamps', phone);
@@ -1902,8 +2039,127 @@ function showToast(msg) {
 window.showToast = showToast;
 
 // ====== DANGER ZONE FUNCTIONS ======
+// ====== GENERAL CONFIRM DIALOG ======
+var _confirmDialogResolve = null;
+window._confirmDialogResolve = function(val) {
+  closeConfirmDialog();
+  if (_confirmDialogResolve) _confirmDialogResolve(val);
+};
+window.closeConfirmDialog = function() {
+  document.getElementById('confirm-dialog-overlay').classList.remove('show');
+};
+function showConfirmDialog(opts) {
+  return new Promise(function(resolve) {
+    _confirmDialogResolve = resolve;
+    var iconWrap = document.getElementById('cd-icon-wrap');
+    iconWrap.style.background = opts.iconBg || '#FFF3E0';
+    iconWrap.style.border = '2px solid ' + (opts.iconBorder || '#FFE0B2');
+    document.getElementById('cd-icon').textContent = opts.icon || '❓';
+    document.getElementById('cd-title').textContent = opts.title || 'ยืนยัน';
+    document.getElementById('cd-desc').innerHTML = (opts.desc || '').replace(/\n/g,'<br>');
+    var btn = document.getElementById('cd-confirm-btn');
+    btn.style.background = opts.confirmColor || 'linear-gradient(135deg,#E53935,#B71C1C)';
+    btn.style.color = opts.confirmTextColor || '#fff';
+    btn.textContent = opts.confirmText || 'ยืนยัน';
+    document.getElementById('confirm-dialog-overlay').classList.add('show');
+  });
+}
+
+// ====== DANGER DIALOG SYSTEM ======
+var _dangerAction = null;
+var _dangerKeyword = null;
+
+var DANGER_CONFIG = {
+  completed: {
+    icon: '🧹', iconBg: '#FFF3CD', iconBorder: '#FFE082',
+    title: 'ลบออเดอร์ที่เสร็จแล้ว',
+    desc: 'สถานะ "รับแล้ว" และ "ยกเลิก" จะถูกลบออกจากระบบ\nการกระทำนี้<strong>ไม่สามารถย้อนกลับได้</strong>',
+    confirmColor: 'linear-gradient(135deg,#F9A825,#F57F17)',
+    confirmText: 'ลบออเดอร์เก่า',
+    confirmTextColor: '#1A0A00',
+    requireTyping: false
+  },
+  all: {
+    icon: '🔥', iconBg: '#FFEBEE', iconBorder: '#FFCDD2',
+    title: 'ลบออเดอร์ทั้งหมด',
+    desc: 'ออเดอร์ทุกรายการในระบบจะถูกลบถาวร\nพิมพ์ <strong>"ลบทั้งหมด"</strong> เพื่อยืนยัน',
+    confirmColor: 'linear-gradient(135deg,#E53935,#B71C1C)',
+    confirmText: 'ลบทั้งหมด',
+    confirmTextColor: '#fff',
+    requireTyping: true,
+    keyword: 'ลบทั้งหมด',
+    inputLabel: 'พิมพ์ "ลบทั้งหมด" เพื่อยืนยัน',
+    placeholder: 'ลบทั้งหมด'
+  },
+  reset: {
+    icon: '💣', iconBg: '#F3E5F5', iconBorder: '#E1BEE7',
+    title: 'รีเซ็ตข้อมูลทั้งระบบ',
+    desc: 'ออเดอร์ + แต้มสะสมทุกรายการจะถูกลบถาวร\nพิมพ์ <strong>"รีเซ็ตระบบ"</strong> เพื่อยืนยัน',
+    confirmColor: 'linear-gradient(135deg,#7B1FA2,#4A148C)',
+    confirmText: 'รีเซ็ตระบบ',
+    confirmTextColor: '#fff',
+    requireTyping: true,
+    keyword: 'รีเซ็ตระบบ',
+    inputLabel: 'พิมพ์ "รีเซ็ตระบบ" เพื่อยืนยัน',
+    placeholder: 'รีเซ็ตระบบ'
+  }
+};
+
+window.openDangerDialog = function(type) {
+  var cfg = DANGER_CONFIG[type];
+  if (!cfg) return;
+  _dangerAction = type;
+  _dangerKeyword = cfg.keyword || null;
+
+  var iconWrap = document.getElementById('dd-icon-wrap');
+  iconWrap.style.background = cfg.iconBg;
+  iconWrap.style.border = '2px solid ' + cfg.iconBorder;
+  document.getElementById('dd-icon').textContent = cfg.icon;
+  document.getElementById('dd-title').textContent = cfg.title;
+  document.getElementById('dd-desc').innerHTML = cfg.desc.replace(/\n/g,'<br>');
+
+  var confirmBtn = document.getElementById('dd-confirm-btn');
+  confirmBtn.style.background = cfg.confirmColor;
+  confirmBtn.style.color = cfg.confirmTextColor;
+  confirmBtn.textContent = cfg.confirmText;
+
+  var inputWrap = document.getElementById('dd-input-wrap');
+  var inputEl = document.getElementById('dd-input');
+  if (cfg.requireTyping) {
+    inputWrap.style.display = 'block';
+    document.getElementById('dd-input-label').textContent = cfg.inputLabel;
+    inputEl.placeholder = cfg.placeholder;
+    inputEl.value = '';
+    inputEl.className = 'danger-dialog-input';
+    confirmBtn.disabled = true;
+    inputEl.oninput = function() {
+      var matched = inputEl.value === _dangerKeyword;
+      confirmBtn.disabled = !matched;
+      inputEl.className = 'danger-dialog-input' + (inputEl.value.length > 0 ? (matched ? ' matched' : '') : '');
+    };
+  } else {
+    inputWrap.style.display = 'none';
+    confirmBtn.disabled = false;
+  }
+
+  document.getElementById('danger-dialog-overlay').classList.add('show');
+  if (cfg.requireTyping) setTimeout(function(){ inputEl.focus(); }, 350);
+};
+
+window.closeDangerDialog = function() {
+  document.getElementById('danger-dialog-overlay').classList.remove('show');
+  _dangerAction = null;
+};
+
+window.confirmDangerAction = async function() {
+  var action = _dangerAction;
+  closeDangerDialog();
+  if (action === 'completed') await deleteCompletedOrders();
+  else if (action === 'all') await deleteAllOrders();
+  else if (action === 'reset') await resetAllData();
+};
+
 window.deleteCompletedOrders = async function() {
-  if(!confirm('ลบออเดอร์ที่เสร็จแล้ว (done + cancelled) ทั้งหมดใช่ไหม?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้')) return;
   showLoading(true);
   try {
     const snap = await getDocs(collection(db,'orders'));
@@ -1921,8 +2177,6 @@ window.deleteCompletedOrders = async function() {
 };
 
 window.deleteAllOrders = async function() {
-  const confirmText = prompt('พิมพ์ "ลบทั้งหมด" เพื่อยืนยันการลบออเดอร์ทุกรายการ:');
-  if(confirmText !== 'ลบทั้งหมด'){ showToast('ยกเลิก: ข้อความไม่ตรงกัน'); return; }
   showLoading(true);
   try {
     const snap = await getDocs(collection(db,'orders'));
@@ -1938,14 +2192,10 @@ window.deleteAllOrders = async function() {
 };
 
 window.resetAllData = async function() {
-  const confirmText = prompt('พิมพ์ "รีเซ็ตระบบ" เพื่อยืนยันการลบออเดอร์ + แต้มสะสมทั้งหมด:');
-  if(confirmText !== 'รีเซ็ตระบบ'){ showToast('ยกเลิก: ข้อความไม่ตรงกัน'); return; }
   showLoading(true);
   try {
-    // Delete all orders
     const ordersSnap = await getDocs(collection(db,'orders'));
     const orderBatch = ordersSnap.docs.map(d=>deleteDoc(doc(db,'orders',d.id)));
-    // Delete all stamps
     const stampsSnap = await getDocs(collection(db,'stamps'));
     const stampBatch = stampsSnap.docs.map(d=>deleteDoc(doc(db,'stamps',d.id)));
     await Promise.all([...orderBatch, ...stampBatch]);

@@ -334,7 +334,7 @@ function renderActiveCard(o){
       <div>
         <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
         <div class="order-date">🕐 ${dateStr} ${timeStr}</div>
-        <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.</div>
+        <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.${o.pickupLocationName ? ` &nbsp;|&nbsp; 📍 ${o.pickupLocationName}` : ''}</div>
       </div>
       <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${statusMap[o.status]||o.status}</span>
     </div>
@@ -345,6 +345,23 @@ function renderActiveCard(o){
       <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
     </div>
   </div>`;
+}
+
+// ===== REALTIME ORDER LIST (onSnapshot แทน getDocs) =====
+let _unsubOrders = null;
+
+function startOrdersRealtime() {
+  if (!user.phone) return;
+  const q = query(collection(db,'orders'), where('customerPhone','==', user.phone||''));
+  _unsubOrders = onSnapshot(q, (snap) => {
+    const docs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    docs.sort((a,b)=>(b.createdAt?.toDate?.()?.getTime?.()??0)-(a.createdAt?.toDate?.()?.getTime?.()??0));
+    renderOrders(docs);
+    showLoading(false);
+  }, (e) => {
+    console.warn('onSnapshot orders error, fallback:', e);
+    loadOrders(); // fallback to getDocs
+  });
 }
 
 async function loadOrders(){
@@ -407,7 +424,7 @@ async function loadStamps(){
   }
 }
 
-loadOrders();
+startOrdersRealtime();
 loadStamps();
 
 // ============================
@@ -583,9 +600,7 @@ function handleStatusChange(order, oldStatus, newStatus) {
 
   showCustBrowserNotif(title, body, 'order-' + order.id);
   showToast(`${icon} ${title}`);
-
-  // รีโหลดออเดอร์เพื่อแสดงสถานะล่าสุด
-  loadOrders();
+  // onSnapshot จะอัพเดท list อัตโนมัติ — ไม่ต้อง loadOrders() อีก
 }
 
 // เริ่มระบบ

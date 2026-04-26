@@ -267,6 +267,7 @@ function saveCart(){localStorage.setItem('imkum_cart',JSON.stringify(cart));}
 function add(id){
   var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
   if(!item) return;
+  if(item.soldOut){ showToast('❌ '+item.name+' หมดแล้ว'); return; }
   cart[id]=(cart[id]||0)+1; saveCart(); render();
   showToast('เพิ่ม '+item.name+' ลงตะกร้า 🛒');
 }
@@ -351,18 +352,22 @@ function buildMenuList(){
     hasAny=true;
     list.innerHTML+='<div class="cat-section"><div class="cat-header"><span class="cat-name">'+cat.category+'</span><div class="cat-line"></div></div>';
     vis.forEach(function(item){
+      var isSoldOut = item.soldOut === true;
       list.innerHTML+=
-        '<div class="card">'+
+        '<div class="card" style="'+(isSoldOut?'opacity:0.6;':'')+'">'+
           '<div class="food-img">'+foodImg(item)+'</div>'+
           '<div class="left">'+
-            '<div class="name">'+item.name+'</div>'+
+            '<div class="name">'+item.name+(isSoldOut?' <span style="background:#FFEBEE;color:#B71C1C;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;vertical-align:middle;">หมด</span>':'')+'</div>'+
             '<div class="desc">'+(item.desc||'')+'</div>'+
             '<div class="price-tag">'+item.price+' บาท</div>'+
           '</div>'+
           '<div class="qty">'+
-            '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
-            '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
-            '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'+
+            (isSoldOut
+              ? '<span style="font-size:12px;font-weight:700;color:#B71C1C;padding:0 8px;">หมดแล้ว</span>'
+              : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
+                '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
+                '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'
+            )+
           '</div>'+
         '</div>';
     });
@@ -484,5 +489,55 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').catch(()=>{});
 }
 </script>
-</body>
+
+<!-- ====== PWA Install Prompt ====== -->
+<div id="pwa-install-bar" style="display:none;position:fixed;bottom:80px;left:12px;right:12px;z-index:800;background:linear-gradient(135deg,#3E2000,#7B3F00);border-radius:16px;padding:12px 16px;box-shadow:0 6px 20px rgba(0,0,0,0.25);display:none;align-items:center;gap:10px;">
+  <img src="logo.png" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;" onerror="this.textContent='🍱';this.style.fontSize='28px';" alt="logo">
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:13px;font-weight:800;color:#FFC107;">เพิ่มลงหน้าจอหลัก</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);">ใช้งานได้เหมือน App จริง ออฟไลน์ได้</div>
+  </div>
+  <button id="pwa-install-btn" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;white-space:nowrap;flex-shrink:0;">ติดตั้ง</button>
+  <button id="pwa-dismiss-btn" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
+</div>
+<script>
+(function() {
+  let _deferredPrompt = null;
+  const bar = document.getElementById('pwa-install-bar');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+  // ไม่แสดงถ้าเคย dismiss ไปแล้ว
+  if (localStorage.getItem('imkum_pwa_dismissed') === '1') return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _deferredPrompt = e;
+    bar.style.display = 'flex';
+  });
+
+  installBtn && installBtn.addEventListener('click', async () => {
+    if (!_deferredPrompt) return;
+    bar.style.display = 'none';
+    _deferredPrompt.prompt();
+    const { outcome } = await _deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      localStorage.setItem('imkum_pwa_dismissed', '1');
+    }
+    _deferredPrompt = null;
+  });
+
+  dismissBtn && dismissBtn.addEventListener('click', () => {
+    bar.style.display = 'none';
+    localStorage.setItem('imkum_pwa_dismissed', '1');
+  });
+
+  // ซ่อนถ้า install สำเร็จแล้ว
+  window.addEventListener('appinstalled', () => {
+    bar.style.display = 'none';
+    _deferredPrompt = null;
+    localStorage.setItem('imkum_pwa_dismissed', '1');
+  });
+})();
+</script>
 </html>

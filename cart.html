@@ -20,6 +20,21 @@
 .stamp-earn-box{background:linear-gradient(135deg,#FF6B35,#FF8C00);margin:0 16px 10px;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
 .stamp-earn-box .icon{font-size:22px;}
 .stamp-earn-box .text{font-size:13px;color:#fff;font-weight:700;}
+/* PICKUP LOCATION */
+.location-section{padding:14px 16px 0;}
+.location-label{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.location-cards{display:flex;flex-direction:column;gap:8px;}
+.location-card{border:2px solid #E8E8E8;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all 0.2s;background:var(--white);display:flex;align-items:flex-start;gap:10px;}
+.location-card.selected{border-color:var(--yellow);background:#FFFBF0;}
+.location-card .loc-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.location-card .loc-info{flex:1;}
+.location-card .loc-name{font-size:14px;font-weight:800;color:var(--text);line-height:1.3;}
+.location-card .loc-desc{font-size:12px;color:#888;margin-top:2px;line-height:1.4;}
+.location-card .loc-map{margin-top:6px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#2196F3;text-decoration:none;background:#EEF6FF;padding:3px 8px;border-radius:20px;}
+.location-card .loc-radio{width:18px;height:18px;border:2px solid #DDD;border-radius:50%;flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.location-card.selected .loc-radio{border-color:var(--yellow);background:var(--yellow);}
+.location-card.selected .loc-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#3E2000;}
+.location-card .loc-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:transparent;}
 </style>
 </head>
 <body>
@@ -72,6 +87,39 @@ function cancelPreorder() {
   document.getElementById('preorder-indicator').classList.remove('show');
   renderCart();
   showToast('กลับสู่การสั่งปกติ');
+}
+
+// ===== PICKUP LOCATIONS =====
+var PICKUP_LOCATIONS = [
+  {
+    id: 'main',
+    name: 'ร้านอิ่มเอ๋ย (หลัก)',
+    desc: 'หน้าร้านชั้น 1 ใกล้ทางเข้าหลัก',
+    icon: '🏪',
+    mapUrl: 'https://maps.google.com/?q=อิ่มเอ๋ย'
+  },
+  {
+    id: 'gate1',
+    name: 'ประตู 1 (อาคาร A)',
+    desc: 'จุดรับหน้าประตูเข้าอาคาร A ชั้น 1',
+    icon: '🚪',
+    mapUrl: 'https://maps.google.com/?q=ประตู+1+อาคาร+A'
+  },
+  {
+    id: 'canteen',
+    name: 'โรงอาหาร',
+    desc: 'โต๊ะรับของด้านหน้าโรงอาหาร',
+    icon: '🍽️',
+    mapUrl: 'https://maps.google.com/?q=โรงอาหาร'
+  }
+];
+var selectedLocation = localStorage.getItem('imkum_location') || 'main';
+function selectLocation(id) {
+  selectedLocation = id;
+  localStorage.setItem('imkum_location', id);
+  document.querySelectorAll('.location-card').forEach(function(el) {
+    el.classList.toggle('selected', el.dataset.locId === id);
+  });
 }
 
 var MENU = [
@@ -187,11 +235,30 @@ function renderCart(){
       '<div style="display:flex;align-items:center;gap:8px"><span class="clock">🕐</span><span style="font-size:14px;font-weight:700">'+pickupLabel+'</span></div>'+
       '<select class="pickup-select" id="pickup-select">'+timeHTML+'</select>'+
     '</div>'+
+    buildLocationSection()+
     '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
     '<div class="total-row"><span class="total-label">รวมทั้งหมด</span><span><span class="total-amount" id="cart-total">'+getTotal()+'</span><span class="total-unit">บาท</span></span></div>'+
     '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="placeOrder()">ยืนยันการสั่งซื้อ</button></div>';
 
   body.innerHTML=html;
+}
+
+function buildLocationSection() {
+  var html = '<div class="location-section"><div class="location-label">📍 เลือกจุดรับอาหาร</div><div class="location-cards">';
+  PICKUP_LOCATIONS.forEach(function(loc) {
+    var sel = selectedLocation === loc.id ? ' selected' : '';
+    html += '<div class="location-card'+sel+'" data-loc-id="'+loc.id+'" onclick="selectLocation(\''+loc.id+'\')">'+
+      '<div class="loc-icon">'+loc.icon+'</div>'+
+      '<div class="loc-info">'+
+        '<div class="loc-name">'+loc.name+'</div>'+
+        '<div class="loc-desc">'+loc.desc+'</div>'+
+        '<a class="loc-map" href="'+loc.mapUrl+'" target="_blank" onclick="event.stopPropagation()">🗺️ ดูแผนที่</a>'+
+      '</div>'+
+      '<div class="loc-radio"></div>'+
+    '</div>';
+  });
+  html += '</div></div>';
+  return html;
 }
 
 function cartAdd(id){
@@ -316,6 +383,8 @@ window.placeOrder = async function() {
       items: orderItems, total, note, customerName, pickupTime,
       customerPhone: phone,
       userId: localStorage.getItem('imkum_userId') || null,
+      pickupLocation: selectedLocation,
+      pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation,
       status: 'pending',
       isPreorder: isNextDay || false,
       deliveryDate: deliveryDate,
@@ -331,6 +400,8 @@ window.placeOrder = async function() {
 
     localStorage.setItem('imkum_last_order', JSON.stringify({
       orderId: ref.id, total, pickupTime, customerName, isPreorder: isNextDay,
+      pickupLocation: selectedLocation,
+      pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || '',
       stampMsg
     }));
     cart = {}; saveCart();

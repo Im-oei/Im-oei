@@ -18,6 +18,7 @@
     <div class="summary-row"><span class="key">เลขที่ออเดอร์</span><span class="val" id="s-id">-</span></div>
     <div class="summary-row"><span class="key">ชื่อผู้สั่ง</span><span class="val" id="s-name">-</span></div>
     <div class="summary-row"><span class="key">เวลารับอาหาร</span><span class="val" id="s-time">07:30 น.</span></div>
+    <div class="summary-row" id="s-location-row" style="display:none"><span class="key">📍 จุดรับอาหาร</span><span class="val" id="s-location" style="color:#1565C0;font-weight:800">-</span></div>
     <div class="summary-row" id="s-date-row"><span class="key">วันที่สั่ง</span><span class="val" id="s-date">-</span></div>
     <div class="summary-row"><span class="key">ยอดรวม</span><span class="val orange" id="s-total">0 บาท</span></div>
   </div>
@@ -43,6 +44,12 @@ document.getElementById('s-id').textContent = order.orderId ? '#' + order.orderI
 document.getElementById('s-name').textContent = order.customerName || '-';
 document.getElementById('s-time').textContent = (order.pickupTime || '07:30') + ' น.';
 document.getElementById('s-total').textContent = (order.total || 0) + ' บาท';
+
+// Pickup location
+if (order.pickupLocationName) {
+  document.getElementById('s-location-row').style.display = '';
+  document.getElementById('s-location').textContent = order.pickupLocationName;
+}
 
 // Preorder
 if (order.isPreorder) {
