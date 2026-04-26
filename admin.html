@@ -29,8 +29,8 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .toggle-switch input:checked + .slider::before { transform: translateX(24px); }
 
 /* TABS */
-.tab-bar { display: flex; background: var(--white); border-bottom: 2px solid #F0E8D8; position: sticky; top: 60px; z-index: 90; }
-.tab-btn { flex: 1; padding: 14px 4px; font-size: 13px; font-weight: 700; color: var(--text-sub); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-family: 'Sarabun', sans-serif; }
+.tab-bar { display: flex; background: var(--white); border-bottom: 2px solid #F0E8D8; position: sticky; top: var(--header-h, 60px); z-index: 95; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.tab-btn { flex: 1; min-width: fit-content; padding: 14px 4px; font-size: 13px; font-weight: 700; color: var(--text-sub); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-family: 'Sarabun', sans-serif; white-space: nowrap; -webkit-tap-highlight-color: rgba(0,0,0,0.1); touch-action: manipulation; }
 .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
 
 /* PANELS */
@@ -1391,10 +1391,22 @@ window.savePasswords = async function() {
 
 window.doLogout = function() {
   if(!confirm('ออกจากระบบใช่ไหม?')) return;
-  sessionStorage.removeItem('imkum_user');
-  sessionStorage.removeItem('imkum_admin_auth');
-  window.location.href = 'login.html';
+  try { sessionStorage.removeItem('imkum_user'); } catch(e) {}
+  try { sessionStorage.removeItem('imkum_admin_auth'); } catch(e) {}
+  try { localStorage.removeItem('imkum_admin_auth'); } catch(e) {}
+  window.location.replace('login.html');
 };
+
+// วัดความสูง header จริง แล้วเซต --header-h ให้ tab-bar sticky ถูกต้อง
+(function setHeaderHeight() {
+  function update() {
+    const h = document.querySelector('.admin-header');
+    if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+  }
+  update();
+  window.addEventListener('resize', update);
+  window.addEventListener('orientationchange', update);
+})();
 
 window.previewBanner = function() {
   const url = document.getElementById('set-banner-url').value;
