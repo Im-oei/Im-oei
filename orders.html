@@ -7,22 +7,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-.profile-hero{background:linear-gradient(135deg,#3E2000 0%,#7B3F00 60%,#FF8C00 100%);padding:28px 20px 70px;position:relative;overflow:hidden;}
+.profile-hero{background:linear-gradient(135deg,rgba(62,32,0,0.82) 0%,rgba(123,63,0,0.75) 60%,rgba(255,140,0,0.7) 100%),url('hero.png') center/cover no-repeat;padding:28px 20px 70px;position:relative;overflow:hidden;}
 .profile-hero::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.05);top:-60px;right:-40px;}
 .profile-hero::after{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);bottom:20px;left:-30px;}
-.profile-back{color:rgba(255,255,255,0.85);font-size:26px;text-decoration:none;display:inline-block;margin-bottom:16px;position:relative;z-index:1;}
+.profile-back{color:rgba(255,255,255,0.85);text-decoration:none;display:inline-flex;align-items:center;margin-bottom:16px;position:relative;z-index:1;}
 .profile-user-row{display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
-.profile-avatar{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;}
+.profile-avatar{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
 .profile-info{flex:1;}
 .profile-name{font-size:20px;font-weight:800;color:#fff;line-height:1.2;}
 .profile-phone{font-size:13px;color:rgba(255,255,255,0.7);margin-top:3px;}
 .profile-logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:12px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
 .stamp-card-float{margin:-40px 16px 0;position:relative;z-index:10;}
 .stamp-card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 30px rgba(0,0,0,0.12);}
-.stamp-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.stamp-card-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;}
 .stamp-title{font-size:15px;font-weight:800;color:#3E2000;}
 .stamp-badge{background:linear-gradient(135deg,#FF6B35,#FF8C00);color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;}
-.stamps-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.stamps-grid{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
 .stamp{width:32px;height:32px;border-radius:50%;border:2px solid #EEE;background:#F9F9F9;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;}
 .stamp.filled{border-color:#FFB300;background:#FFF8E1;}
 .stamp-progress-bar{margin-top:12px;background:#F0E8D8;border-radius:10px;height:7px;overflow:hidden;}
@@ -32,6 +32,7 @@
 .sec-count{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:4px;}
 .order-card{background:#fff;margin:0 16px 12px;border-radius:18px;box-shadow:0 2px 14px rgba(0,0,0,0.07);overflow:hidden;border:1.5px solid #F5EDE0;transition:transform .15s;}
 .order-card:active{transform:scale(0.99);}
+.order-card.active-order{border-color:#FFC107;box-shadow:0 4px 20px rgba(255,193,7,0.2);}
 .order-card-head{padding:14px 16px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
 .order-id{font-size:12px;font-weight:800;color:#FF8C00;letter-spacing:.5px;}
 .order-date{font-size:12px;color:#BBB;margin-top:2px;}
@@ -53,6 +54,40 @@
 .order-total-val{font-size:20px;font-weight:800;color:#FF8C00;}
 .reorder-btn{background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:9px 18px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 3px 10px rgba(255,193,7,0.35);transition:all .15s;white-space:nowrap;}
 .reorder-btn:active{transform:scale(0.94);opacity:.85;}
+
+/* ===== ACTIVE PULSE ===== */
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(255,193,7,0.4)}70%{box-shadow:0 0 0 8px rgba(255,193,7,0)}100%{box-shadow:0 0 0 0 rgba(255,193,7,0)}}
+.order-card.active-order{animation:pulse-ring 2.5s ease infinite;}
+
+/* ===== SECTION HEADERS ===== */
+.sec-header{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;}
+.sec-header-left{display:flex;align-items:center;gap:8px;}
+.sec-header-title{font-size:14px;font-weight:800;color:#3E2000;}
+.sec-header-count{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;}
+.sec-header-empty{font-size:12px;color:#CCC;padding:8px 16px 14px;}
+
+/* ===== COMPACT HISTORY ROWS ===== */
+.history-row{display:flex;align-items:center;gap:12px;padding:11px 16px;background:#fff;margin:0 16px 8px;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);border:1px solid #F5EDE0;cursor:pointer;transition:background .15s;}
+.history-row:active{background:#FFF8F0;}
+.history-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.history-dot.done{background:#AB47BC;}
+.history-dot.cancelled{background:#EF5350;}
+.history-main{flex:1;min-width:0;}
+.history-id{font-size:11px;font-weight:800;color:#FF8C00;letter-spacing:.3px;}
+.history-items{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.history-right{text-align:right;flex-shrink:0;}
+.history-price{font-size:14px;font-weight:800;color:#3E2000;}
+.history-date{font-size:11px;color:#CCC;margin-top:1px;}
+
+/* ===== EXPAND BUTTON ===== */
+.show-more-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 16px 16px;padding:11px;border-radius:14px;border:1.5px dashed #E8DDD0;background:transparent;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#999;cursor:pointer;width:calc(100% - 32px);transition:all .2s;}
+.show-more-btn:active{background:#FFF8F0;color:#FF8C00;}
+
+/* ===== DETAIL EXPAND ===== */
+.history-detail{display:none;padding:10px 16px 4px;border-top:1px solid #F5EDE0;}
+.history-detail.open{display:block;}
+.history-row.expanded{border-color:#FFD54F;}
+
 .empty-state{text-align:center;padding:60px 30px;color:#CCC;}
 .empty-icon{font-size:60px;opacity:.5;margin-bottom:14px;}
 .empty-text{font-size:15px;font-weight:700;color:#BBB;}
@@ -71,14 +106,30 @@
 <body style="background:#F7F3EE;padding-bottom:80px;">
 
 <div class="profile-hero">
-  <a class="profile-back" href="index.html">‹</a>
+  <a class="profile-back" href="index.html">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.18)"/>
+      <path d="M16 9L11 14L16 19" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
   <div class="profile-user-row">
-    <div class="profile-avatar">😊</div>
+    <div class="profile-avatar" id="profile-avatar-wrap">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="15" r="7" fill="rgba(255,255,255,0.85)"/>
+        <ellipse cx="19" cy="31" rx="12" ry="7" fill="rgba(255,255,255,0.85)"/>
+      </svg>
+    </div>
     <div class="profile-info">
       <div class="profile-name" id="user-name-display">ลูกค้า</div>
       <div class="profile-phone" id="user-phone-display">📱 -</div>
     </div>
-    <button class="profile-logout" onclick="doLogout()">🚪 ออก</button>
+    <button class="profile-logout" onclick="doLogout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px">
+        <path d="M15 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H15" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 17L15 12L10 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="15" y1="12" x2="3" y2="12" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>ออก
+    </button>
   </div>
 </div>
 
@@ -96,11 +147,29 @@
   </div>
 </div>
 
-<div class="sec-label">
-  📋 ออเดอร์ของฉัน
-  <span class="sec-count" id="order-count" style="display:none">0</span>
+<div id="active-section">
+  <div class="sec-header">
+    <div class="sec-header-left">
+      <div class="sec-header-title">🔥 กำลังดำเนินการ</div>
+      <span class="sec-header-count" id="active-count" style="display:none">0</span>
+    </div>
+  </div>
+  <div id="active-wrap"></div>
 </div>
-<div id="orders-wrap"></div>
+
+<div id="history-section">
+  <div class="sec-header">
+    <div class="sec-header-left">
+      <div class="sec-header-title">📋 ประวัติออเดอร์</div>
+      <span class="sec-header-count" id="history-count" style="display:none">0</span>
+    </div>
+  </div>
+  <div id="history-wrap"></div>
+  <button class="show-more-btn" id="show-more-btn" style="display:none" onclick="showAllHistory()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="show-more-text">ดูทั้งหมด</span>
+  </button>
+</div>
 
 <div class="bottom-bar">
   <button class="order-btn-main" onclick="location.href='index.html'">🛒 สั่งอาหารเพิ่ม</button>
@@ -131,6 +200,17 @@ function showToast(msg){ const t=document.getElementById('toast'); t.textContent
 document.getElementById('user-name-display').textContent = user.name||'ลูกค้า';
 document.getElementById('user-phone-display').textContent = '📱 '+(user.phone||'-');
 
+// โหลดรูป profile ถ้ามี
+if (user.photoURL) {
+  const wrap = document.getElementById('profile-avatar-wrap');
+  const img = document.createElement('img');
+  img.src = user.photoURL;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+  img.onerror = function(){ this.remove(); }; // fallback กลับ SVG ถ้าโหลดไม่ได้
+  wrap.innerHTML = '';
+  wrap.appendChild(img);
+}
+
 window.doLogout = function(){
   if(!confirm('ออกจากระบบใช่ไหม?')) return;
   sessionStorage.removeItem('imkum_user');
@@ -142,40 +222,116 @@ const statusMap={pending:'รอรับ',preparing:'กำลังทำ',rea
 const statusCls={pending:'status-pending',preparing:'status-preparing',ready:'status-ready',done:'status-done',cancelled:'status-cancelled'};
 const statusIcon={pending:'🟡',preparing:'🔵',ready:'🟢',done:'✅',cancelled:'❌'};
 
+const HISTORY_PREVIEW = 10;
+let allHistoryDocs = [];
+let historyExpanded = false;
+
 function renderOrders(docs){
-  const wrap=document.getElementById('orders-wrap');
   if(!docs.length){
-    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีออเดอร์</div><div class="empty-sub">สั่งอาหารครั้งแรกของคุณได้เลย!</div><a href="index.html" class="empty-btn">🛒 ดูเมนู</a></div>`;
-    document.getElementById('order-count').style.display='none';
+    document.getElementById('active-wrap').innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีออเดอร์</div><div class="empty-sub">สั่งอาหารครั้งแรกของคุณได้เลย!</div><a href="index.html" class="empty-btn">🛒 ดูเมนู</a></div>`;
+    document.getElementById('history-wrap').innerHTML='';
     return;
   }
-  const cnt=document.getElementById('order-count');
-  cnt.textContent=docs.length; cnt.style.display='inline';
-  let html='';
-  docs.forEach(o=>{
-    const dt=o.createdAt?.toDate?o.createdAt.toDate():new Date();
-    const dateStr=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
-    const timeStr=dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-    const items=(o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
-    const itemsJson=JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
-    html+=`<div class="order-card">
-      <div class="order-card-head">
-        <div>
-          <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
-          <div class="order-date">🕐 ${dateStr} ${timeStr}</div>
-          <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.</div>
+
+  const active = docs.filter(o => ['pending','preparing','ready'].includes(o.status));
+  const history = docs.filter(o => ['done','cancelled'].includes(o.status));
+  allHistoryDocs = history;
+
+  // === ACTIVE ORDERS (full card) ===
+  const activeWrap = document.getElementById('active-wrap');
+  const activeCount = document.getElementById('active-count');
+  if(active.length){
+    activeCount.textContent = active.length; activeCount.style.display='inline';
+    activeWrap.innerHTML = active.map(o => renderActiveCard(o)).join('');
+  } else {
+    activeCount.style.display='none';
+    activeWrap.innerHTML = '<div class="sec-header-empty">ไม่มีออเดอร์ที่กำลังดำเนินการ</div>';
+  }
+
+  // === HISTORY (compact rows) ===
+  const historyCount = document.getElementById('history-count');
+  if(history.length){
+    historyCount.textContent = history.length; historyCount.style.display='inline';
+    renderHistoryRows(historyExpanded ? history : history.slice(0, HISTORY_PREVIEW));
+    const btn = document.getElementById('show-more-btn');
+    if(history.length > HISTORY_PREVIEW){
+      btn.style.display='flex';
+      document.getElementById('show-more-text').textContent = historyExpanded ? 'ย่อกลับ' : `ดูทั้งหมด ${history.length} รายการ`;
+    } else { btn.style.display='none'; }
+  } else {
+    historyCount.style.display='none';
+    document.getElementById('history-wrap').innerHTML='<div class="sec-header-empty">ยังไม่มีประวัติออเดอร์</div>';
+  }
+}
+
+function renderHistoryRows(list){
+  const wrap = document.getElementById('history-wrap');
+  wrap.innerHTML = list.map((o,idx) => {
+    const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+    const dateStr = dt.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+    const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    const itemNames = (o.items||[]).map(i=>`${i.name}×${i.qty}`).join(', ');
+    const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
+    const dotCls = o.status==='done'?'done':'cancelled';
+    const detailRows = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+    return `<div class="history-row" id="hrow-${idx}" onclick="toggleHistoryDetail(${idx})">
+      <div class="history-dot ${dotCls}"></div>
+      <div class="history-main">
+        <div class="history-id">#${o.id.slice(0,8).toUpperCase()} · ${statusMap[o.status]||o.status}</div>
+        <div class="history-items">${itemNames}</div>
+        <div class="history-detail" id="hdetail-${idx}">
+          <div style="padding:8px 0 4px">${detailRows}</div>
+          <div style="display:flex;justify-content:flex-end;padding-bottom:8px">
+            <button class="reorder-btn" onclick="event.stopPropagation();reorder(${itemsJson})">🔁 สั่งซ้ำ</button>
+          </div>
         </div>
-        <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${statusMap[o.status]||o.status}</span>
       </div>
-      <div class="order-divider"></div>
-      <div class="order-items">${items}</div>
-      <div class="order-footer">
-        <div><div class="order-total-label">ยอดรวม</div><div class="order-total-val">${o.total} ฿</div></div>
-        <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
+      <div class="history-right">
+        <div class="history-price">${o.total} ฿</div>
+        <div class="history-date">${dateStr} ${timeStr}</div>
       </div>
     </div>`;
-  });
-  wrap.innerHTML=html;
+  }).join('');
+}
+
+window.toggleHistoryDetail = function(idx){
+  const row = document.getElementById('hrow-'+idx);
+  const detail = document.getElementById('hdetail-'+idx);
+  const isOpen = detail.classList.contains('open');
+  detail.classList.toggle('open', !isOpen);
+  row.classList.toggle('expanded', !isOpen);
+};
+
+window.showAllHistory = function(){
+  historyExpanded = !historyExpanded;
+  renderHistoryRows(historyExpanded ? allHistoryDocs : allHistoryDocs.slice(0, HISTORY_PREVIEW));
+  document.getElementById('show-more-text').textContent = historyExpanded ? 'ย่อกลับ' : `ดูทั้งหมด ${allHistoryDocs.length} รายการ`;
+  const btn = document.getElementById('show-more-btn');
+  btn.querySelector('svg').style.transform = historyExpanded ? 'rotate(180deg)' : '';
+};
+
+function renderActiveCard(o){
+  const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+  const dateStr = dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+  const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const items = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+  const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
+  return `<div class="order-card active-order">
+    <div class="order-card-head">
+      <div>
+        <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
+        <div class="order-date">🕐 ${dateStr} ${timeStr}</div>
+        <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.</div>
+      </div>
+      <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${statusMap[o.status]||o.status}</span>
+    </div>
+    <div class="order-divider"></div>
+    <div class="order-items">${items}</div>
+    <div class="order-footer">
+      <div><div class="order-total-label">ยอดรวม</div><div class="order-total-val">${o.total} ฿</div></div>
+      <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
+    </div>
+  </div>`;
 }
 
 async function loadOrders(){
