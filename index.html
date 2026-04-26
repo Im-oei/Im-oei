@@ -23,6 +23,22 @@
 .order-time-banner .clock-icon{font-size:20px;}
 .order-time-banner .time-text strong{font-size:13px;font-weight:700;color:#2C2C2C;display:block;}
 .order-time-banner .time-text span{font-size:11px;color:#999;}
+/* PREORDER BANNER */
+.preorder-banner{background:linear-gradient(135deg,#667eea,#764ba2);margin:0 16px 10px;padding:12px 14px;border-radius:14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 14px rgba(102,126,234,0.35);}
+.preorder-banner .icon{font-size:26px;}
+.preorder-banner .text strong{font-size:14px;font-weight:800;color:#fff;display:block;}
+.preorder-banner .text span{font-size:12px;color:rgba(255,255,255,0.8);}
+.preorder-banner .arrow{margin-left:auto;color:#fff;font-size:20px;}
+/* STAMP CARD */
+.stamp-card-wrap{margin:0 16px 12px;}
+.stamp-card{background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:16px;padding:14px 16px;box-shadow:0 4px 16px rgba(255,107,53,0.3);}
+.stamp-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stamp-card-header .title{font-size:14px;font-weight:800;color:#fff;}
+.stamp-card-header .pts{font-size:13px;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.15);padding:3px 10px;border-radius:20px;}
+.stamps-grid{display:flex;gap:7px;flex-wrap:wrap;}
+.stamp{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+.stamp.filled{background:rgba(255,255,255,0.9);border-color:rgba(255,255,255,0.9);}
+.stamp-msg{font-size:11px;color:rgba(255,255,255,0.8);margin-top:8px;}
 .cat-tabs-wrap{padding:0 16px 4px;overflow-x:auto;scrollbar-width:none;display:flex;gap:8px;}
 .cat-tabs-wrap::-webkit-scrollbar{display:none;}
 .cat-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid #E8E8E8;background:#fff;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#666;cursor:pointer;white-space:nowrap;transition:all .18s;}
@@ -31,7 +47,6 @@
 .section-title .left{display:flex;align-items:center;gap:6px;}
 .section-title .icon{font-size:18px;}
 .section-title span{font-size:17px;font-weight:800;color:#2C2C2C;}
-.section-title .see-all{font-size:12px;font-weight:700;color:#FFC107;}
 .featured-row{display:flex;gap:12px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none;}
 .featured-row::-webkit-scrollbar{display:none;}
 .featured-card{flex-shrink:0;width:140px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,0.09);cursor:pointer;position:relative;transition:transform .18s;}
@@ -72,7 +87,7 @@
 .pb-footer{padding-bottom:72px;}
 .promo-slider{margin:10px 16px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);position:relative;}
 .promo-slides{display:flex;transition:transform .4s ease;will-change:transform;}
-.promo-slide{flex-shrink:0;width:100%;}
+.promo-slide{flex-shrink:0;width:100%;position:relative;}
 .promo-slide img{width:100%;height:130px;object-fit:cover;display:block;}
 .promo-slide .promo-text-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.45) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:center;padding:16px;}
 .promo-slide .promo-title{font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
@@ -86,6 +101,13 @@
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .28s;z-index:200;white-space:nowrap;pointer-events:none;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .no-results{text-align:center;padding:40px 20px;color:#bbb;font-size:15px;}
+/* PROMO MID BANNER */
+.promo-mid{margin:4px 16px 12px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);position:relative;cursor:pointer;}
+.promo-mid img{width:100%;height:110px;object-fit:cover;display:block;}
+.promo-mid-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.45) 0%,transparent 65%);display:flex;flex-direction:column;justify-content:center;padding:16px;}
+.promo-mid-title{font-size:17px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.4);}
+.promo-mid-sub{font-size:12px;color:rgba(255,255,255,0.88);margin-top:3px;font-weight:600;}
+.promo-mid-badge{position:absolute;top:10px;right:10px;background:#FFC107;color:#3E2000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;}
 </style>
 </head>
 <body>
@@ -103,9 +125,9 @@
   </div>
 </div>
 
-<div class="hero-wrap">
-  <img src="hero.png" alt="อิ่มเอ้ย">
-</div>
+<div class="preorder-mode-bar" id="preorder-mode-bar">📅 โหมดสั่งล่วงหน้า — สำหรับวันพรุ่งนี้</div>
+
+<div class="hero-wrap"><img src="hero.png" alt="อิ่มเอ้ย"></div>
 
 <div class="search-wrap">
   <span class="search-icon">🔍</span>
@@ -124,6 +146,19 @@
 <div id="promo-slider-wrap"></div>
 <div id="banner-section"></div>
 
+<!-- PREORDER BANNER -->
+<div class="preorder-banner" id="preorder-btn" onclick="togglePreorder()">
+  <span class="icon">📅</span>
+  <div class="text">
+    <strong id="preorder-label">สั่งล่วงหน้าวันพรุ่งนี้</strong>
+    <span id="preorder-sub">สั่งตอนนี้ รับได้พรุ่งนี้เช้า</span>
+  </div>
+  <span class="arrow" id="preorder-arrow">›</span>
+</div>
+
+<!-- STAMP CARD -->
+<div class="stamp-card-wrap" id="stamp-card-wrap" style="display:none"></div>
+
 <div class="cat-tabs-wrap" id="cat-tabs"></div>
 
 <div class="section-title">
@@ -131,12 +166,14 @@
 </div>
 <div class="featured-row" id="featured-row"></div>
 
+<!-- PROMOTION BANNER (between featured and menu) -->
+<div id="promo-mid-wrap"></div>
+
 <div id="menu-list" class="pb-footer"></div>
 
 <div class="bottom-nav">
   <div class="nav-item active">
-    <span class="nav-icon">🏠</span>
-    <span>หน้าหลัก</span>
+    <span class="nav-icon">🏠</span><span>หน้าหลัก</span>
   </div>
   <div class="nav-cart" onclick="location.href='cart.html'">
     <span class="nav-icon">🛒</span>
@@ -145,14 +182,60 @@
     <span class="nav-label">ตะกร้า</span>
   </div>
   <div class="nav-item" onclick="goProfile()">
-    <span class="nav-icon">👤</span>
-    <span>โปรไฟล์</span>
+    <span class="nav-icon">👤</span><span>โปรไฟล์</span>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ====== PREORDER STATE ======
+var isPreorderMode = false;
+var preorderDate = null;
+
+function togglePreorder() {
+  isPreorderMode = !isPreorderMode;
+  var bar = document.getElementById('preorder-mode-bar');
+  var label = document.getElementById('preorder-label');
+  var sub = document.getElementById('preorder-sub');
+  var arrow = document.getElementById('preorder-arrow');
+  var btn = document.getElementById('preorder-btn');
+
+  if (isPreorderMode) {
+    var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    preorderDate = tomorrow.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'});
+    bar.classList.add('show');
+    label.textContent = '✅ โหมดสั่งล่วงหน้า: '+preorderDate;
+    sub.textContent = 'แตะเพื่อยกเลิก / กลับสั่งวันนี้';
+    btn.style.background = 'linear-gradient(135deg,#4CAF50,#388E3C)';
+    arrow.textContent = '✓';
+    localStorage.setItem('imkum_preorder','1');
+    localStorage.setItem('imkum_preorder_date', preorderDate);
+    showToast('📅 สั่งล่วงหน้าวันพรุ่งนี้: '+preorderDate);
+  } else {
+    bar.classList.remove('show');
+    label.textContent = 'สั่งล่วงหน้าวันพรุ่งนี้';
+    sub.textContent = 'สั่งตอนนี้ รับได้พรุ่งนี้เช้า';
+    btn.style.background = '';
+    arrow.textContent = '›';
+    localStorage.removeItem('imkum_preorder');
+    localStorage.removeItem('imkum_preorder_date');
+    showToast('กลับสู่การสั่งปกติ');
+  }
+}
+
+// Restore preorder state
+if (localStorage.getItem('imkum_preorder') === '1') {
+  isPreorderMode = true;
+  preorderDate = localStorage.getItem('imkum_preorder_date') || '';
+  document.getElementById('preorder-mode-bar').classList.add('show');
+  document.getElementById('preorder-label').textContent = '✅ โหมดสั่งล่วงหน้า: '+preorderDate;
+  document.getElementById('preorder-sub').textContent = 'แตะเพื่อยกเลิก / กลับสั่งวันนี้';
+  document.getElementById('preorder-btn').style.background = 'linear-gradient(135deg,#4CAF50,#388E3C)';
+  document.getElementById('preorder-arrow').textContent = '✓';
+}
+
+// ====== USER ======
 function getUser(){ try{ return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
 function goProfile(){
   var u=getUser();
@@ -169,6 +252,34 @@ function updateUserBadge(){
 }
 updateUserBadge();
 
+// ====== STAMP CARD ======
+var STAMP_GOAL = 10; // สะสมครบ 10 ครั้ง รับฟรี 1 เมนู
+function getStamps() {
+  var u = getUser();
+  if (!u || !u.phone) return null;
+  var key = 'imkum_stamps_' + u.phone;
+  try { return JSON.parse(localStorage.getItem(key) || '{"count":0,"total":0}'); } catch { return {count:0,total:0}; }
+}
+function renderStampCard() {
+  var u = getUser();
+  var wrap = document.getElementById('stamp-card-wrap');
+  if (!u || u.role === 'admin' || u.role === 'owner') { wrap.style.display = 'none'; return; }
+  var stamps = getStamps();
+  if (!stamps) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  var count = stamps.count || 0;
+  var total = stamps.total || 0;
+  var dots = '';
+  for (var i = 0; i < STAMP_GOAL; i++) {
+    dots += '<div class="stamp' + (i < count ? ' filled' : '') + '">' + (i < count ? '⭐' : '') + '</div>';
+  }
+  var msg = count >= STAMP_GOAL
+    ? '🎉 ครบแล้ว! แจ้งร้านเพื่อรับรางวัล'
+    : 'อีก ' + (STAMP_GOAL - count) + ' ครั้ง รับฟรี 1 เมนู! (สั่งแล้ว ' + total + ' ครั้ง)';
+  wrap.innerHTML = '<div class="stamp-card"><div class="stamp-card-header"><div class="title">⭐ สะสมแต้ม</div><div class="pts">'+count+'/'+STAMP_GOAL+'</div></div><div class="stamps-grid">'+dots+'</div><div class="stamp-msg">'+msg+'</div></div>';
+}
+
+// ====== MENU DATA ======
 var MENU=[
   {category:"🥪 แซนวิช",catKey:"sandwich",items:[
     {id:"tuna",name:"ปูอัดทูน่า",desc:"ปูอัด, ทูน่า, ผักสลัด",emoji:"🥪",price:20},
@@ -298,7 +409,27 @@ function buildMenuList(){
   if(!hasAny) list.innerHTML='<div class="no-results">😔 ไม่พบเมนูที่ค้นหา</div>';
 }
 
-buildTabs(); buildFeatured(); buildMenuList(); render();
+// ====== PUSH NOTIFICATION SUBSCRIBE ======
+async function requestPushPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission === 'granted') return;
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    showToast('🔔 เปิดรับการแจ้งเตือนแล้ว!');
+    // Store subscription flag
+    localStorage.setItem('imkum_push_enabled','1');
+  }
+}
+
+// Auto-ask for push permission after login
+var u = getUser();
+if (u && u.role === 'customer' && !localStorage.getItem('imkum_push_asked')) {
+  localStorage.setItem('imkum_push_asked','1');
+  setTimeout(requestPushPermission, 2000);
+}
+
+buildTabs(); buildFeatured(); buildMenuList(); render(); renderStampCard();
+
 window.openAdminLogin=function(){window.location.href='login.html';};
 window.closeAdminModal=function(){};
 window.doAdminLogin=function(){window.location.href='login.html';};
@@ -317,10 +448,7 @@ function buildPromoSlider(banners) {
   const slides = banners.map((b) => {
     const imgTag = b.imageUrl ? `<img src="${b.imageUrl}" alt="${b.title||''}">` : '';
     const hasText = b.title || b.subtitle;
-    return `<div class="promo-slide" style="position:relative">
-      ${imgTag}
-      ${hasText ? `<div class="promo-text-overlay"><div class="promo-title">${b.title||''}</div><div class="promo-sub">${b.subtitle||''}</div></div>` : ''}
-    </div>`;
+    return `<div class="promo-slide">${imgTag}${hasText ? `<div class="promo-text-overlay"><div class="promo-title">${b.title||''}</div><div class="promo-sub">${b.subtitle||''}</div></div>` : ''}</div>`;
   }).join('');
   const dots = banners.map((_,i) => `<div class="promo-dot${i===0?' active':''}" id="pdot-${i}"></div>`).join('');
   wrap.innerHTML = `<div class="promo-slider"><div class="promo-slides" id="promo-slides">${slides}</div><div class="promo-dots">${dots}</div></div>`;
@@ -349,16 +477,25 @@ async function syncFirestore(){
         document.getElementById('closed-banner').style.display='block';
         document.getElementById('closed-banner').innerHTML='<div class="closed-overlay">🔴 ร้านปิดรับออเดอร์แล้ว กรุณามาใหม่วันพรุ่งนี้</div>';
       }
-      if(s.featuredIds){FEATURED_IDS=s.featuredIds;buildFeatured();}
+      if(s.featuredIds){ FEATURED_IDS=s.featuredIds; buildFeatured(); }
+      // Preorder config
+      if(s.preorderEnabled===false){
+        document.getElementById('preorder-btn').style.display='none';
+      }
     }
     // Load promo banners
     const bannersSnap=await getDocs(collection(db,'banners'));
     if(!bannersSnap.empty){
-      const banners=bannersSnap.docs
-        .map(d=>({id:d.id,...d.data()}))
-        .filter(b=>b.active!==false)
-        .sort((a,b)=>(a.order||0)-(b.order||0));
+      const banners=bannersSnap.docs.map(d=>({id:d.id,...d.data()})).filter(b=>b.active!==false).sort((a,b)=>(a.order||0)-(b.order||0));
       buildPromoSlider(banners);
+      // Promotion banner between featured & menu list
+      const midBanner = banners.find(b=>b.midBanner) || (banners.length > 1 ? banners[1] : banners[0]);
+      if (midBanner && midBanner.imageUrl) {
+        const midWrap = document.getElementById('promo-mid-wrap');
+        if (midWrap) {
+          midWrap.innerHTML = `<div class="promo-mid"><img src="${midBanner.imageUrl}" alt="${midBanner.title||'โปรโมชัน'}"><div class="promo-mid-overlay"><div class="promo-mid-title">${midBanner.title||'โปรโมชันพิเศษ'}</div>${midBanner.subtitle?`<div class="promo-mid-sub">${midBanner.subtitle}</div>`:''}</div><div class="promo-mid-badge">📢 โปรโมชัน</div></div>`;
+        }
+      }
     }
     const mSnap=await getDocs(collection(db,'menu'));
     if(!mSnap.empty){
@@ -375,9 +512,27 @@ async function syncFirestore(){
       ALL_ITEMS=[].concat(...MENU.map(c=>c.items));
       buildTabs(); buildFeatured(); buildMenuList(); render();
     }
+    // Load stamps from Firestore for logged-in customer
+    const user = (() => { try { return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); } catch { return null; } })();
+    if (user && user.phone && user.role === 'customer') {
+      try {
+        const stampDoc = await getDoc(doc(db,'stamps', user.phone));
+        if (stampDoc.exists()) {
+          const d = stampDoc.data();
+          const key = 'imkum_stamps_' + user.phone;
+          localStorage.setItem(key, JSON.stringify({count: d.count||0, total: d.total||0}));
+          renderStampCard();
+        }
+      } catch(e) { /* ignore */ }
+    }
   }catch(e){console.log('Firebase sync skipped:',e.message);}
 }
 syncFirestore();
+
+// Register SW
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>

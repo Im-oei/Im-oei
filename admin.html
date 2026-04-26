@@ -196,6 +196,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
   <button class="tab-btn active" onclick="switchTab('orders', this)">📋 ออเดอร์</button>
   <button class="tab-btn" onclick="switchTab('menu', this)">🍽️ เมนู</button>
   <button class="tab-btn" onclick="switchTab('banners', this)">📢 แบนเนอร์</button>
+  <button class="tab-btn" onclick="switchTab('stamps', this)">⭐ แต้ม</button>
   <button class="tab-btn" onclick="switchTab('stats', this)">📊 สถิติ</button>
   <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ ตั้งค่า</button>
 </div>
@@ -251,6 +252,31 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
   </div>
 </div>
 
+
+<div id="panel-stamps" class="panel">
+  <div class="menu-admin-section">
+    <h3>⭐ จัดการแต้มสะสมลูกค้า</h3>
+    <p style="font-size:13px;color:var(--text-sub);margin-bottom:14px">ค้นหาลูกค้าจากเบอร์โทร เพื่อดู/แก้ไขแต้ม</p>
+    <div class="form-group" style="display:flex;gap:8px">
+      <input type="tel" class="form-input" id="stamp-phone-input" placeholder="เบอร์โทรลูกค้า" style="flex:1">
+      <button class="action-btn btn-preparing" onclick="lookupStamp()" style="white-space:nowrap">🔍 ค้นหา</button>
+    </div>
+    <div id="stamp-result" style="margin-top:10px"></div>
+    <div class="section-sep"></div>
+    <h3>⚙️ ตั้งค่าแต้มสะสม</h3>
+    <div class="settings-card">
+      <div class="form-group">
+        <label>จำนวนแต้มที่ต้องสะสม (ครั้ง)</label>
+        <input type="number" class="form-input" id="stamp-goal" value="10" min="1" max="50">
+      </div>
+      <div class="form-group">
+        <label>รางวัลเมื่อครบแต้ม</label>
+        <input type="text" class="form-input" id="stamp-reward" placeholder="เช่น เมนูฟรี 1 รายการ">
+      </div>
+      <button class="save-btn" onclick="saveStampConfig()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
 
 <div id="panel-stats" class="panel">
   <div class="menu-admin-section">
@@ -315,6 +341,22 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
         <input type="file" id="hero-logo-file" accept="image/*" style="display:none" onchange="uploadHeroLogoFile(this)">
       </div>
       <button class="save-btn" onclick="saveHeroLogo()">💾 บันทึก Logo</button>
+    </div>
+
+    <div class="settings-card">
+      <h3>📅 สั่งล่วงหน้า (Pre-order)</h3>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <label style="font-size:14px;font-weight:700">เปิดให้ลูกค้าสั่งล่วงหน้าวันถัดไป</label>
+        <input type="checkbox" id="preorder-enabled" checked style="width:20px;height:20px;accent-color:var(--yellow)">
+      </div>
+      <button class="save-btn" onclick="savePreorderSetting()">💾 บันทึก</button>
+    </div>
+
+    <div class="settings-card">
+      <h3>⭐ เมนูแนะนำ (Featured)</h3>
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px">เลือกเมนูที่จะปรากฏในแถว "เมนูแนะนำ" (สูงสุด 5 เมนู)</p>
+      <div id="featured-checkboxes" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
+      <button class="save-btn" style="margin-top:12px" onclick="saveFeaturedItems()">💾 บันทึกเมนูแนะนำ</button>
     </div>
 
     <div class="settings-card owner-only">
@@ -439,6 +481,10 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       <label style="font-size:13px;font-weight:700;color:var(--text-sub)">เปิดใช้งาน</label>
       <input type="checkbox" id="banner-active" checked style="width:20px;height:20px;accent-color:var(--yellow)">
     </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <label style="font-size:13px;font-weight:700;color:var(--text-sub)">📢 แสดงเป็น Promotion Banner (ระหว่างเมนูแนะนำ)</label>
+      <input type="checkbox" id="banner-mid" style="width:20px;height:20px;accent-color:var(--orange)">
+    </div>
     <button class="save-btn" onclick="saveBannerItem()">💾 บันทึก</button>
   </div>
 </div>
@@ -479,7 +525,6 @@ import {
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
   serverTimestamp, where, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 const app = initializeApp({
   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
   authDomain: "im-oei.firebaseapp.com",
@@ -584,7 +629,8 @@ function renderOrderCard(o) {
                <button class="action-btn btn-cancel" onclick="updateStatus('${o.id}','cancelled')">❌ ยกเลิก</button>`,
     preparing: `<button class="action-btn btn-ready" onclick="updateStatus('${o.id}','ready')">🟢 พร้อมรับ</button>
                  <button class="action-btn btn-cancel" onclick="updateStatus('${o.id}','cancelled')">❌ ยกเลิก</button>`,
-    ready: `<button class="action-btn btn-done" onclick="updateStatus('${o.id}','done')">✅ รับแล้ว</button>`,
+    ready: `<button class="action-btn btn-done" onclick="updateStatus('${o.id}','done')">✅ รับแล้ว</button>
+               <button class="action-btn" style="background:#E8F5E9;color:#2E7D32" onclick="notifyCustomer('${o.id}','${(o.customerName||'').replace(/'/g,'')}','${o.pickupTime||'07:30'}')">💬 แจ้งลูกค้า</button>`,
     done: ``, cancelled: ``
   }[o.status] || '';
 
@@ -667,6 +713,8 @@ function renderMenuAdmin() {
   });
   container.innerHTML = html;
   renderCategoryAdmin();
+  // Update featured checkboxes if settings tab is open
+  if (document.getElementById('featured-checkboxes')) renderFeaturedCheckboxes();
 }
 
 function renderCategoryAdmin() {
@@ -751,6 +799,8 @@ window.openEditBanner = function(id) {
   document.getElementById('banner-order').value = b.order || 1;
   document.getElementById('banner-img-url').value = b.imageUrl || '';
   document.getElementById('banner-active').checked = b.active !== false;
+  const midEl = document.getElementById('banner-mid');
+  if (midEl) midEl.checked = b.midBanner === true;
   const prev = document.getElementById('banner-modal-preview');
   if (b.imageUrl) { prev.src = b.imageUrl; prev.style.display = 'block'; }
   else prev.style.display = 'none';
@@ -783,6 +833,7 @@ window.saveBannerItem = async function() {
     imageUrl: document.getElementById('banner-img-url').value.trim(),
     order: parseInt(document.getElementById('banner-order').value) || 1,
     active: document.getElementById('banner-active').checked,
+    midBanner: document.getElementById('banner-mid') ? document.getElementById('banner-mid').checked : false,
   };
   showLoading(true);
   try {
@@ -898,7 +949,6 @@ window.deleteCategoryItem = async function(key) {
 
 
 
-// ====== SETTINGS ======
 async function loadSettings() {
   const d = await getDoc(doc(db, 'settings', 'store'));
   if (d.exists()) {
@@ -915,20 +965,34 @@ async function loadSettings() {
       document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
       const logoImg = document.getElementById('hero-logo-preview-img');
       logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
-    } else if (s.heroLogoRef) {
-      // stored in separate doc
-      const logoDoc = await getDoc(doc(db, 'settings', s.heroLogoRef));
-      if (logoDoc.exists() && logoDoc.data().heroLogoUrl) {
-        const url = logoDoc.data().heroLogoUrl;
-        document.getElementById('set-hero-logo-url').value = url;
-        const logoImg = document.getElementById('hero-logo-preview-img');
-        logoImg.src = url; logoImg.style.display = 'block';
-      }
     }
+    if (s.featuredIds) currentFeaturedIds = s.featuredIds;
     storeIsOpen = s.isOpen !== false;
     document.getElementById('store-open-toggle').checked = storeIsOpen;
     document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
   }
+}
+
+async function loadStampConfig() {
+  try {
+    const d = await getDoc(doc(db, 'settings', 'stamps'));
+    if (d.exists()) {
+      const s = d.data();
+      if (document.getElementById('stamp-goal')) document.getElementById('stamp-goal').value = s.goal || 10;
+      if (document.getElementById('stamp-reward')) document.getElementById('stamp-reward').value = s.reward || '';
+    }
+  } catch {}
+}
+
+async function loadPreorderSetting() {
+  try {
+    const d = await getDoc(doc(db, 'settings', 'store'));
+    if (d.exists()) {
+      const s = d.data();
+      const el = document.getElementById('preorder-enabled');
+      if (el) el.checked = s.preorderEnabled !== false;
+    }
+  } catch {}
 }
 
 // ====== STATS ======
@@ -979,6 +1043,12 @@ window.switchTab = function(tab, btn) {
   btn.classList.add('active');
   if (tab === 'stats') renderStats();
   if (tab === 'banners') renderBannersAdmin();
+  if (tab === 'settings') {
+    renderFeaturedCheckboxes();
+    loadStampConfig();
+    loadPreorderSetting();
+  }
+  if (tab === 'stamps') loadStampConfig();
 };
 
 window.filterOrders = function(status, btn) {
@@ -1285,8 +1355,144 @@ window.saveItemImage = async function() {
   finally { showLoading(false); }
 };
 
-// ====== UTILS ======
-window.closeModal = function(id) {
+// ====== NOTIFY CUSTOMER (LINE / Push) ======
+window.notifyCustomer = async function(orderId, name, pickupTime) {
+  const msg = `🍱 อิ่มเอ้ย\nสวัสดีคุณ ${name}!\nออเดอร์ของคุณพร้อมแล้ว 🟢\nรับได้เลยที่ร้าน ⏰ ${pickupTime} น.`;
+
+  // Check if browser supports share / clipboard
+  if (navigator.share) {
+    try {
+      await navigator.share({ text: msg });
+      showToast('แชร์ข้อความแจ้งลูกค้าแล้ว ✓');
+      return;
+    } catch {}
+  }
+  // Fallback: copy to clipboard
+  try {
+    await navigator.clipboard.writeText(msg);
+    showToast('📋 คัดลอกข้อความแล้ว! ส่งให้ลูกค้าได้เลย');
+  } catch {
+    prompt('คัดลอกข้อความนี้ส่งให้ลูกค้า:', msg);
+  }
+
+  // Also try LINE URL scheme
+  const lineUrl = 'https://line.me/R/msg/text/?' + encodeURIComponent(msg);
+  setTimeout(() => {
+    if (confirm('เปิด LINE เพื่อส่งข้อความ?')) {
+      window.open(lineUrl, '_blank');
+    }
+  }, 500);
+};
+
+// ====== STAMP MANAGEMENT ======
+window.lookupStamp = async function() {
+  const phone = document.getElementById('stamp-phone-input').value.trim();
+  if (!phone) { showToast('กรุณากรอกเบอร์โทร'); return; }
+  showLoading(true);
+  try {
+    const snap = await getDoc(doc(db, 'stamps', phone));
+    const result = document.getElementById('stamp-result');
+    if (!snap.exists()) {
+      result.innerHTML = '<div style="padding:14px;background:#FFF8E1;border-radius:12px;font-size:14px">ยังไม่มีข้อมูลแต้มของเบอร์นี้</div>';
+    } else {
+      const d = snap.data();
+      const count = d.count || 0;
+      const total = d.total || 0;
+      result.innerHTML = `
+        <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:var(--shadow)">
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">📱 ${phone}</div>
+          <div style="font-size:14px;margin-bottom:4px">แต้มปัจจุบัน: <strong style="color:var(--orange)">${count}/10</strong></div>
+          <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px">ซื้อทั้งหมด: ${total} ครั้ง</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="action-btn btn-preparing" onclick="addStamp('${phone}')">+ เพิ่มแต้ม</button>
+            <button class="action-btn btn-done" onclick="resetStamp('${phone}')">🎁 ใช้รางวัล (Reset)</button>
+          </div>
+        </div>`;
+    }
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+window.addStamp = async function(phone) {
+  showLoading(true);
+  try {
+    const stampRef = doc(db, 'stamps', phone);
+    const snap = await getDoc(stampRef);
+    let count = snap.exists() ? (snap.data().count||0) : 0;
+    let total = snap.exists() ? (snap.data().total||0) : 0;
+    count = (count + 1) >= 10 ? 0 : count + 1;
+    total = total + 1;
+    await setDoc(stampRef, { count, total, phone, updatedAt: serverTimestamp() });
+    showToast('เพิ่มแต้มแล้ว: '+count+'/10');
+    lookupStamp();
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+window.resetStamp = async function(phone) {
+  if (!confirm('ยืนยันใช้รางวัล แล้ว Reset แต้มลูกค้า?')) return;
+  showLoading(true);
+  try {
+    const stampRef = doc(db, 'stamps', phone);
+    const snap = await getDoc(stampRef);
+    const total = snap.exists() ? (snap.data().total||0) : 0;
+    await setDoc(stampRef, { count: 0, total, phone, updatedAt: serverTimestamp() }, { merge: true });
+    showToast('🎁 ใช้รางวัลแล้ว แต้มถูก Reset!');
+    lookupStamp();
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+window.saveStampConfig = async function() {
+  const goal = parseInt(document.getElementById('stamp-goal').value) || 10;
+  const reward = document.getElementById('stamp-reward').value.trim();
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'stamps'), { goal, reward, updatedAt: serverTimestamp() });
+    showToast('บันทึกตั้งค่าแต้มแล้ว ✓');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+// ====== FEATURED ITEMS PIN ======
+let currentFeaturedIds = [];
+
+function renderFeaturedCheckboxes() {
+  const wrap = document.getElementById('featured-checkboxes');
+  if (!wrap || !allMenuItems.length) return;
+  wrap.innerHTML = allMenuItems.filter(i => !i.hidden).map(item => `
+    <label style="display:flex;align-items:center;gap:10px;padding:8px;background:#fff;border-radius:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <input type="checkbox" value="${item.id}" style="width:18px;height:18px;accent-color:var(--yellow)"
+        ${currentFeaturedIds.includes(item.id) ? 'checked' : ''}>
+      <span style="font-size:14px">${item.emoji||'🍽️'} ${item.name}</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--text-sub)">${item.price} บาท</span>
+    </label>`).join('');
+}
+
+window.saveFeaturedItems = async function() {
+  const checks = document.querySelectorAll('#featured-checkboxes input[type=checkbox]:checked');
+  const ids = Array.from(checks).map(c => c.value);
+  if (ids.length > 5) { showToast('เลือกได้สูงสุด 5 เมนู'); return; }
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { featuredIds: ids }, { merge: true });
+    currentFeaturedIds = ids;
+    showToast('บันทึกเมนูแนะนำแล้ว ✓ ('+ids.length+' เมนู)');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
+// ====== PREORDER SETTING ======
+window.savePreorderSetting = async function() {
+  const enabled = document.getElementById('preorder-enabled').checked;
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { preorderEnabled: enabled }, { merge: true });
+    showToast(enabled ? '📅 เปิด Pre-order แล้ว' : '❌ ปิด Pre-order แล้ว');
+  } catch(e) { showToast('เกิดข้อผิดพลาด'); }
+  finally { showLoading(false); }
+};
+
   document.getElementById(id).classList.remove('show');
 };
 // Close modal on overlay click
