@@ -23,14 +23,13 @@
 .order-time-banner .clock-icon{font-size:20px;}
 .order-time-banner .time-text strong{font-size:13px;font-weight:700;color:#2C2C2C;display:block;}
 .order-time-banner .time-text span{font-size:11px;color:#999;}
-/* PREORDER TOP BAR TOGGLE */
-.preorder-topbar{background:#fff;border-bottom:1.5px solid #F0E8D8;padding:8px 16px;display:flex;align-items:center;gap:10px;}
-.preorder-topbar .ptb-icon{font-size:18px;}
-.preorder-topbar .ptb-text{flex:1;}
-.preorder-topbar .ptb-text strong{font-size:13px;font-weight:800;color:#2C2C2C;display:block;line-height:1.3;}
-.preorder-topbar .ptb-text span{font-size:11px;color:#999;}
-.preorder-topbar.active{background:#E8F5E9;border-bottom-color:#A5D6A7;}
-.preorder-topbar.active .ptb-text strong{color:#2E7D32;}
+/* PREORDER CHIP inside topbar */
+.preorder-chip{display:flex;align-items:center;background:#F5EFE6;border-radius:20px;padding:5px 10px 5px 8px;gap:2px;}
+.preorder-chip span{font-size:11px;font-weight:800;color:#5D3A00;white-space:nowrap;}
+.app-topbar.active-preorder{background:#E8F5E9;}
+.app-topbar.active-preorder .brand-name{color:#2E7D32;}
+.app-topbar.active-preorder .preorder-chip{background:#C8E6C9;}
+.app-topbar.active-preorder .preorder-chip span{color:#1B5E20;}
 /* Toggle switch */
 .toggle-sw{position:relative;width:46px;height:26px;flex-shrink:0;}
 .toggle-sw input{opacity:0;width:0;height:0;}
@@ -112,29 +111,26 @@
 </head>
 <body>
 
-<div class="app-topbar">
+<div class="app-topbar" id="preorder-topbar">
   <div class="brand">
     <img src="logo.png" alt="logo">
     <div>
       <div class="brand-name">อิ่มเอ้ย</div>
-      <div class="brand-sub">อร่อยง่ายๆ ใกล้บ้านคุณ</div>
+      <div class="brand-sub" id="preorder-sub">อร่อยง่ายๆ ใกล้บ้านคุณ</div>
     </div>
   </div>
-  <div class="user-btn" id="user-badge" onclick="goProfile()">
-    <span id="user-avatar">👤</span>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+    <div class="preorder-chip" id="preorder-chip">
+      <span id="preorder-label">📅 พรุ่งนี้</span>
+      <label class="toggle-sw" style="margin-left:6px;">
+        <input type="checkbox" id="preorder-toggle" onchange="togglePreorder()">
+        <span class="sl"></span>
+      </label>
+    </div>
+    <div class="user-btn" id="user-badge" onclick="goProfile()">
+      <span id="user-avatar">👤</span>
+    </div>
   </div>
-</div>
-
-<div class="preorder-topbar" id="preorder-topbar">
-  <span class="ptb-icon">📅</span>
-  <div class="ptb-text">
-    <strong id="preorder-label">สั่งล่วงหน้าวันพรุ่งนี้</strong>
-    <span id="preorder-sub">เปิดเพื่อสั่งรับพรุ่งนี้เช้า</span>
-  </div>
-  <label class="toggle-sw">
-    <input type="checkbox" id="preorder-toggle" onchange="togglePreorder()">
-    <span class="sl"></span>
-  </label>
 </div>
 
 <div class="hero-wrap"><img src="hero.png" alt="อิ่มเอ้ย"></div>
@@ -194,23 +190,23 @@ var preorderDate = null;
 
 function togglePreorder() {
   isPreorderMode = document.getElementById('preorder-toggle').checked;
-  var bar = document.getElementById('preorder-topbar');
+  var topbar = document.getElementById('preorder-topbar');
   var label = document.getElementById('preorder-label');
   var sub = document.getElementById('preorder-sub');
 
   if (isPreorderMode) {
     var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
     preorderDate = tomorrow.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'});
-    bar.classList.add('active');
-    label.textContent = '✅ โหมดสั่งล่วงหน้า: '+preorderDate;
-    sub.textContent = 'สั่งตอนนี้ รับได้พรุ่งนี้เช้า';
+    topbar.classList.add('active-preorder');
+    label.textContent = '📅 ' + preorderDate;
+    sub.textContent = '✅ โหมดสั่งล่วงหน้า';
     localStorage.setItem('imkum_preorder','1');
     localStorage.setItem('imkum_preorder_date', preorderDate);
     showToast('📅 สั่งล่วงหน้าวันพรุ่งนี้: '+preorderDate);
   } else {
-    bar.classList.remove('active');
-    label.textContent = 'สั่งล่วงหน้าวันพรุ่งนี้';
-    sub.textContent = 'เปิดเพื่อสั่งรับพรุ่งนี้เช้า';
+    topbar.classList.remove('active-preorder');
+    label.textContent = '📅 พรุ่งนี้';
+    sub.textContent = 'อร่อยง่ายๆ ใกล้บ้านคุณ';
     localStorage.removeItem('imkum_preorder');
     localStorage.removeItem('imkum_preorder_date');
     showToast('กลับสู่การสั่งปกติ');
@@ -222,9 +218,9 @@ if (localStorage.getItem('imkum_preorder') === '1') {
   isPreorderMode = true;
   preorderDate = localStorage.getItem('imkum_preorder_date') || '';
   document.getElementById('preorder-toggle').checked = true;
-  document.getElementById('preorder-topbar').classList.add('active');
-  document.getElementById('preorder-label').textContent = '✅ โหมดสั่งล่วงหน้า: '+preorderDate;
-  document.getElementById('preorder-sub').textContent = 'สั่งตอนนี้ รับได้พรุ่งนี้เช้า';
+  document.getElementById('preorder-topbar').classList.add('active-preorder');
+  document.getElementById('preorder-label').textContent = '📅 ' + preorderDate;
+  document.getElementById('preorder-sub').textContent = '✅ โหมดสั่งล่วงหน้า';
 }
 
 // ====== USER ======
@@ -446,7 +442,7 @@ async function syncFirestore(){
       if(s.featuredIds){ FEATURED_IDS=s.featuredIds; buildFeatured(); }
       // Preorder config
       if(s.preorderEnabled===false){
-        document.getElementById('preorder-topbar').style.display='none';
+        document.getElementById('preorder-chip').style.display='none';
       }
     }
     // Load promo banners

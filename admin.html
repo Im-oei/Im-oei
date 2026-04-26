@@ -203,7 +203,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 
 <!-- ====== ORDERS PANEL ====== -->
 <div id="panel-orders" class="panel active">
-  <div class="realtime-bar"><span class="realtime-dot"></span>อัพเดทอัตโนมัติ (real-time)</div>
+  <div class="realtime-bar" id="realtime-bar"><span class="realtime-dot" id="realtime-dot" style="background:#aaa"></span><span id="realtime-status">กำลังเชื่อมต่อ Firestore...</span></div>
   <div class="summary-grid">
     <div class="sum-card yellow"><div class="label">ออเดอร์วันนี้</div><div class="value" id="sum-total-orders">-</div></div>
     <div class="sum-card green"><div class="label">ยอดรวมวันนี้</div><div class="value" id="sum-revenue">-</div></div>
@@ -576,15 +576,74 @@ listenOrders();
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
-  // Listen to today's orders (last 24h for simplicity)
-  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-  unsubOrders = onSnapshot(q, snap => {
+  unsubOrders = onSnapshot(q,
+    snap => {
+      allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateSummary();
+      renderOrders();
+      if (document.getElementById('panel-stats').classList.contains('active')) renderStats();
+      // Show connected status
+      const dot = document.getElementById('realtime-dot');
+      const st = document.getElementById('realtime-status');
+      if (dot) dot.style.background = 'var(--green)';
+      if (st) st.textContent = 'อัพเดทอัตโนมัติ (real-time)';
+    },
+    err => {
+      console.error('onSnapshot error:', err.code, err.message);
+      // Show error in status bar
+      const dot = document.getElementById('realtime-dot');
+      const st = document.getElementById('realtime-status');
+      if (dot) { dot.style.background = 'var(--red)'; dot.style.animation = 'none'; }
+      if (st) st.textContent = '⚠️ real-time ล้มเหลว: ' + (err.code || err.message) + ' — กำลัง fallback...';
+      // Show error in UI
+      const container = document.getElementById('orders-list');
+      container.innerHTML = `<div style="margin:16px;background:#FFEBEE;border-radius:12px;padding:14px;font-size:13px;color:#B71C1C">
+        ⚠️ real-time ล้มเหลว: <b>${err.code || err.message}</b><br>
+        <span style="font-size:12px;color:#666;margin-top:6px;display:block">กำลังลองโหลดแบบปกติ...</span>
+      </div>`;
+      fallbackLoadOrders();
+    }
+  );
+}
+
+async function fallbackLoadOrders() {
+  try {
+    // Try with orderBy first
+    const snap = await getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc')));
     allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     updateSummary();
     renderOrders();
-    if (document.getElementById('panel-stats').classList.contains('active')) renderStats();
-  });
+    showToast('โหลดออเดอร์แล้ว (fallback mode)');
+  } catch(e) {
+    // If index error, try without orderBy
+    try {
+      const snap2 = await getDocs(collection(db, 'orders'));
+      allOrders = snap2.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a,b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||0);
+          return tb - ta;
+        });
+      updateSummary();
+      renderOrders();
+      showToast('โหลดออเดอร์แล้ว (no-index mode)');
+    } catch(e2) {
+      console.error('fallback error:', e2);
+      const container = document.getElementById('orders-list');
+      container.innerHTML = `<div style="margin:16px;background:#FFEBEE;border-radius:12px;padding:16px;font-size:13px;color:#B71C1C">
+        ❌ ไม่สามารถโหลดออเดอร์ได้<br>
+        <b>${e2.code || e2.message}</b><br>
+        <span style="font-size:12px;color:#555;margin-top:8px;display:block">
+          💡 ตรวจสอบ Firestore Security Rules<br>
+          ให้อนุญาต: <code>allow read, write: if true;</code> (dev mode)<br>
+          หรือตั้งค่า auth rules ให้ถูกต้อง
+        </span>
+        <button onclick="fallbackLoadOrders()" style="margin-top:10px;padding:8px 16px;background:#FFC107;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">🔄 ลองอีกครั้ง</button>
+      </div>`;
+    }
+  }
 }
 
 function updateSummary() {
