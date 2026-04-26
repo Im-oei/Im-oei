@@ -1476,7 +1476,7 @@ window.saveHeroLogo = async function() {
   showLoading(true);
   try {
     const url = document.getElementById('set-hero-logo-url').value;
-    if (!url) { showToast('กรุณาเลือกรูปก่อน'); return; }
+    if (!url) { showLoading(false); showToast('กรุณาเลือกรูปก่อน'); return; }
     // Firestore doc limit ~1MB — store in separate doc if large
     // Firestore doc limit ~1MB. Use separate doc if needed.
     if (url.length > 600000) {
@@ -1787,7 +1787,17 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
 });
 
-function showLoading(v) { document.getElementById('loading').classList.toggle('show', v); }
+function showLoading(v) {
+  const el = document.getElementById('loading');
+  el.classList.toggle('show', v);
+  // Safety: auto-hide after 10s to prevent stuck overlay
+  if (v) {
+    clearTimeout(window._loadingTimer);
+    window._loadingTimer = setTimeout(() => el.classList.remove('show'), 10000);
+  } else {
+    clearTimeout(window._loadingTimer);
+  }
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -1803,7 +1813,7 @@ window.deleteCompletedOrders = async function() {
   try {
     const snap = await getDocs(collection(db,'orders'));
     const toDelete = snap.docs.filter(d=>['done','cancelled'].includes(d.data().status));
-    if(toDelete.length===0){ showToast('ไม่มีออเดอร์ที่เสร็จแล้ว'); return; }
+    if(toDelete.length===0){ showLoading(false); showToast('ไม่มีออเดอร์ที่เสร็จแล้ว'); return; }
     const batch = [];
     for(const d of toDelete){ batch.push(deleteDoc(doc(db,'orders',d.id))); }
     await Promise.all(batch);
@@ -1821,7 +1831,7 @@ window.deleteAllOrders = async function() {
   showLoading(true);
   try {
     const snap = await getDocs(collection(db,'orders'));
-    if(snap.empty){ showToast('ไม่มีออเดอร์ในระบบ'); return; }
+    if(snap.empty){ showLoading(false); showToast('ไม่มีออเดอร์ในระบบ'); return; }
     const batch = snap.docs.map(d=>deleteDoc(doc(db,'orders',d.id)));
     await Promise.all(batch);
     showToast(`🔥 ลบออเดอร์ทั้งหมด ${snap.size} รายการแล้ว`);
