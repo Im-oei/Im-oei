@@ -784,14 +784,14 @@ import {
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
   serverTimestamp, getDocs, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
 const app = initializeApp({
   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
   authDomain: "im-oei.firebaseapp.com",
   projectId: "im-oei"
 });
 const db = getFirestore(app);
-const functions = getFunctions(app, 'asia-southeast1');
+
 
 // ====== AUTH & ROLE ======
 const ADMIN_KEY = 'imkum_admin_auth';
@@ -1532,9 +1532,7 @@ async function sendLineMessageViaFirestore(lineUserId, title, body) {
 window.updateStatus = async function(id, status) {
   showLoading(true);
   try {
-    // ใช้ Cloud Function แทน updateDoc โดยตรง
-    const updateOrderStatus = httpsCallable(functions, 'updateOrderStatus');
-    await updateOrderStatus({ orderId: id, status });
+    await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
 
     // แจ้งเตือน admin เอง
     const statusTH = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };

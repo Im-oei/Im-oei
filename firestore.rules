@@ -3,14 +3,14 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ===== ORDERS =====
-    // - สร้าง/อ่าน: ต้อง login (request.auth != null)
-    //   Cloud Function createOrder ใช้ Admin SDK ไม่ถูกจำกัดโดย rules
-    // - แก้ไข/ลบ: เฉพาะ admin เท่านั้น (custom claim admin:true หรือ owner:true)
-    //   Cloud Function updateOrderStatus ใช้ Admin SDK เช่นกัน
+    // ลูกค้า login แล้ว → สร้าง/อ่านได้โดยตรง (ไม่ผ่าน Cloud Function แล้ว)
+    // admin → แก้ไข/ลบได้
     match /orders/{orderId} {
       allow create: if request.auth != null;
       allow read:   if request.auth != null;
-      allow update, delete: if request.auth != null &&
+      allow update: if request.auth != null &&
+        (request.auth.token.admin == true || request.auth.token.owner == true);
+      allow delete: if request.auth != null &&
         (request.auth.token.admin == true || request.auth.token.owner == true);
     }
 
@@ -36,9 +36,10 @@ service cloud.firestore {
     }
 
     // ===== STAMPS =====
+    // ลูกค้า login แล้ว → อ่าน/เขียนได้ (update แต้มสะสมโดยตรง)
     match /stamps/{phone} {
       allow read: if request.auth != null;
-      allow write: if false;
+      allow write: if request.auth != null;
     }
 
     // ===== SETTINGS =====
