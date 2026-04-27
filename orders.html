@@ -244,10 +244,7 @@ if (user.photoURL) {
 }
 
 window.doLogout = function(){
-  if(!confirm('ออกจากระบบใช่ไหม?')) return;
-  sessionStorage.removeItem('imkum_user');
-  sessionStorage.removeItem('imkum_admin_auth');
-  window.location.href='login.html';
+  showLogoutModal();
 };
 
 const statusMap={pending:'รอรับ',preparing:'กำลังทำ',ready:'พร้อมรับ',done:'รับแล้ว',cancelled:'ยกเลิก'};
@@ -764,6 +761,41 @@ loadMyRatings();
   <button onclick="allowNotifications()" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:8px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;color:#3E2000;cursor:pointer;white-space:nowrap;flex-shrink:0;">เปิด</button>
   <button onclick="dismissNotifBanner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
 </div>
+
+
+<!-- ====== BEAUTIFUL LOGOUT MODAL ====== -->
+<style>
+@keyframes loFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes loSlideUp{from{transform:translateY(30px) scale(0.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+#logout-modal{display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center;padding:20px;}
+#logout-modal.open{display:flex;}
+</style>
+<div id="logout-modal">
+  <div onclick="closeLogoutModal()" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(5px);animation:loFadeIn .2s;"></div>
+  <div style="position:relative;z-index:1;background:#fff;border-radius:24px;width:100%;max-width:300px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:loSlideUp .3s cubic-bezier(.34,1.56,.64,1);text-align:center;">
+    <div style="padding:28px 24px 8px;">
+      <div style="width:60px;height:60px;border-radius:50%;background:#FFF3E0;border:2px solid #FFE0B2;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF8C00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:#2C2C2C;margin-bottom:8px;">ออกจากระบบ?</div>
+      <div style="font-size:13px;color:#999;line-height:1.6;margin-bottom:22px;">คุณต้องการออกจากระบบใช่ไหม?<br>สามารถเข้าใหม่ได้ตลอดเวลา</div>
+    </div>
+    <div style="display:flex;border-top:1px solid #F0F0F0;">
+      <button onclick="closeLogoutModal()" style="flex:1;padding:16px;border:none;background:#fff;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;color:#999;cursor:pointer;border-radius:0 0 0 24px;">ยกเลิก</button>
+      <div style="width:1px;background:#F0F0F0;flex-shrink:0;"></div>
+      <button onclick="confirmLogout()" style="flex:1;padding:16px;border:none;background:#fff;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:800;color:#E53935;cursor:pointer;border-radius:0 0 24px 0;">ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
+<script>
+function showLogoutModal(){ document.getElementById('logout-modal').classList.add('open'); }
+function closeLogoutModal(){ document.getElementById('logout-modal').classList.remove('open'); }
+function confirmLogout(){
+  sessionStorage.removeItem('imkum_user');
+  sessionStorage.removeItem('imkum_admin_auth');
+  window.location.href = 'index.html';
+}
+</script>
 
 </body>
 </html>
