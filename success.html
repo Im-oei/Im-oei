@@ -10,6 +10,14 @@
 <body>
 <div class="success">
   <div class="success-confetti">🎉 🎊 🎉</div>
+
+  <!-- LOGO -->
+  <div style="margin-bottom:12px;animation:fadeDown 0.5s ease-out;">
+    <img src="logo.png" alt="อิ่มเอ๋ย"
+      style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #FFC107;box-shadow:0 4px 18px rgba(255,193,7,0.35);"
+      onerror="this.style.display='none'">
+  </div>
+
   <div class="success-check">✓</div>
   <h2>สั่งซื้อสำเร็จ!</h2>
   <p>ขอบคุณที่อุดหนุนนะคะ 😊</p>
@@ -41,7 +49,7 @@
 const order = JSON.parse(localStorage.getItem('imkum_last_order') || '{}');
 const now = new Date();
 document.getElementById('s-id').textContent = order.orderId ? '#' + order.orderId.slice(0,8).toUpperCase() : '#??????';
-document.getElementById('s-name').textContent = order.customerName || '-';
+document.getElementById('s-name').textContent = 'คุณ ' + (order.customerName || '-');
 document.getElementById('s-time').textContent = (order.pickupTime || '07:30') + ' น.';
 document.getElementById('s-total').textContent = (order.total || 0) + ' บาท';
 
