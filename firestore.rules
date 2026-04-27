@@ -3,7 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ===== ORDERS =====
-    // ระบบใช้ sessionStorage (ไม่มี Firebase Auth) → อนุญาต create/read โดยไม่ต้อง auth
     match /orders/{orderId} {
       allow create: if true;
       allow read:   if true;
@@ -83,5 +82,26 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
+
+    // ===== LINE USERS (LIFF) =====
+    // เก็บ { userId, displayName, pictureUrl, phone, linkedAt }
+    // liff.html เขียน/อ่าน document โดยใช้ userId เป็น key
+    match /lineUsers/{userId} {
+      allow read:   if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false;
+    }
+
+    // ===== LINE PHONE MAP (LIFF) =====
+    // index: phone → userId  ให้ Cloud Function/admin ค้นหา userId จากเบอร์ได้เร็ว
+    // เก็บ { userId, displayName, pictureUrl, updatedAt }
+    match /linePhoneMap/{phone} {
+      allow read:   if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false;
+    }
+
   }
 }
