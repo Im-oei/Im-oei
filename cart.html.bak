@@ -63,10 +63,6 @@
   var sess = sessionStorage.getItem('imkum_user');
   if(sess){
     var user = JSON.parse(sess);
-    // ตรวจ session expiry 8 ชั่วโมง
-    if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-      sessionStorage.clear(); return;
-    }
     if(user.role === 'admin' || user.role === 'owner'){
       window.location.href = 'admin.html'; return;
     }
@@ -144,13 +140,7 @@ var ALL_ITEMS = [].concat.apply([], MENU.map(function(c){ return c.items; }));
 var STORE_SETTINGS = { pickupStart:'07:00', pickupEnd:'08:00' };
 
 var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
-// Cache ราคา กรณี ALL_ITEMS ยังไม่ sync จาก Firestore
-var cartPriceCache = JSON.parse(localStorage.getItem('imkum_cart_prices') || '{}');
-function saveCart(){
-  localStorage.setItem('imkum_cart', JSON.stringify(cart));
-  ALL_ITEMS.forEach(function(i){ cartPriceCache[i.id] = i.price; });
-  localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
-}
+function saveCart(){ localStorage.setItem('imkum_cart', JSON.stringify(cart)); }
 function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2200); }
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 
@@ -159,16 +149,11 @@ function foodImg(item){
   return item.emoji||'🍽️';
 }
 
-function getItemPrice(id){
-  var item=ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
-  if(item) return item.price;
-  return cartPriceCache[id] || 0;
-}
-
 function getTotal(){
   var sum=0;
   Object.keys(cart).forEach(function(id){
-    sum += getItemPrice(id) * cart[id];
+    var item=ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
+    if(item) sum+=item.price*cart[id];
   });
   return sum;
 }
@@ -227,16 +212,15 @@ function renderCart(){
     html+='<div class="cart-section-title">'+cat.category+'</div>';
     catItems.forEach(function(item){
       var qty=cart[item.id];
-      var price=getItemPrice(item.id);
       html+='<div class="cart-item">'+
         '<div class="food-img">'+foodImg(item)+'</div>'+
-        '<div class="item-info"><div class="item-name">'+item.name+'</div><div class="item-unit-price">'+price+' บาท</div></div>'+
+        '<div class="item-info"><div class="item-name">'+item.name+'</div><div class="item-unit-price">'+item.price+' บาท</div></div>'+
         '<div class="qty">'+
           '<button class="btn" onclick="cartRemove(\''+item.id+'\')">−</button>'+
           '<span class="qty-num" id="cqty-'+item.id+'">'+qty+'</span>'+
           '<button class="btn plus" onclick="cartAdd(\''+item.id+'\')">+</button>'+
         '</div>'+
-        '<div class="item-subtotal" id="csub-'+item.id+'">'+price*qty+' บาท</div>'+
+        '<div class="item-subtotal" id="csub-'+item.id+'">'+item.price*qty+' บาท</div>'+
       '</div>';
     });
   });
@@ -276,21 +260,21 @@ function buildLocationSection() {
 }
 
 function cartAdd(id){
-  var price=getItemPrice(id);
-  if(!price) return;
+  var item=ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
+  if(!item) return;
   cart[id]=(cart[id]||0)+1; saveCart();
   document.getElementById('cqty-'+id).textContent=cart[id];
-  document.getElementById('csub-'+id).textContent=price*cart[id]+' บาท';
+  document.getElementById('csub-'+id).textContent=item.price*cart[id]+' บาท';
   document.getElementById('cart-total').textContent=getTotal();
 }
 function cartRemove(id){
   if(!cart[id]) return;
-  var price=getItemPrice(id);
+  var item=ALL_ITEMS.filter(function(i){ return i.id===id; })[0];
   cart[id]--;
   if(!cart[id]){ delete cart[id]; saveCart(); renderCart(); return; }
   saveCart();
   document.getElementById('cqty-'+id).textContent=cart[id];
-  document.getElementById('csub-'+id).textContent=price*cart[id]+' บาท';
+  document.getElementById('csub-'+id).textContent=item.price*cart[id]+' บาท';
   document.getElementById('cart-total').textContent=getTotal();
 }
 function clearCart(){
@@ -333,29 +317,9 @@ async function syncMenu() {
       });
       MENU = Object.values(catMap);
       ALL_ITEMS = [].concat(...MENU.map(c => c.items));
-      // อัปเดต price cache หลัง Firestore sync
-      ALL_ITEMS.forEach(i => { cartPriceCache[i.id] = i.price; });
-      localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
       renderCart();
     }
   } catch(e) { console.log('Cart sync skipped:', e.message); }
-
-  // Sync stamp จาก Firestore เมื่อ login
-  try {
-    const userSess = sessionStorage.getItem('imkum_user');
-    const userObj = userSess ? JSON.parse(userSess) : null;
-    const phone = userObj && userObj.phone;
-    if (phone) {
-      const stampRef = doc(db, 'stamps', phone);
-      const snap = await getDoc(stampRef);
-      if (snap.exists()) {
-        const key = 'imkum_stamps_' + phone;
-        const d = snap.data();
-        localStorage.setItem(key, JSON.stringify({ count: d.count || 0, total: d.total || 0 }));
-        renderCart();
-      }
-    }
-  } catch(e) { console.log('Stamp sync skipped:', e.message); }
 }
 
 // ====== STAMP LOGIC ======
@@ -382,7 +346,7 @@ async function earnStamp(phone) {
 
 window.placeOrder = async function() {
   var total = getTotal();
-  if (!total) { showToast('ไม่มีสินค้าในตะกร้า'); return; }
+  if (!total) return;
 
   // บังคับ login ก่อนสั่งซื้อ
   const userSess = sessionStorage.getItem('imkum_user');
@@ -396,7 +360,6 @@ window.placeOrder = async function() {
   var nameEl = document.getElementById('name-input');
   var customerName = (nameEl ? nameEl.value : '').trim();
   if (!customerName) { showToast('กรุณากรอกชื่อของคุณ'); if(nameEl) nameEl.focus(); return; }
-  if (!selectedLocation) { showToast('กรุณาเลือกจุดรับอาหาร'); return; }
   localStorage.setItem('imkum_name', customerName);
 
   var note = document.getElementById('note-input') ? document.getElementById('note-input').value : '';

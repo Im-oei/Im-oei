@@ -422,6 +422,9 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     <div id="stats-chart" class="chart-bar-wrap"></div>
     <h3 style="margin-top:20px">ออเดอร์ตามช่วงเวลา</h3>
     <div id="stats-time" class="chart-bar-wrap"></div>
+    <h3 style="margin-top:20px">⭐ คะแนน Rating เมนู</h3>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px">เฉลี่ยจากรีวิวลูกค้าทั้งหมด</p>
+    <div id="stats-ratings" class="chart-bar-wrap"></div>
   </div>
 </div>
 
@@ -760,9 +763,9 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, onSnapshot,
+  getFirestore, collection, onSnapshot, query,
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
-  serverTimestamp, getDocs
+  serverTimestamp, getDocs, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const app = initializeApp({
   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
@@ -773,10 +776,18 @@ const db = getFirestore(app);
 
 // ====== AUTH & ROLE ======
 const ADMIN_KEY = 'imkum_admin_auth';
+const SESSION_MAX = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
 function checkAuth() {
   if (!sessionStorage.getItem(ADMIN_KEY)) {
     window.location.href = 'login.html'; return false;
   }
+  try {
+    const u = JSON.parse(sessionStorage.getItem('imkum_user') || 'null');
+    if (u && u.loginAt && (Date.now() - u.loginAt > SESSION_MAX)) {
+      sessionStorage.clear();
+      window.location.href = 'login.html'; return false;
+    }
+  } catch(e) {}
   return true;
 }
 function getUser(){ try{ return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
@@ -1385,6 +1396,44 @@ function renderStats() {
       </div>
     </div>`
   ).join('') || '<p style="color:var(--text-sub);font-size:13px">ยังไม่มีข้อมูล</p>';
+
+  // Ratings
+  loadRatingStats();
+}
+
+async function loadRatingStats() {
+  const el = document.getElementById('stats-ratings');
+  if (!el) return;
+  el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">⏳ กำลังโหลด...</p>';
+  try {
+    const snap = await getDocs(collection(db, 'ratings'));
+    const rMap = {}; // itemName → {sum, count, comments:[]}
+    snap.docs.forEach(d => {
+      const r = d.data();
+      if (!r.itemName || !r.star) return;
+      if (!rMap[r.itemName]) rMap[r.itemName] = { sum: 0, count: 0, comments: [] };
+      rMap[r.itemName].sum += r.star;
+      rMap[r.itemName].count += 1;
+      if (r.comment) rMap[r.itemName].comments.push(r.comment);
+    });
+    const sorted = Object.entries(rMap).sort((a,b) => (b[1].sum/b[1].count) - (a[1].sum/a[1].count));
+    if (!sorted.length) { el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">ยังไม่มีรีวิว</p>'; return; }
+    el.innerHTML = sorted.map(([name, rd]) => {
+      const avg = (rd.sum / rd.count);
+      const stars = '⭐'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+      const latestComment = rd.comments.slice(-1)[0] || '';
+      return `<div class="chart-item" style="flex-direction:column;align-items:flex-start;gap:4px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div style="font-size:14px;font-weight:800;color:var(--text)">${name}</div>
+          <div style="font-size:13px;font-weight:800;color:#F5A623">${avg.toFixed(1)} ⭐ <span style="font-size:11px;color:var(--text-sub);font-weight:600">(${rd.count} รีวิว)</span></div>
+        </div>
+        <div style="font-size:18px;letter-spacing:2px">${stars}</div>
+        ${latestComment ? `<div style="font-size:12px;color:var(--text-sub);margin-top:2px">💬 "${latestComment}"</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">โหลด rating ไม่ได้</p>';
+  }
 }
 
 // ====== GLOBAL FUNCTIONS ======
@@ -1553,20 +1602,28 @@ window.savePasswords = async function() {
   if(role !== 'owner'){ showToast('เฉพาะเจ้าของร้านเท่านั้น'); return; }
   const adminPwd = document.getElementById('set-admin-password').value;
   const ownerPwd = document.getElementById('set-owner-password').value;
-  if(adminPwd && adminPwd.length < 4){ showToast('รหัสผ่านต้องมีอย่างน้อย 4 ตัว'); return; }
-  if(ownerPwd && ownerPwd.length < 4){ showToast('รหัสผ่านต้องมีอย่างน้อย 4 ตัว'); return; }
+  if(adminPwd && adminPwd.length < 6){ showToast('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+  if(ownerPwd && ownerPwd.length < 6){ showToast('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
   showLoading(true);
   try {
+    // hash รหัสผ่านด้วย SHA-256 ก่อน save — ไม่เก็บ plain text ใน Firestore
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
     const updates = {};
-    if(adminPwd){ updates.adminPassword = adminPwd; localStorage.setItem('imkum_admin_pwd', adminPwd); }
-    if(ownerPwd){ updates.ownerPassword = ownerPwd; localStorage.setItem('imkum_owner_pwd', ownerPwd); }
+    if(adminPwd) updates.adminHash = await sha256(adminPwd);
+    if(ownerPwd) updates.ownerHash = await sha256(ownerPwd);
+    // ลบ plain text เก่าออกด้วย (migration)
+    if(adminPwd) updates.adminPassword = deleteField();
+    if(ownerPwd) updates.ownerPassword = deleteField();
     if(Object.keys(updates).length){
-      // บันทึกลง localStorage เสมอ (หลัก)
-      // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
-      setDoc(doc(db, 'settings', 'roles'), updates, { merge: true }).catch(e => console.warn('Firestore roles write:', e.code));
+      await setDoc(doc(db, 'settings', 'auth'), updates, { merge: true });
+      localStorage.removeItem('imkum_admin_pwd');
+      localStorage.removeItem('imkum_owner_pwd');
       document.getElementById('set-admin-password').value = '';
       document.getElementById('set-owner-password').value = '';
-      showToast('บันทึกรหัสผ่านแล้ว ✓');
+      showToast('บันทึกรหัสผ่านแล้ว ✓ (เข้ารหัส SHA-256)');
     } else {
       showToast('ไม่มีรหัสผ่านที่ต้องบันทึก');
     }

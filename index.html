@@ -224,7 +224,15 @@ if (localStorage.getItem('imkum_preorder') === '1') {
 }
 
 // ====== USER ======
-function getUser(){ try{ return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
+function getUser(){
+  try {
+    const u = JSON.parse(sessionStorage.getItem('imkum_user')||'null');
+    if (u && u.loginAt && (Date.now() - u.loginAt > 8*60*60*1000)) {
+      sessionStorage.clear(); return null; // หมดอายุ
+    }
+    return u;
+  } catch(e){ return null; }
+}
 function goProfile(){
   var u=getUser();
   if(!u){ window.location.href='login.html'; return; }
@@ -353,11 +361,15 @@ function buildMenuList(){
     list.innerHTML+='<div class="cat-section"><div class="cat-header"><span class="cat-name">'+cat.category+'</span><div class="cat-line"></div></div>';
     vis.forEach(function(item){
       var isSoldOut = item.soldOut === true;
+      var ratingBadge = '';
+      if (item.avgRating && item.ratingCount > 0) {
+        ratingBadge = '<span style="display:inline-flex;align-items:center;gap:2px;background:#FFF8E1;border:1px solid #FFE082;color:#F5A623;font-size:10px;font-weight:800;padding:1px 6px;border-radius:7px;margin-left:5px;vertical-align:middle;">⭐ '+item.avgRating.toFixed(1)+'</span>';
+      }
       list.innerHTML+=
         '<div class="card" style="'+(isSoldOut?'opacity:0.6;':'')+'">'+
           '<div class="food-img">'+foodImg(item)+'</div>'+
           '<div class="left">'+
-            '<div class="name">'+item.name+(isSoldOut?' <span style="background:#FFEBEE;color:#B71C1C;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;vertical-align:middle;">หมด</span>':'')+'</div>'+
+            '<div class="name">'+item.name+(isSoldOut?' <span style="background:#FFEBEE;color:#B71C1C;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;vertical-align:middle;">หมด</span>':'')+ratingBadge+'</div>'+
             '<div class="desc">'+(item.desc||'')+'</div>'+
             '<div class="price-tag">'+item.price+' บาท</div>'+
           '</div>'+
@@ -479,6 +491,27 @@ async function syncFirestore(){
       ALL_ITEMS=[].concat(...MENU.map(c=>c.items));
       buildTabs(); buildFeatured(); buildMenuList(); render();
     }
+
+    // โหลด ratings รวม (avg per item) เพื่อแสดงดาวข้างชื่อเมนู
+    try {
+      const rSnap = await getDocs(collection(db,'ratings'));
+      const ratingMap = {}; // itemId → {sum, count}
+      rSnap.forEach(d => {
+        const r = d.data();
+        if (!r.itemId || !r.star) return;
+        if (!ratingMap[r.itemId]) ratingMap[r.itemId] = { sum: 0, count: 0 };
+        ratingMap[r.itemId].sum += r.star;
+        ratingMap[r.itemId].count += 1;
+      });
+      // ใส่ avgRating ลงใน ALL_ITEMS
+      ALL_ITEMS.forEach(item => {
+        const rd = ratingMap[item.id];
+        item.avgRating = rd ? (rd.sum / rd.count) : null;
+        item.ratingCount = rd ? rd.count : 0;
+      });
+      window._ratingMap = ratingMap;
+      buildMenuList(); // re-render พร้อมดาว
+    } catch(re) { console.log('ratings load skipped:', re.message); }
 
   }catch(e){console.log('Firebase sync skipped:',e.message);}
 }

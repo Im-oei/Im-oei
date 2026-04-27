@@ -236,7 +236,7 @@ window.customerLogin = async function() {
   showLoading(true);
   try {
     // บันทึก session ทันที (ไม่รอ Firestore)
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone }));
+    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
     localStorage.setItem('imkum_name', name);
     localStorage.setItem('imkum_phone', phone);
     // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
@@ -252,44 +252,76 @@ window.customerLogin = async function() {
   }
 };
 
-// ========== STAFF LOGIN ==========
-window.staffLogin = function() {
+// ========== HASH HELPER ==========
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ========== STAFF LOGIN (ตรวจสอบ hash จาก Firestore) ==========
+window.staffLogin = async function() {
   const pwd = document.getElementById('staff-pwd').value;
   if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
-  // ใช้ localStorage เท่านั้น ไม่ต้องรอ Firestore
-  const adminPwd = localStorage.getItem('imkum_admin_pwd') || 'admin1234';
-  if(pwd === adminPwd){
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน' }));
-    sessionStorage.setItem('imkum_admin_auth','1');
-    window.location.href = 'admin.html';
-  } else {
-    showError('รหัสผ่านไม่ถูกต้อง');
-    document.getElementById('staff-pwd').value='';
+  showLoading(true);
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'auth'));
+    const storedHash = snap.exists() ? (snap.data().adminHash || '') : '';
+    if(!storedHash){ showError('ยังไม่ได้ตั้งรหัสผ่านแอดมิน กรุณาติดต่อเจ้าของร้าน'); return; }
+    const inputHash = await sha256(pwd);
+    if(inputHash === storedHash){
+      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
+      sessionStorage.setItem('imkum_admin_auth','1');
+      window.location.href = 'admin.html';
+    } else {
+      showError('รหัสผ่านไม่ถูกต้อง');
+      document.getElementById('staff-pwd').value='';
+    }
+  } catch(e) {
+    console.error(e);
+    showError('เชื่อมต่อ Firestore ไม่ได้ กรุณาลองใหม่');
+  } finally {
+    showLoading(false);
   }
 };
 
-// ========== OWNER LOGIN ==========
-window.ownerLogin = function() {
+// ========== OWNER LOGIN (ตรวจสอบ hash จาก Firestore) ==========
+window.ownerLogin = async function() {
   const pwd = document.getElementById('owner-pwd').value;
   if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
-  // ใช้ localStorage เท่านั้น ไม่ต้องรอ Firestore
-  const ownerPwd = localStorage.getItem('imkum_owner_pwd') || 'owner5678';
-  if(pwd === ownerPwd){
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน' }));
-    sessionStorage.setItem('imkum_admin_auth','1');
-    window.location.href = 'admin.html';
-  } else {
-    showError('รหัสผ่านไม่ถูกต้อง');
-    document.getElementById('owner-pwd').value='';
+  showLoading(true);
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'auth'));
+    const storedHash = snap.exists() ? (snap.data().ownerHash || '') : '';
+    if(!storedHash){ showError('ยังไม่ได้ตั้งรหัสผ่านเจ้าของร้าน กรุณาติดต่อเจ้าของร้าน'); return; }
+    const inputHash = await sha256(pwd);
+    if(inputHash === storedHash){
+      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
+      sessionStorage.setItem('imkum_admin_auth','1');
+      window.location.href = 'admin.html';
+    } else {
+      showError('รหัสผ่านไม่ถูกต้อง');
+      document.getElementById('owner-pwd').value='';
+    }
+  } catch(e) {
+    console.error(e);
+    showError('เชื่อมต่อ Firestore ไม่ได้ กรุณาลองใหม่');
+  } finally {
+    showLoading(false);
   }
 };
 
-// Auto redirect ถ้า login อยู่แล้ว
+// Auto redirect ถ้า login อยู่แล้ว (ตรวจ expiry 8 ชั่วโมง)
 const sess = sessionStorage.getItem('imkum_user');
 if(sess){
   const user = JSON.parse(sess);
-  if(user.role === 'customer') window.location.href = 'index.html';
-  else window.location.href = 'admin.html';
+  const loginAt = user.loginAt || 0;
+  const EIGHT_HOURS = 8 * 60 * 60 * 1000;
+  if(Date.now() - loginAt > EIGHT_HOURS){
+    sessionStorage.clear(); // หมดอายุ
+  } else {
+    if(user.role === 'customer') window.location.href = 'index.html';
+    else window.location.href = 'admin.html';
+  }
 }
 </script>
 </body>
