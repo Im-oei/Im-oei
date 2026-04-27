@@ -847,6 +847,25 @@ const db = getFirestore(app);
 // ====== AUTH & ROLE ======
 const ADMIN_KEY = 'imkum_admin_auth';
 const SESSION_MAX = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
+let _adminToken = sessionStorage.getItem('imkum_admin_token') || null;
+
+// โหลด adminToken จาก Firestore (ต้องการสำหรับ write operations)
+async function loadAdminToken() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'auth'));
+    if (snap.exists() && snap.data().adminToken) {
+      _adminToken = snap.data().adminToken;
+      sessionStorage.setItem('imkum_admin_token', _adminToken);
+    }
+  } catch(e) { console.warn('Cannot load adminToken:', e.message); }
+}
+
+// Helper: แนบ _adminToken ก่อน setDoc/addDoc
+function withToken(data) {
+  if (_adminToken) return Object.assign({}, data, { _adminToken });
+  return data;
+}
+
 function checkAuth() {
   if (!sessionStorage.getItem(ADMIN_KEY)) {
     window.location.href = 'login.html'; return false;
@@ -889,6 +908,7 @@ let unsubOrders = null;
 // ====== INIT ======
 if (checkAuth()) {
 applyRoleUI();
+loadAdminToken(); // โหลด token สำหรับ write operations
 selectBannerSize('medium'); // default before Firestore loads
 loadSettings();
 loadMenu();
@@ -1085,7 +1105,7 @@ async function seedMenu() {
     { id:'pork_noodle',   name:'หมี่หมูแดง',     desc:'หมี่, หมูแดง, ไข่ต้ม',          emoji:'🥢', price:50, catKey:'noodle',   category:'🍜 หมี่',   sortOrder:3 },
   ];
   for (const item of defaults) {
-    await setDoc(doc(db, 'menu', item.id), item);
+    await setDoc(doc(db, 'menu', item.id), withToken(item));
   }
   allMenuItems = defaults;
 }
@@ -1259,11 +1279,11 @@ window.saveBannerItem = async function() {
   showLoading(true);
   try {
     if (id) {
-      await updateDoc(doc(db, 'banners', id), data);
+      await updateDoc(doc(db, 'banners', id), withToken(data));
       const idx = allBanners.findIndex(b => b.id === id);
       if (idx >= 0) allBanners[idx] = { ...allBanners[idx], ...data };
     } else {
-      const ref = await addDoc(collection(db, 'banners'), data);
+      const ref = await addDoc(collection(db, 'banners'), withToken(data));
       allBanners.push({ id: ref.id, ...data });
     }
     allBanners.sort((a,b)=>(a.order||0)-(b.order||0));
@@ -1336,7 +1356,7 @@ window.saveCategoryItem = async function() {
   const data = { key, name, emoji, sortOrder, category: `${emoji} ${name}` };
   showLoading(true);
   try {
-    await setDoc(doc(db, 'categories', key), data);
+    await setDoc(doc(db, 'categories', key), withToken(data));
     if (editKey && editKey !== key) {
       // key changed — delete old
       await deleteDoc(doc(db, 'categories', editKey));
@@ -1650,18 +1670,18 @@ window.deleteOrder = async function(id) {
 window.toggleStore = async function() {
   storeIsOpen = document.getElementById('store-open-toggle').checked;
   document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
-  await setDoc(doc(db, 'settings', 'store'), { isOpen: storeIsOpen }, { merge: true });
+  await setDoc(doc(db, 'settings', 'store'), withToken({ isOpen: storeIsOpen }), { merge: true });
   showToast(storeIsOpen ? '🟢 เปิดร้านแล้ว' : '🔴 ปิดร้านแล้ว');
 };
 
 window.saveSettings = async function() {
   showLoading(true);
   try {
-    await setDoc(doc(db, 'settings', 'store'), {
+    await setDoc(doc(db, 'settings', 'store'), withToken({
       orderCutoff: document.getElementById('set-cutoff').value,
       pickupStart: document.getElementById('set-pickup-start').value,
       pickupEnd: document.getElementById('set-pickup-end').value,
-    }, { merge: true });
+    }), { merge: true });
     showToast('บันทึกการตั้งค่าแล้ว ✓');
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
@@ -1671,7 +1691,7 @@ window.saveBanner = async function() {
   showLoading(true);
   try {
     const url = document.getElementById('set-banner-url').value;
-    await setDoc(doc(db, 'settings', 'store'), { bannerUrl: url }, { merge: true });
+    await setDoc(doc(db, 'settings', 'store'), withToken({ bannerUrl: url }), { merge: true });
     showToast('บันทึก Banner แล้ว ✓');
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
@@ -1695,7 +1715,7 @@ window.selectBannerSize = function(size) {
 window.saveBannerSize = async function() {
   showLoading(true);
   try {
-    await setDoc(doc(db, 'settings', 'store'), { bannerSize: currentBannerSize }, { merge: true });
+    await setDoc(doc(db, 'settings', 'store'), withToken({ bannerSize: currentBannerSize }), { merge: true });
     showToast('บันทึกขนาด Banner แล้ว ✓');
     renderBannersAdmin(); // refresh badge
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
@@ -1723,7 +1743,7 @@ window.saveBannerSize = async function() {
     if(adminPwd) updates.adminPassword = deleteField();
     if(ownerPwd) updates.ownerPassword = deleteField();
     if(Object.keys(updates).length){
-      await setDoc(doc(db, 'settings', 'auth'), updates, { merge: true });
+      await setDoc(doc(db, 'settings', 'auth'), withToken(updates), { merge: true });
       localStorage.removeItem('imkum_admin_pwd');
       localStorage.removeItem('imkum_owner_pwd');
       document.getElementById('set-admin-password').value = '';
@@ -1828,10 +1848,10 @@ window.saveHeroLogo = async function() {
     // Firestore doc limit ~1MB — store in separate doc if large
     // Firestore doc limit ~1MB. Use separate doc if needed.
     if (url.length > 600000) {
-      await setDoc(doc(db, 'settings', 'heroLogo'), { heroLogoUrl: url });
-      await setDoc(doc(db, 'settings', 'store'), { heroLogoRef: 'heroLogo' }, { merge: true });
+      await setDoc(doc(db, 'settings', 'heroLogo'), withToken({ heroLogoUrl: url }));
+      await setDoc(doc(db, 'settings', 'store'), withToken({ heroLogoRef: 'heroLogo' }), { merge: true });
     } else {
-      await setDoc(doc(db, 'settings', 'store'), { heroLogoUrl: url }, { merge: true });
+      await setDoc(doc(db, 'settings', 'store'), withToken({ heroLogoUrl: url }), { merge: true });
     }
     showToast('บันทึก Logo แล้ว ✓');
   } catch(e) { console.error(e); showToast('เกิดข้อผิดพลาด: ' + e.message); }
@@ -1918,11 +1938,11 @@ window.saveMenuItem = async function() {
   showLoading(true);
   try {
     if (id) {
-      await updateDoc(doc(db, 'menu', id), data);
+      await updateDoc(doc(db, 'menu', id), withToken(data));
       const idx = allMenuItems.findIndex(i => i.id === id);
       if (idx >= 0) allMenuItems[idx] = { ...allMenuItems[idx], ...data };
     } else {
-      const ref = await addDoc(collection(db, 'menu'), data);
+      const ref = await addDoc(collection(db, 'menu'), withToken(data));
       allMenuItems.push({ id: ref.id, ...data });
     }
     renderMenuAdmin();
@@ -1936,7 +1956,7 @@ window.toggleHide = async function(id, setHidden) {
   const hidden = setHidden === 'true';
   showLoading(true);
   try {
-    await updateDoc(doc(db, 'menu', id), { hidden });
+    await updateDoc(doc(db, 'menu', id), withToken({ hidden }));
     const item = allMenuItems.find(i => i.id === id);
     if (item) item.hidden = hidden;
     renderMenuAdmin();
@@ -1947,7 +1967,7 @@ window.toggleHide = async function(id, setHidden) {
 
 window.toggleSoldOut = async function(id, soldOut) {
   try {
-    await updateDoc(doc(db, 'menu', id), { soldOut });
+    await updateDoc(doc(db, 'menu', id), withToken({ soldOut }));
     const item = allMenuItems.find(i => i.id === id);
     if (item) item.soldOut = soldOut;
     renderMenuAdmin();
@@ -1989,7 +2009,7 @@ window.saveItemImage = async function() {
   const url = document.getElementById('img-url-input').value.trim();
   showLoading(true);
   try {
-    await updateDoc(doc(db, 'menu', id), { imageUrl: url });
+    await updateDoc(doc(db, 'menu', id), withToken({ imageUrl: url }));
     const item = allMenuItems.find(i => i.id === id);
     if (item) item.imageUrl = url;
     renderMenuAdmin();
@@ -2128,7 +2148,7 @@ window.saveStampConfig = async function() {
   const reward = document.getElementById('stamp-reward').value.trim();
   showLoading(true);
   try {
-    await setDoc(doc(db, 'settings', 'stamps'), { goal, reward, updatedAt: serverTimestamp() });
+    await setDoc(doc(db, 'settings', 'stamps'), withToken({ goal, reward, updatedAt: serverTimestamp() }));
     showToast('บันทึกตั้งค่าแต้มแล้ว ✓');
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }
@@ -2155,7 +2175,7 @@ window.saveFeaturedItems = async function() {
   if (ids.length > 5) { showToast('เลือกได้สูงสุด 5 เมนู'); return; }
   showLoading(true);
   try {
-    await setDoc(doc(db, 'settings', 'store'), { featuredIds: ids }, { merge: true });
+    await setDoc(doc(db, 'settings', 'store'), withToken({ featuredIds: ids }), { merge: true });
     currentFeaturedIds = ids;
     showToast('บันทึกเมนูแนะนำแล้ว ✓ ('+ids.length+' เมนู)');
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
@@ -2167,7 +2187,7 @@ window.savePreorderSetting = async function() {
   const enabled = document.getElementById('preorder-enabled').checked;
   showLoading(true);
   try {
-    await setDoc(doc(db, 'settings', 'store'), { preorderEnabled: enabled }, { merge: true });
+    await setDoc(doc(db, 'settings', 'store'), withToken({ preorderEnabled: enabled }), { merge: true });
     showToast(enabled ? '📅 เปิด Pre-order แล้ว' : '❌ ปิด Pre-order แล้ว');
   } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
   finally { showLoading(false); }

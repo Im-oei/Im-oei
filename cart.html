@@ -146,10 +146,18 @@ var STORE_SETTINGS = { pickupStart:'07:00', pickupEnd:'08:00' };
 var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
 // Cache ราคา กรณี ALL_ITEMS ยังไม่ sync จาก Firestore
 var cartPriceCache = JSON.parse(localStorage.getItem('imkum_cart_prices') || '{}');
+var cartNameCache = JSON.parse(localStorage.getItem('imkum_cart_names') || '{}');
+var cartEmojiCache = JSON.parse(localStorage.getItem('imkum_cart_emojis') || '{}');
 function saveCart(){
   localStorage.setItem('imkum_cart', JSON.stringify(cart));
-  ALL_ITEMS.forEach(function(i){ cartPriceCache[i.id] = i.price; });
+  ALL_ITEMS.forEach(function(i){
+    cartPriceCache[i.id] = i.price;
+    cartNameCache[i.id] = i.name;
+    cartEmojiCache[i.id] = i.emoji || i.imageUrl || '🍽️';
+  });
   localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
+  localStorage.setItem('imkum_cart_names', JSON.stringify(cartNameCache));
+  localStorage.setItem('imkum_cart_emojis', JSON.stringify(cartEmojiCache));
 }
 function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2200); }
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
@@ -221,6 +229,22 @@ function renderCart(){
   }
 
   var html='';
+  // Fallback: แสดง item จาก cache ถ้า Firestore ยังไม่ sync
+  var knownIds = ALL_ITEMS.map(function(i){ return i.id; });
+  entries.forEach(function(id){
+    if(knownIds.indexOf(id) === -1 && (cartNameCache[id] || cartPriceCache[id])){
+      var savedName = cartNameCache[id] || id;
+      var savedPrice = cartPriceCache[id] || 0;
+      var savedEmoji = cartEmojiCache[id] || '🍽️';
+      var otherCat = MENU.filter(function(c){ return c.catKey==='_cache'; })[0];
+      if(!otherCat){
+        otherCat = { category:'รายการสินค้า', catKey:'_cache', items:[] };
+        MENU.push(otherCat);
+      }
+      otherCat.items.push({ id:id, name:savedName, price:savedPrice, emoji:savedEmoji });
+      ALL_ITEMS.push({ id:id, name:savedName, price:savedPrice, emoji:savedEmoji });
+    }
+  });
   MENU.forEach(function(cat){
     var catItems=cat.items.filter(function(i){ return cart[i.id]>0; });
     if(!catItems.length) return;
@@ -333,9 +357,15 @@ async function syncMenu() {
       });
       MENU = Object.values(catMap);
       ALL_ITEMS = [].concat(...MENU.map(c => c.items));
-      // อัปเดต price cache หลัง Firestore sync
-      ALL_ITEMS.forEach(i => { cartPriceCache[i.id] = i.price; });
+      // อัปเดต cache หลัง Firestore sync
+      ALL_ITEMS.forEach(i => {
+        cartPriceCache[i.id] = i.price;
+        cartNameCache[i.id] = i.name;
+        cartEmojiCache[i.id] = i.emoji || i.imageUrl || '🍽️';
+      });
       localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
+      localStorage.setItem('imkum_cart_names', JSON.stringify(cartNameCache));
+      localStorage.setItem('imkum_cart_emojis', JSON.stringify(cartEmojiCache));
       renderCart();
     }
   } catch(e) { console.log('Cart sync skipped:', e.message); }
