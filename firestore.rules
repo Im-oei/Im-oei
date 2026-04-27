@@ -2,23 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===== HELPER FUNCTIONS =====
-    // im-oei ใช้ sessionStorage auth (ไม่มี Firebase Auth)
-    // จึงต้องเปิด read/write จาก client โดยตรง
-    // ป้องกันด้วย app logic + password แทน
-
     // ===== ORDERS =====
     match /orders/{orderId} {
-      allow read: if true;       // ลูกค้า/แอดมินอ่านได้
-      allow create: if true;     // ลูกค้าสั่งออเดอร์
-      allow update: if true;     // แอดมินเปลี่ยนสถานะ
-      allow delete: if true;     // แอดมินลบออเดอร์เก่า ✅ แก้ permission-denied
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
     }
 
     // ===== MENU =====
     match /menu/{itemId} {
       allow read: if true;
-      allow write: if true;      // แอดมินจัดการเมนู
+      allow write: if true;
     }
 
     // ===== CATEGORIES =====
@@ -33,38 +28,51 @@ service cloud.firestore {
       allow write: if true;
     }
 
-    // ===== STAMPS (แต้มสะสม) =====
+    // ===== STAMPS =====
     match /stamps/{phone} {
       allow read: if true;
-      allow write: if true;      // แอดมินรีเซ็ตแต้ม ✅
+      allow write: if true;
     }
 
     // ===== SETTINGS =====
+    // settings/auth เก็บ hash รหัสผ่าน — อ่านได้ (แค่ hash ไม่ใช่ plain text)
     match /settings/{docId} {
       allow read: if true;
-      allow write: if true;      // แอดมินบันทึกตั้งค่า ✅
+      allow write: if true;
     }
 
     // ===== PUSH SUBSCRIPTIONS =====
     match /pushSubscriptions/{phone} {
       allow read: if true;
-      allow write: if true;      // ลูกค้า subscribe push
+      allow write: if true;
     }
 
-    // ===== PUSH QUEUE (Cloud Function only) =====
+    // ===== PUSH QUEUE =====
     match /pushQueue/{docId} {
       allow read: if false;
-      allow write: if true;      // admin.html เขียน job
+      allow write: if true;
     }
 
-    // ===== LINE QUEUE (Cloud Function only) =====
+    // ===== LINE QUEUE =====
     match /lineQueue/{docId} {
       allow read: if false;
-      allow write: if true;      // admin.html เขียน job
+      allow write: if true;
+    }
+
+    // ===== RATINGS =====
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow write: if true;
     }
 
     // ===== STORE CONFIG =====
     match /store/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ===== CUSTOMERS =====
+    match /customers/{customerId} {
       allow read: if true;
       allow write: if true;
     }

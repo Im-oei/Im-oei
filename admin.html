@@ -275,6 +275,17 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .danger-btn-red:active { opacity: .8; }
 
 /* BANNER MANAGEMENT */
+/* BANNER SIZE OPTIONS */
+.banner-size-opt{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:12px;border:2px solid #EEEEEE;background:#FAFAFA;cursor:pointer;transition:all .2s;}
+.banner-size-opt.selected{border-color:var(--yellow);background:var(--yellow-light);}
+.bso-radio{width:20px;height:20px;border-radius:50%;border:2.5px solid #CCCCCC;flex-shrink:0;margin-top:2px;transition:all .2s;position:relative;}
+.banner-size-opt.selected .bso-radio{border-color:var(--yellow-dark);background:var(--yellow-dark);}
+.banner-size-opt.selected .bso-radio::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#fff;}
+.bso-info{flex:1;min-width:0;}
+.bso-label{font-size:13px;font-weight:700;color:var(--text);}
+.bso-dim{font-size:11px;color:var(--text-sub);margin-top:2px;}
+/* BANNER SIZE BADGE */
+.b-size-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:#FFF3CD;color:#8D6E00;margin-top:3px;}
 .banner-card{background:var(--white);border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;}
 .banner-card-img{width:100%;height:90px;object-fit:cover;display:block;background:#F0E8D8;}
 .banner-card-body{padding:10px 14px;display:flex;align-items:center;gap:10px;}
@@ -446,6 +457,65 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
         <input type="time" class="form-input" id="set-pickup-end" value="08:00">
       </div>
       <button class="save-btn" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+    </div>
+
+    <div class="settings-card">
+      <h3>📐 ขนาด Banner Slide</h3>
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:12px">เลือกขนาดความสูงของ Banner Slide ที่แสดงบนหน้าแรก</p>
+      <div class="form-group">
+        <label>ขนาด Banner</label>
+        <div id="banner-size-options" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <label class="banner-size-opt" data-size="small" onclick="selectBannerSize('small')">
+            <div class="bso-radio" id="bso-small"></div>
+            <div class="bso-info">
+              <div class="bso-label">📏 เล็ก (Small)</div>
+              <div class="bso-dim">กว้าง 100% × สูง 100px</div>
+              <div class="bso-bar" style="height:14px;background:linear-gradient(90deg,#FFC107,#FF9800);border-radius:4px;margin-top:4px;width:100%"></div>
+            </div>
+          </label>
+          <label class="banner-size-opt" data-size="medium" onclick="selectBannerSize('medium')">
+            <div class="bso-radio" id="bso-medium"></div>
+            <div class="bso-info">
+              <div class="bso-label">📐 กลาง (Medium) — <span style="color:#4CAF50;font-weight:700">ค่าเริ่มต้น</span></div>
+              <div class="bso-dim">กว้าง 100% × สูง 130px</div>
+              <div class="bso-bar" style="height:18px;background:linear-gradient(90deg,#FFC107,#FF9800);border-radius:4px;margin-top:4px;width:100%"></div>
+            </div>
+          </label>
+          <label class="banner-size-opt" data-size="large" onclick="selectBannerSize('large')">
+            <div class="bso-radio" id="bso-large"></div>
+            <div class="bso-info">
+              <div class="bso-label">🖼️ ใหญ่ (Large)</div>
+              <div class="bso-dim">กว้าง 100% × สูง 180px</div>
+              <div class="bso-bar" style="height:24px;background:linear-gradient(90deg,#FFC107,#FF9800);border-radius:4px;margin-top:4px;width:100%"></div>
+            </div>
+          </label>
+          <label class="banner-size-opt" data-size="xlarge" onclick="selectBannerSize('xlarge')">
+            <div class="bso-radio" id="bso-xlarge"></div>
+            <div class="bso-info">
+              <div class="bso-label">🖼️ ใหญ่พิเศษ (XL)</div>
+              <div class="bso-dim">กว้าง 100% × สูง 220px</div>
+              <div class="bso-bar" style="height:30px;background:linear-gradient(90deg,#FFC107,#FF9800);border-radius:4px;margin-top:4px;width:100%"></div>
+            </div>
+          </label>
+          <label class="banner-size-opt" data-size="square" onclick="selectBannerSize('square')">
+            <div class="bso-radio" id="bso-square"></div>
+            <div class="bso-info">
+              <div class="bso-label">⬜ จัตุรัส (Square 1:1)</div>
+              <div class="bso-dim">กว้าง 100% × สูงเท่ากับความกว้าง</div>
+              <div class="bso-bar" style="height:30px;background:linear-gradient(90deg,#FFC107,#FF9800);border-radius:4px;margin-top:4px;width:30px"></div>
+            </div>
+          </label>
+          <label class="banner-size-opt" data-size="cinema" onclick="selectBannerSize('cinema')">
+            <div class="bso-radio" id="bso-cinema"></div>
+            <div class="bso-info">
+              <div class="bso-label">🎬 Cinema (21:9)</div>
+              <div class="bso-dim">กว้าง 100% × สัดส่วน 21:9 (~47% กว้าง)</div>
+              <div class="bso-bar" style="height:8px;background:linear-gradient(90deg,#FFC107,#FF9800);border-radius:4px;margin-top:4px;width:100%"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <button class="save-btn" style="margin-top:14px" onclick="saveBannerSize()">💾 บันทึกขนาด Banner</button>
     </div>
 
     <div class="settings-card">
@@ -810,6 +880,7 @@ function applyRoleUI() {
 let allOrders = [];
 let allMenuItems = [];
 let allBanners = [];
+let currentBannerSize = 'medium'; // small|medium|large|xlarge|square|cinema
 let allCategories = [];
 let currentFilter = 'all';
 let storeIsOpen = true;
@@ -818,6 +889,7 @@ let unsubOrders = null;
 // ====== INIT ======
 if (checkAuth()) {
 applyRoleUI();
+selectBannerSize('medium'); // default before Firestore loads
 loadSettings();
 loadMenu();
 loadBanners();
@@ -1108,6 +1180,7 @@ function renderBannersAdmin() {
     container.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>ยังไม่มีแบนเนอร์</p></div>';
     return;
   }
+  const sizeLabel = BANNER_SIZE_LABELS[currentBannerSize] || BANNER_SIZE_LABELS['medium'];
   container.innerHTML = allBanners.map(b => `
     <div class="banner-card">
       ${b.imageUrl ? `<img class="banner-card-img" src="${b.imageUrl}" alt="${b.title||''}">` : '<div class="banner-card-img" style="display:flex;align-items:center;justify-content:center;font-size:40px">🖼️</div>'}
@@ -1115,6 +1188,7 @@ function renderBannersAdmin() {
         <div class="info">
           <div class="b-title">${b.title||'(ไม่มีชื่อ)'}</div>
           <div class="b-order">ลำดับ: ${b.order||1} &nbsp;|&nbsp; ${b.active!==false?'✅ เปิด':'❌ ปิด'}</div>
+          <div class="b-size-badge">${sizeLabel}</div>
         </div>
         <button class="icon-btn btn-edit" onclick="openEditBanner('${b.id}')" title="แก้ไข">✏️</button>
         <button class="icon-btn" style="background:#FFEBEE" onclick="deleteBannerItem('${b.id}')" title="ลบ">🗑️</button>
@@ -1313,6 +1387,12 @@ async function loadSettings() {
       document.getElementById('set-banner-url').value = s.bannerUrl;
       const img = document.getElementById('banner-preview-img');
       img.src = s.bannerUrl; img.style.display = 'block';
+    }
+    if (s.bannerSize) {
+      currentBannerSize = s.bannerSize;
+      selectBannerSize(s.bannerSize);
+    } else {
+      selectBannerSize('medium');
     }
     if (s.heroLogoUrl) {
       document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
@@ -1597,7 +1677,32 @@ window.saveBanner = async function() {
   finally { showLoading(false); }
 };
 
-window.savePasswords = async function() {
+// ====== BANNER SIZE ======
+const BANNER_SIZE_LABELS = {
+  small:  '📏 เล็ก · 100px',
+  medium: '📐 กลาง · 130px',
+  large:  '🖼️ ใหญ่ · 180px',
+  xlarge: '🖼️ ใหญ่พิเศษ · 220px',
+  square: '⬜ จัตุรัส 1:1',
+  cinema: '🎬 Cinema 21:9',
+};
+window.selectBannerSize = function(size) {
+  currentBannerSize = size;
+  document.querySelectorAll('.banner-size-opt').forEach(el => {
+    el.classList.toggle('selected', el.dataset.size === size);
+  });
+};
+window.saveBannerSize = async function() {
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { bannerSize: currentBannerSize }, { merge: true });
+    showToast('บันทึกขนาด Banner แล้ว ✓');
+    renderBannersAdmin(); // refresh badge
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+  finally { showLoading(false); }
+};
+
+ = async function() {
   const role = getCurrentRole();
   if(role !== 'owner'){ showToast('เฉพาะเจ้าของร้านเท่านั้น'); return; }
   const adminPwd = document.getElementById('set-admin-password').value;
