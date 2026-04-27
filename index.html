@@ -63,7 +63,9 @@
 .cat-header .cat-name{font-size:16px;font-weight:800;color:#2C2C2C;}
 .cat-header .cat-line{flex:1;height:1.5px;background:linear-gradient(to right,#FFC107,transparent);border-radius:2px;}
 .card{background:#fff;margin:0 16px 8px;padding:12px 14px;border-radius:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
-.card .food-img{width:64px;height:64px;border-radius:14px;background:#F5EFE6;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;}
+.card .food-img{width:64px;height:64px;border-radius:14px;background:#F5EFE6;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;transition:transform .15s,box-shadow .15s;}
+.card .food-img[onclick]:hover{transform:scale(1.07);box-shadow:0 4px 14px rgba(0,0,0,0.18);}
+.card .food-img[onclick]:active{transform:scale(0.96);}
 .card .food-img img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
 .card .left{flex:1;min-width:0;}
 .card .name{font-size:15px;font-weight:700;}
@@ -397,7 +399,7 @@ function buildMenuList(){
       }
       list.innerHTML+=
         '<div class="card" style="'+(isSoldOut?'opacity:0.6;':'')+'">'+
-          '<div class="food-img">'+foodImg(item)+'</div>'+
+          '<div class="food-img" '+(item.imageUrl?'onclick="openLightbox(\''+item.imageUrl.replace(/'/g,"\\'")+'\',' +'\''+item.name.replace(/'/g,"\\'")+'\')" style="cursor:pointer;" title="ดูรูปใหญ่"':'')+'>'+foodImg(item)+'</div>'+
           '<div class="left">'+
             '<div class="name">'+item.name+(isSoldOut?' <span style="background:#FFEBEE;color:#B71C1C;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;vertical-align:middle;">หมด</span>':'')+ratingBadge+'</div>'+
             '<div class="desc">'+(item.desc||'')+'</div>'+
@@ -693,6 +695,30 @@ async function submitLoginModal() {
   showToast('ยินดีต้อนรับ ' + name + ' 👋');
   if (window._loginModalCb) window._loginModalCb();
 }
+</script>
+
+<!-- IMAGE LIGHTBOX -->
+<div id="img-lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;padding:20px;animation:lbFadeIn .2s ease;">
+  <div onclick="event.stopPropagation()" style="position:relative;max-width:420px;width:100%;">
+    <img id="img-lightbox-img" src="" alt="" style="width:100%;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.6);display:block;max-height:80vh;object-fit:contain;">
+    <div id="img-lightbox-name" style="text-align:center;color:#fff;font-size:16px;font-weight:800;margin-top:14px;text-shadow:0 1px 4px rgba(0,0,0,0.5);"></div>
+    <button onclick="closeLightbox()" style="position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;background:#fff;border:none;cursor:pointer;font-size:18px;font-weight:700;color:#3E2000;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.3);">✕</button>
+  </div>
+</div>
+<style>
+@keyframes lbFadeIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+</style>
+<script>
+function openLightbox(src, name) {
+  const lb = document.getElementById('img-lightbox');
+  document.getElementById('img-lightbox-img').src = src;
+  document.getElementById('img-lightbox-name').textContent = name || '';
+  lb.style.display = 'flex';
+}
+function closeLightbox() {
+  document.getElementById('img-lightbox').style.display = 'none';
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeLightbox(); });
 </script>
 
 </html>

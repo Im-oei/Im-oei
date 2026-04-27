@@ -16,17 +16,24 @@
 }
 html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sans-serif; color: var(--text); }
 
-/* HEADER */
-.admin-header { background: linear-gradient(135deg, #3E2000, #5D3A00); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.admin-header h1 { font-size: 20px; font-weight: 800; color: var(--yellow); }
-.admin-header .store-toggle { display: flex; align-items: center; gap: 10px; }
-.toggle-label { font-size: 13px; color: #ccc; }
-.toggle-switch { position: relative; width: 52px; height: 28px; }
+/* HEADER - index style */
+.admin-header { background: #fff; padding: 10px 16px 8px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+.admin-header .brand { display: flex; align-items: center; gap: 10px; }
+.admin-header .brand-logo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #FFC107; overflow: hidden; background: #FFF8E1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.admin-header .brand-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.admin-brand-text .brand-name { font-size: 16px; font-weight: 800; color: #3E2000; line-height: 1.2; }
+.admin-brand-text .brand-sub { font-size: 11px; color: #999; }
+.admin-header .store-toggle { display: flex; align-items: center; gap: 8px; }
+.toggle-label { font-size: 12px; color: #888; font-weight: 600; }
+.toggle-switch { position: relative; width: 46px; height: 26px; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-switch .slider { position: absolute; inset: 0; background: #555; border-radius: 28px; cursor: pointer; transition: 0.3s; }
-.toggle-switch .slider::before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+.toggle-switch .slider { position: absolute; inset: 0; background: #ccc; border-radius: 26px; cursor: pointer; transition: 0.3s; }
+.toggle-switch .slider::before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s; }
 .toggle-switch input:checked + .slider { background: var(--green); }
-.toggle-switch input:checked + .slider::before { transform: translateX(24px); }
+.toggle-switch input:checked + .slider::before { transform: translateX(20px); }
+.header-icon-btn { background: #FFF8E1; border: 1.5px solid #FFE082; cursor: pointer; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.2s; }
+.header-icon-btn:active { background: #FFE082; }
+.header-icon-btn svg { display: block; }
 
 /* TABS */
 .tab-bar { display: flex; background: var(--white); border-bottom: 2px solid #F0E8D8; position: sticky; top: var(--header-h, 60px); z-index: 95; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -308,26 +315,33 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 
 <!-- HEADER -->
 <div class="admin-header">
-  <div>
-    <h1>🧑‍🍳 แอดมิน</h1>
+  <div class="brand">
+    <div class="brand-logo" id="admin-logo-wrap">
+      <img src="logo.png" alt="logo" style="width:44px;height:44px;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <svg style="display:none" width="26" height="26" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="14" r="8" fill="#FFC107"/><ellipse cx="20" cy="32" rx="13" ry="7" fill="#FF8C00"/></svg>
+    </div>
+    <div class="admin-brand-text">
+      <div class="brand-name" id="admin-brand-name">อิ่มเอ๋ย</div>
+      <div class="brand-sub" id="admin-brand-sub">แอดมิน</div>
+    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="store-toggle">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="store-toggle" style="display:flex;align-items:center;gap:6px;">
       <span class="toggle-label" id="store-status-label">เปิดร้าน</span>
       <label class="toggle-switch">
         <input type="checkbox" id="store-open-toggle" checked onchange="toggleStore()">
         <span class="slider"></span>
       </label>
     </div>
-    <button id="notif-bell-btn" onclick="toggleNotifications()" title="แจ้งเตือน" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;position:relative;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;background:#FF4444;border-radius:50%;border:2px solid #3E2000;"></span>
+    <button id="notif-bell-btn" onclick="toggleNotifications()" title="แจ้งเตือน" class="header-icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;background:#FF4444;border-radius:50%;border:2px solid #fff;"></span>
     </button>
-    <button onclick="window.location.href='index.html'" title="ดูหน้าร้าน" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <button onclick="window.location.href='index.html'" title="ดูหน้าร้าน" class="header-icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </button>
-    <button onclick="doLogout()" title="ออกจากระบบ" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <button onclick="doLogout()" title="ออกจากระบบ" class="header-icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </button>
   </div>
 </div>
@@ -801,8 +815,8 @@ function applyRoleUI() {
   const role = getCurrentRole();
   const isOwner = role === 'owner';
   // แสดงชื่อ role ใน header
-  const h1 = document.querySelector('.admin-header h1');
-  if(h1) h1.textContent = isOwner ? '👑 เจ้าของร้าน' : '🧑‍🍳 แอดมิน';
+  const subEl = document.getElementById('admin-brand-sub');
+  if(subEl) subEl.textContent = isOwner ? '👑 เจ้าของร้าน' : '🧑‍🍳 แอดมิน';
   // owner เห็นทุกแท็บ, admin ไม่เห็นแท็บตั้งค่าบางส่วน
   document.querySelectorAll('.owner-only').forEach(el => {
     el.style.display = isOwner ? '' : 'none';
@@ -1322,6 +1336,11 @@ async function loadSettings() {
       const logoImg = document.getElementById('hero-logo-preview-img');
       logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
       window._storeLogo = s.heroLogoUrl; // ใช้ใน order card
+      // โหลดโลโก้ใน header
+      const logoWrap = document.getElementById('admin-logo-wrap');
+      if (logoWrap) { logoWrap.innerHTML = `<img src="${s.heroLogoUrl}" alt="logo" style="width:44px;height:44px;object-fit:cover;border-radius:50%;">`; }
+      const nameEl = document.getElementById('admin-brand-name');
+      if (nameEl && s.storeName) nameEl.textContent = s.storeName;
     }
     if (s.featuredIds) currentFeaturedIds = s.featuredIds;
     storeIsOpen = s.isOpen !== false;
