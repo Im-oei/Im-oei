@@ -89,25 +89,6 @@
 .history-row.expanded{border-color:#FFD54F;}
 
 .empty-state{text-align:center;padding:60px 30px;color:#CCC;}
-/* ===== RATING POPUP ===== */
-.rating-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:900;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
-.rating-overlay.show{opacity:1;pointer-events:all;}
-.rating-sheet{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:24px 20px 40px;transform:translateY(100%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
-.rating-overlay.show .rating-sheet{transform:translateY(0);}
-.rating-title{font-size:18px;font-weight:800;color:#3E2000;text-align:center;margin-bottom:4px;}
-.rating-sub{font-size:13px;color:#999;text-align:center;margin-bottom:18px;}
-.rating-item-name{font-size:14px;font-weight:700;color:#5D3A00;text-align:center;background:#FFF8E1;border-radius:10px;padding:8px 14px;margin-bottom:16px;}
-.stars-row{display:flex;justify-content:center;gap:10px;margin-bottom:20px;}
-.star-btn{font-size:38px;cursor:pointer;transition:transform .15s,filter .15s;filter:grayscale(1);opacity:.4;}
-.star-btn.lit{filter:grayscale(0);opacity:1;transform:scale(1.12);}
-.star-btn:active{transform:scale(.9);}
-.rating-comment{width:100%;border:1.5px solid #E8E8E8;border-radius:12px;padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:14px;color:#2C2C2C;background:#FAFAFA;outline:none;resize:none;box-sizing:border-box;transition:border-color .2s;}
-.rating-comment:focus{border-color:#FFC107;}
-.rating-submit-btn{width:100%;margin-top:14px;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,.4);transition:opacity .2s;}
-.rating-submit-btn:disabled{opacity:.4;cursor:not-allowed;}
-.rating-skip{width:100%;margin-top:8px;padding:11px;border-radius:14px;border:none;background:transparent;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:#BBB;cursor:pointer;}
-/* ===== STAR BADGE in history ===== */
-.star-badge{display:inline-flex;align-items:center;gap:3px;background:#FFF8E1;border:1px solid #FFE082;color:#F5A623;font-size:11px;font-weight:800;padding:2px 7px;border-radius:8px;margin-left:6px;vertical-align:middle;}
 .empty-icon{font-size:60px;opacity:.5;margin-bottom:14px;}
 .empty-text{font-size:15px;font-weight:700;color:#BBB;}
 .empty-sub{font-size:13px;color:#CCC;margin-top:6px;}
@@ -199,7 +180,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const sess = sessionStorage.getItem('imkum_user');
 if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
@@ -306,21 +287,14 @@ function renderHistoryRows(list){
     const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
     const dotCls = o.status==='done'?'done':'cancelled';
     const detailRows = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
-    // Rating badges
-    const ratedItems = (o.items||[]).filter(i => _ratingsCache[`${o.id}_${i.id}`]);
-    const allRated = ratedItems.length === (o.items||[]).filter(i=>i.id).length && ratedItems.length > 0;
-    const avgStar = ratedItems.length ? (ratedItems.reduce((s,i)=>s+(_ratingsCache[`${o.id}_${i.id}`]?.star||0),0)/ratedItems.length).toFixed(1) : null;
-    const starBadge = avgStar ? `<span class="star-badge">⭐ ${avgStar}</span>` : '';
-    const rateBtn = o.status==='done' && !allRated ? `<button class="reorder-btn" style="background:linear-gradient(135deg,#FFF8E1,#FFE082);color:#5D3A00;box-shadow:none;border:1.5px solid #FFE082;" onclick="event.stopPropagation();openRatingPopup(${JSON.stringify(o).replace(/"/g,'&quot;')})">⭐ รีวิว</button>` : '';
     return `<div class="history-row" id="hrow-${idx}" onclick="toggleHistoryDetail(${idx})">
       <div class="history-dot ${dotCls}"></div>
       <div class="history-main">
-        <div class="history-id">#${o.id.slice(0,8).toUpperCase()} · ${statusMap[o.status]||o.status}${starBadge}</div>
+        <div class="history-id">#${o.id.slice(0,8).toUpperCase()} · ${statusMap[o.status]||o.status}</div>
         <div class="history-items">${itemNames}</div>
         <div class="history-detail" id="hdetail-${idx}">
           <div style="padding:8px 0 4px">${detailRows}</div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;padding-bottom:8px">
-            ${rateBtn}
+          <div style="display:flex;justify-content:flex-end;padding-bottom:8px">
             <button class="reorder-btn" onclick="event.stopPropagation();reorder(${itemsJson})">🔁 สั่งซ้ำ</button>
           </div>
         </div>
@@ -627,133 +601,12 @@ function handleStatusChange(order, oldStatus, newStatus) {
   showCustBrowserNotif(title, body, 'order-' + order.id);
   showToast(`${icon} ${title}`);
   // onSnapshot จะอัพเดท list อัตโนมัติ — ไม่ต้อง loadOrders() อีก
-
-  // ขึ้น rating popup เมื่อสถานะเป็น "รับแล้ว"
-  if (newStatus === 'done') {
-    setTimeout(() => openRatingPopup(order), 1200);
-  }
 }
-
-// ===== RATING SYSTEM =====
-let _ratingOrder = null;
-let _ratingItemIdx = 0;
-let _ratingItemList = []; // [{id, name, subtotal}]
-let _selectedStar = 0;
-let _ratingsCache = {}; // orderId_itemId → star
-
-// โหลด ratings ที่เคยให้ไว้ (เพื่อแสดงดาวในประวัติ)
-async function loadMyRatings() {
-  if (!user.phone) return;
-  try {
-    const snap = await getDocs(query(collection(db,'ratings'), where('phone','==',user.phone)));
-    snap.docs.forEach(d => { _ratingsCache[d.id] = d.data(); });
-    // re-render history rows ถ้ามีข้อมูลแล้ว
-    if (allHistoryDocs && allHistoryDocs.length) renderHistoryRows(historyExpanded ? allHistoryDocs : allHistoryDocs.slice(0, HISTORY_PREVIEW));
-  } catch(e) { console.warn('loadMyRatings:', e); }
-}
-
-function openRatingPopup(order) {
-  const items = (order.items || []).filter(i => i.id);
-  if (!items.length) return;
-  _ratingOrder = order;
-  _ratingItemList = items;
-  _ratingItemIdx = 0;
-  _selectedStar = 0;
-  showRatingItem();
-  document.getElementById('rating-overlay').classList.add('show');
-}
-
-function showRatingItem() {
-  const item = _ratingItemList[_ratingItemIdx];
-  if (!item) { closeRatingPopup(); return; }
-  const alreadyRated = _ratingsCache[`${_ratingOrder.id}_${item.id}`];
-
-  document.getElementById('rating-item-name').textContent = `${item.name}`;
-  document.getElementById('rating-progress').textContent = `${_ratingItemIdx + 1} / ${_ratingItemList.length}`;
-  document.getElementById('rating-comment').value = '';
-  _selectedStar = alreadyRated ? alreadyRated.star : 0;
-  updateStars(_selectedStar);
-  document.getElementById('rating-submit-btn').disabled = _selectedStar === 0;
-}
-
-function updateStars(n) {
-  document.querySelectorAll('.star-btn').forEach((btn, i) => {
-    btn.classList.toggle('lit', i < n);
-  });
-  _selectedStar = n;
-  document.getElementById('rating-submit-btn').disabled = n === 0;
-}
-
-window.clickStar = function(n) { updateStars(n); };
-
-window.submitRating = async function() {
-  if (_selectedStar === 0) return;
-  const item = _ratingItemList[_ratingItemIdx];
-  const comment = document.getElementById('rating-comment').value.trim();
-  const ratingKey = `${_ratingOrder.id}_${item.id}`;
-  try {
-    await setDoc(doc(db, 'ratings', ratingKey), {
-      orderId: _ratingOrder.id,
-      itemId: item.id,
-      itemName: item.name,
-      star: _selectedStar,
-      comment,
-      phone: user.phone || '',
-      customerName: user.name || '',
-      createdAt: serverTimestamp()
-    });
-    _ratingsCache[ratingKey] = { star: _selectedStar, comment, itemName: item.name };
-    showToast(`⭐ ขอบคุณที่รีวิว "${item.name}"!`);
-  } catch(e) { console.warn('submitRating:', e); showToast('❌ บันทึกรีวิวไม่ได้'); }
-
-  // ไปรายการถัดไป
-  _ratingItemIdx++;
-  if (_ratingItemIdx < _ratingItemList.length) {
-    _selectedStar = 0;
-    showRatingItem();
-  } else {
-    closeRatingPopup();
-    // refresh history badges
-    if (allHistoryDocs && allHistoryDocs.length) renderHistoryRows(historyExpanded ? allHistoryDocs : allHistoryDocs.slice(0, HISTORY_PREVIEW));
-  }
-};
-
-window.skipRating = function() {
-  _ratingItemIdx++;
-  if (_ratingItemIdx < _ratingItemList.length) { _selectedStar = 0; showRatingItem(); }
-  else closeRatingPopup();
-};
-
-function closeRatingPopup() {
-  document.getElementById('rating-overlay').classList.remove('show');
-  _ratingOrder = null;
-}
-window.openRatingPopup = openRatingPopup;
 
 // เริ่มระบบ
 initCustomerNotifications();
-loadMyRatings();
 
 </script>
-
-<!-- ===== RATING POPUP ===== -->
-<div class="rating-overlay" id="rating-overlay">
-  <div class="rating-sheet">
-    <div class="rating-title">⭐ รีวิวอาหาร</div>
-    <div class="rating-sub" id="rating-progress">1 / 1</div>
-    <div class="rating-item-name" id="rating-item-name"></div>
-    <div class="stars-row">
-      <span class="star-btn" onclick="clickStar(1)">⭐</span>
-      <span class="star-btn" onclick="clickStar(2)">⭐</span>
-      <span class="star-btn" onclick="clickStar(3)">⭐</span>
-      <span class="star-btn" onclick="clickStar(4)">⭐</span>
-      <span class="star-btn" onclick="clickStar(5)">⭐</span>
-    </div>
-    <textarea class="rating-comment" id="rating-comment" rows="3" placeholder="ความคิดเห็น (ไม่บังคับ)..."></textarea>
-    <button class="rating-submit-btn" id="rating-submit-btn" onclick="submitRating()" disabled>✅ ส่งรีวิว</button>
-    <button class="rating-skip" onclick="skipRating()">ข้ามรายการนี้</button>
-  </div>
-</div>
 <!-- NOTIFICATION PERMISSION BANNER -->
 <div id="notif-request-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#3E2000,#7B3F00);padding:12px 16px;align-items:center;gap:10px;box-shadow:0 3px 12px rgba(0,0,0,0.2);">
   <span style="font-size:20px">🔔</span>

@@ -422,9 +422,6 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     <div id="stats-chart" class="chart-bar-wrap"></div>
     <h3 style="margin-top:20px">ออเดอร์ตามช่วงเวลา</h3>
     <div id="stats-time" class="chart-bar-wrap"></div>
-    <h3 style="margin-top:20px">⭐ คะแนน Rating เมนู</h3>
-    <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px">เฉลี่ยจากรีวิวลูกค้าทั้งหมด</p>
-    <div id="stats-ratings" class="chart-bar-wrap"></div>
   </div>
 </div>
 
@@ -511,17 +508,6 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
         <input type="password" class="form-input" id="set-owner-password" placeholder="ตั้งรหัสผ่านใหม่">
       </div>
       <button class="save-btn" onclick="savePasswords()">💾 บันทึกรหัสผ่าน</button>
-    </div>
-
-    <!-- ====== PICKUP LOCATIONS ====== -->
-    <div class="settings-card">
-      <h3>📍 จุดรับอาหาร</h3>
-      <div id="pickup-loc-list" style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px;">
-        <p style="color:var(--text-sub);font-size:13px">⏳ กำลังโหลด...</p>
-      </div>
-      <button class="save-btn" onclick="openPickupLocModal(null)" style="background:linear-gradient(135deg,#4CAF50,#388E3C);box-shadow:0 4px 14px rgba(76,175,80,0.3);">
-        ➕ เพิ่มจุดรับใหม่
-      </button>
     </div>
 
     <!-- ====== DANGER ZONE ====== -->
@@ -774,7 +760,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, onSnapshot, query,
+  getFirestore, collection, onSnapshot,
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
   serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -1399,127 +1385,8 @@ function renderStats() {
       </div>
     </div>`
   ).join('') || '<p style="color:var(--text-sub);font-size:13px">ยังไม่มีข้อมูล</p>';
-
-  // Ratings
-  loadRatingStats();
 }
 
-async function loadRatingStats() {
-  const el = document.getElementById('stats-ratings');
-  if (!el) return;
-  el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">⏳ กำลังโหลด...</p>';
-  try {
-    const snap = await getDocs(collection(db, 'ratings'));
-    const rMap = {}; // itemName → {sum, count, comments:[]}
-    snap.docs.forEach(d => {
-      const r = d.data();
-      if (!r.itemName || !r.star) return;
-      if (!rMap[r.itemName]) rMap[r.itemName] = { sum: 0, count: 0, comments: [] };
-      rMap[r.itemName].sum += r.star;
-      rMap[r.itemName].count += 1;
-      if (r.comment) rMap[r.itemName].comments.push(r.comment);
-    });
-    const sorted = Object.entries(rMap).sort((a,b) => (b[1].sum/b[1].count) - (a[1].sum/a[1].count));
-    if (!sorted.length) { el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">ยังไม่มีรีวิว</p>'; return; }
-    el.innerHTML = sorted.map(([name, rd]) => {
-      const avg = (rd.sum / rd.count);
-      const stars = '⭐'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
-      const latestComment = rd.comments.slice(-1)[0] || '';
-      return `<div class="chart-item" style="flex-direction:column;align-items:flex-start;gap:4px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
-          <div style="font-size:14px;font-weight:800;color:var(--text)">${name}</div>
-          <div style="font-size:13px;font-weight:800;color:#F5A623">${avg.toFixed(1)} ⭐ <span style="font-size:11px;color:var(--text-sub);font-weight:600">(${rd.count} รีวิว)</span></div>
-        </div>
-        <div style="font-size:18px;letter-spacing:2px">${stars}</div>
-        ${latestComment ? `<div style="font-size:12px;color:var(--text-sub);margin-top:2px">💬 "${latestComment}"</div>` : ''}
-      </div>`;
-    }).join('');
-  } catch(e) {
-    el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">โหลด rating ไม่ได้</p>';
-  }
-}
-
-// ====== PICKUP LOCATIONS CRUD ======
-let _pickupLocs = [];
-let _pickupUnsub = null;
-
-function startPickupLocsRealtime() {
-  if (_pickupUnsub) return;
-  _pickupUnsub = onSnapshot(collection(db, 'pickupLocations'), (snap) => {
-    _pickupLocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    _pickupLocs.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-    renderPickupLocList();
-  });
-}
-
-function renderPickupLocList() {
-  const el = document.getElementById('pickup-loc-list');
-  if (!el) return;
-  if (!_pickupLocs.length) {
-    el.innerHTML = '<p style="color:var(--text-sub);font-size:13px">ยังไม่มีจุดรับอาหาร — กด "เพิ่มจุดรับใหม่" ด้านล่าง</p>';
-    return;
-  }
-  el.innerHTML = _pickupLocs.map(loc => `
-    <div style="display:flex;align-items:center;gap:10px;background:#FAFAFA;border:1.5px solid #F0E8D8;border-radius:14px;padding:12px 14px;">
-      <span style="font-size:24px;flex-shrink:0;">${loc.icon || '📍'}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${loc.name}</div>
-        <div style="font-size:12px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${loc.desc || ''}</div>
-      </div>
-      <button onclick="openPickupLocModal('${loc.id}')" style="background:#FFF8E1;border:1.5px solid #FFE082;border-radius:10px;padding:7px 12px;font-size:13px;cursor:pointer;flex-shrink:0;">✏️</button>
-      <button onclick="deletePickupLoc('${loc.id}','${(loc.name||'').replace(/'/g,'')}')" style="background:#FFEBEE;border:1.5px solid #FFCDD2;border-radius:10px;padding:7px 12px;font-size:13px;cursor:pointer;flex-shrink:0;">🗑️</button>
-    </div>`
-  ).join('');
-}
-
-window.openPickupLocModal = function(id) {
-  const loc = id ? _pickupLocs.find(l => l.id === id) : null;
-  document.getElementById('pickup-loc-modal-title').textContent = loc ? '✏️ แก้ไขจุดรับอาหาร' : '➕ เพิ่มจุดรับอาหาร';
-  document.getElementById('plm-id').value = id || '';
-  document.getElementById('plm-icon').value = loc ? (loc.icon || '') : '📍';
-  document.getElementById('plm-name').value = loc ? (loc.name || '') : '';
-  document.getElementById('plm-desc').value = loc ? (loc.desc || '') : '';
-  document.getElementById('plm-map').value = loc ? (loc.mapUrl || '') : '';
-  const ov = document.getElementById('pickup-loc-overlay');
-  ov.style.display = 'flex';
-};
-
-window.closePickupLocModal = function() {
-  document.getElementById('pickup-loc-overlay').style.display = 'none';
-};
-
-window.savePickupLoc = async function() {
-  const name = document.getElementById('plm-name').value.trim();
-  if (!name) { showToast('กรุณากรอกชื่อจุดรับ'); return; }
-  const id = document.getElementById('plm-id').value;
-  const data = {
-    icon: document.getElementById('plm-icon').value.trim() || '📍',
-    name,
-    desc: document.getElementById('plm-desc').value.trim(),
-    mapUrl: document.getElementById('plm-map').value.trim(),
-    order: id ? (_pickupLocs.find(l => l.id === id)?.order ?? _pickupLocs.length) : _pickupLocs.length,
-    updatedAt: serverTimestamp()
-  };
-  try {
-    if (id) {
-      await updateDoc(doc(db, 'pickupLocations', id), data);
-    } else {
-      await addDoc(collection(db, 'pickupLocations'), data);
-    }
-    closePickupLocModal();
-    showToast(id ? '✅ แก้ไขจุดรับแล้ว' : '✅ เพิ่มจุดรับแล้ว');
-  } catch(e) { showToast('❌ ' + (e.message || 'เกิดข้อผิดพลาด')); }
-};
-
-window.deletePickupLoc = async function(id, name) {
-  if (!confirm(`ลบจุดรับ "${name}" ?\nลูกค้าที่เลือกจุดนี้ไว้จะถูก fallback ไปจุดแรก`)) return;
-  try {
-    await deleteDoc(doc(db, 'pickupLocations', id));
-    showToast('🗑️ ลบจุดรับแล้ว');
-  } catch(e) { showToast('❌ ' + (e.message || 'เกิดข้อผิดพลาด')); }
-};
-
-// เริ่ม realtime เมื่อ switch ไปแท็บ settings
 // ====== GLOBAL FUNCTIONS ======
 window.switchTab = function(tab, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1532,7 +1399,6 @@ window.switchTab = function(tab, btn) {
     renderFeaturedCheckboxes();
     loadStampConfig();
     loadPreorderSetting();
-    startPickupLocsRealtime();
   }
   if (tab === 'stamps') loadStampConfig();
 };
@@ -2485,33 +2351,5 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
-<!-- ====== PICKUP LOCATION MODAL ====== -->
-<div class="modal-overlay" id="pickup-loc-overlay" onclick="if(event.target===this)closePickupLocModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:900;align-items:flex-end;justify-content:center;">
-  <div style="background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:24px 20px 40px;transform:translateY(0);">
-    <div style="font-size:17px;font-weight:800;color:#3E2000;margin-bottom:18px;" id="pickup-loc-modal-title">➕ เพิ่มจุดรับอาหาร</div>
-    <input type="hidden" id="plm-id">
-    <div class="form-group">
-      <label>Emoji ไอคอน</label>
-      <input type="text" class="form-input" id="plm-icon" placeholder="🏪" maxlength="4" style="font-size:22px;width:70px;">
-    </div>
-    <div class="form-group">
-      <label>ชื่อจุดรับ <span style="color:#E53935">*</span></label>
-      <input type="text" class="form-input" id="plm-name" placeholder="เช่น ร้านอิ่มเอ๋ย (หลัก)">
-    </div>
-    <div class="form-group">
-      <label>คำอธิบาย</label>
-      <input type="text" class="form-input" id="plm-desc" placeholder="เช่น หน้าร้านชั้น 1 ใกล้ทางเข้าหลัก">
-    </div>
-    <div class="form-group">
-      <label>Google Maps URL (ไม่บังคับ)</label>
-      <input type="url" class="form-input" id="plm-map" placeholder="https://maps.google.com/...">
-    </div>
-    <div style="display:flex;gap:10px;margin-top:6px;">
-      <button onclick="closePickupLocModal()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid #E8E8E8;background:#fff;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:#999;cursor:pointer;">ยกเลิก</button>
-      <button onclick="savePickupLoc()" style="flex:2;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:15px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 12px rgba(255,193,7,0.35);">💾 บันทึก</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>

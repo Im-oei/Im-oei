@@ -90,28 +90,30 @@ function cancelPreorder() {
 }
 
 // ===== PICKUP LOCATIONS =====
-// จุดรับอาหาร — โหลดจาก Firestore (fallback hardcode ถ้าไม่มีข้อมูล)
 var PICKUP_LOCATIONS = [
-  { id:'main', name:'ร้านอิ่มเอ๋ย (หลัก)', desc:'หน้าร้านชั้น 1', icon:'🏪', mapUrl:'' }
+  {
+    id: 'main',
+    name: 'ร้านอิ่มเอ๋ย (หลัก)',
+    desc: 'หน้าร้านชั้น 1 ใกล้ทางเข้าหลัก',
+    icon: '🏪',
+    mapUrl: 'https://maps.google.com/?q=อิ่มเอ๋ย'
+  },
+  {
+    id: 'gate1',
+    name: 'ประตู 1 (อาคาร A)',
+    desc: 'จุดรับหน้าประตูเข้าอาคาร A ชั้น 1',
+    icon: '🚪',
+    mapUrl: 'https://maps.google.com/?q=ประตู+1+อาคาร+A'
+  },
+  {
+    id: 'canteen',
+    name: 'โรงอาหาร',
+    desc: 'โต๊ะรับของด้านหน้าโรงอาหาร',
+    icon: '🍽️',
+    mapUrl: 'https://maps.google.com/?q=โรงอาหาร'
+  }
 ];
-var selectedLocation = localStorage.getItem('imkum_location') || '';
-
-function loadPickupLocations(db) {
-  onSnapshot(collection(db, 'pickupLocations'), (snap) => {
-    if (!snap.empty) {
-      PICKUP_LOCATIONS = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-      // ถ้า selectedLocation ไม่อยู่ใน list → reset เป็นตัวแรก
-      if (!PICKUP_LOCATIONS.find(l => l.id === selectedLocation)) {
-        selectedLocation = PICKUP_LOCATIONS[0]?.id || '';
-        localStorage.setItem('imkum_location', selectedLocation);
-      }
-    }
-    // re-render cart ถ้าแสดงอยู่แล้ว
-    if (document.getElementById('cart-body')) renderCart();
-  }, () => {}); // silent fail
-}
+var selectedLocation = localStorage.getItem('imkum_location') || 'main';
 function selectLocation(id) {
   selectedLocation = id;
   localStorage.setItem('imkum_location', id);
@@ -193,7 +195,7 @@ function renderCart(){
     isPreorder
   );
   var timeHTML = slots.map(function(s){ return '<option value="'+s.val+'">'+s.label+' น.</option>'; }).join('');
-  var savedName = (function(){ try { var u=JSON.parse(sessionStorage.getItem('imkum_user')||'null'); return (u&&u.name)||localStorage.getItem('imkum_name')||''; } catch(e){ return localStorage.getItem('imkum_name')||''; } })();
+  var savedName = localStorage.getItem('imkum_name')||'';
 
   // Stamp earn notice
   var stampInfo = getStampInfo();
@@ -287,7 +289,7 @@ renderCart();
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, getDocs, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, getDocs, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
@@ -295,7 +297,6 @@ const app = initializeApp({
   projectId: "im-oei"
 });
 const db = getFirestore(app);
-loadPickupLocations(db);
 
 async function syncMenu() {
   try {
@@ -347,16 +348,6 @@ async function earnStamp(phone) {
 window.placeOrder = async function() {
   var total = getTotal();
   if (!total) return;
-
-  // บังคับ login ก่อนสั่งซื้อ
-  const userSess = sessionStorage.getItem('imkum_user');
-  const userObj = userSess ? JSON.parse(userSess) : null;
-  if (!userObj || !userObj.phone) {
-    if (confirm('กรุณาเข้าสู่ระบบก่อนสั่งอาหาร\nกด OK เพื่อไป login')) {
-      window.location.href = 'login.html';
-    }
-    return;
-  }
   var nameEl = document.getElementById('name-input');
   var customerName = (nameEl ? nameEl.value : '').trim();
   if (!customerName) { showToast('กรุณากรอกชื่อของคุณ'); if(nameEl) nameEl.focus(); return; }
@@ -377,8 +368,9 @@ window.placeOrder = async function() {
 
   showLoading(true);
   try {
-    const phone = userObj.phone || '';
-    const custName = userObj.name || customerName;
+    const userSess = sessionStorage.getItem('imkum_user');
+    const userObj = userSess ? JSON.parse(userSess) : null;
+    const phone = (userObj && userObj.phone) || localStorage.getItem('imkum_phone') || '';
 
     // Calculate preorder delivery date
     var deliveryDate = null;

@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== HELPER FUNCTIONS =====
+    // im-oei ใช้ sessionStorage auth (ไม่มี Firebase Auth)
+    // จึงต้องเปิด read/write จาก client โดยตรง
+    // ป้องกันด้วย app logic + password แทน
+
+    // ===== ORDERS =====
+    match /orders/{orderId} {
+      allow read: if true;       // ลูกค้า/แอดมินอ่านได้
+      allow create: if true;     // ลูกค้าสั่งออเดอร์
+      allow update: if true;     // แอดมินเปลี่ยนสถานะ
+      allow delete: if true;     // แอดมินลบออเดอร์เก่า ✅ แก้ permission-denied
+    }
+
+    // ===== MENU =====
+    match /menu/{itemId} {
+      allow read: if true;
+      allow write: if true;      // แอดมินจัดการเมนู
+    }
+
+    // ===== CATEGORIES =====
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ===== BANNERS =====
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ===== STAMPS (แต้มสะสม) =====
+    match /stamps/{phone} {
+      allow read: if true;
+      allow write: if true;      // แอดมินรีเซ็ตแต้ม ✅
+    }
+
+    // ===== SETTINGS =====
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if true;      // แอดมินบันทึกตั้งค่า ✅
+    }
+
+    // ===== PUSH SUBSCRIPTIONS =====
+    match /pushSubscriptions/{phone} {
+      allow read: if true;
+      allow write: if true;      // ลูกค้า subscribe push
+    }
+
+    // ===== PUSH QUEUE (Cloud Function only) =====
+    match /pushQueue/{docId} {
+      allow read: if false;
+      allow write: if true;      // admin.html เขียน job
+    }
+
+    // ===== LINE QUEUE (Cloud Function only) =====
+    match /lineQueue/{docId} {
+      allow read: if false;
+      allow write: if true;      // admin.html เขียน job
+    }
+
+    // ===== STORE CONFIG =====
+    match /store/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
