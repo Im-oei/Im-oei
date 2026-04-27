@@ -61,18 +61,19 @@
 // ===== AUTH CHECK =====
 (function(){
   var sess = sessionStorage.getItem('imkum_user');
-  if(sess){
+  if(!sess){ window.location.href = 'login.html'; return; }
+  try {
     var user = JSON.parse(sess);
     // ตรวจ session expiry 8 ชั่วโมง
     if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-      sessionStorage.clear(); return;
+      sessionStorage.clear(); window.location.href = 'login.html'; return;
     }
     if(user.role === 'admin' || user.role === 'owner'){
       window.location.href = 'admin.html'; return;
     }
     if(user.name) localStorage.setItem('imkum_name', user.name);
     if(user.phone) localStorage.setItem('imkum_phone', user.phone);
-  }
+  } catch(e) { sessionStorage.clear(); window.location.href = 'login.html'; }
 })();
 
 // ===== PREORDER =====
@@ -255,7 +256,7 @@ function renderCart(){
     buildLocationSection()+
     '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
     '<div class="total-row"><span class="total-label">รวมทั้งหมด</span><span><span class="total-amount" id="cart-total">'+getTotal()+'</span><span class="total-unit">บาท</span></span></div>'+
-    '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="checkout()">ยืนยันคำสั่งซื้อ</button></div>';
+    '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="checkout()">ยืนยันการสั่งซื้อ</button></div>';
 
   body.innerHTML=html;
 }
@@ -301,12 +302,20 @@ function clearCart(){
   cart={}; saveCart(); renderCart();
 }
 
+// Stub: module script โหลดช้ากว่า inline onclick
+// window.checkout จะถูก override โดย <script type="module"> ด้านล่าง
+window.checkout = function() {
+  showToast('กำลังโหลด กรุณารอสักครู่...');
+};
+window.placeOrder = window.checkout;
+
 renderCart();
 </script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, getDocs, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 window._onSnapshot = onSnapshot;
 window._collection = collection;
 
@@ -316,6 +325,7 @@ const app = initializeApp({
   projectId: "im-oei"
 });
 const db = getFirestore(app);
+const functions = getFunctions(app, 'asia-southeast1');
 loadPickupLocations(db);
 _execLoadPickup(db, getDocs, collection);
 
@@ -339,7 +349,6 @@ async function syncMenu() {
       });
       MENU = Object.values(catMap);
       ALL_ITEMS = [].concat(...MENU.map(c => c.items));
-      // อัปเดต price cache หลัง Firestore sync
       ALL_ITEMS.forEach(i => { cartPriceCache[i.id] = i.price; });
       localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
       renderCart();
@@ -364,29 +373,8 @@ async function syncMenu() {
   } catch(e) { console.log('Stamp sync skipped:', e.message); }
 }
 
-// ====== STAMP LOGIC ======
-async function earnStamp(phone) {
-  if (!phone) return;
-  try {
-    const stampRef = doc(db, 'stamps', phone);
-    const snap = await getDoc(stampRef);
-    let current = snap.exists() ? (snap.data().count || 0) : 0;
-    let total = snap.exists() ? (snap.data().total || 0) : 0;
-    let newCount = (current + 1) >= 10 ? 0 : current + 1; // reset after 10
-    let newTotal = total + 1;
-    await setDoc(stampRef, { count: newCount, total: newTotal, phone, updatedAt: serverTimestamp() }, { merge: true });
-    // Update local
-    const key = 'imkum_stamps_' + phone;
-    localStorage.setItem(key, JSON.stringify({ count: newCount, total: newTotal }));
-    if (newCount === 0) {
-      // Just completed a round!
-      return '🎉 ครบ 10 แต้ม! รับรางวัลได้เลย!';
-    }
-    return '⭐ แต้มสะสม: ' + newCount + '/10';
-  } catch(e) { console.log('stamp error:', e); return null; }
-}
-
-window.placeOrder = async function() {
+// ====== CHECKOUT via Cloud Function (ไม่มี addDoc orders โดยตรง) ======
+window.checkout = async function() {
   var total = getTotal();
   if (!total) { showToast('ไม่มีสินค้าในตะกร้า'); return; }
 
@@ -405,7 +393,6 @@ window.placeOrder = async function() {
 
   var note = document.getElementById('note-input') ? document.getElementById('note-input').value : '';
   var pickupRaw = document.getElementById('pickup-select') ? document.getElementById('pickup-select').value : '07:30';
-  // Parse preorder value
   var isNextDay = pickupRaw.startsWith('next:');
   var pickupTime = pickupRaw.replace('next:', '');
 
@@ -419,42 +406,28 @@ window.placeOrder = async function() {
   showLoading(true);
   try {
     const phone = userObj.phone || '';
-    const custName = userObj.name || customerName;
-
-    // Calculate preorder delivery date
-    var deliveryDate = null;
-    if (isNextDay) {
-      var d = new Date(); d.setDate(d.getDate()+1);
-      deliveryDate = d.toISOString().split('T')[0];
-    }
-
-    const ref = await addDoc(collection(db, 'orders'), {
-      items: orderItems, total, note, customerName, pickupTime,
+    const createOrder = httpsCallable(functions, 'createOrder');
+    const result = await createOrder({
+      items: orderItems,
+      note,
+      customerName,
+      pickupTime,
       customerPhone: phone,
-      userId: localStorage.getItem('imkum_userId') || null,
       pickupLocation: selectedLocation,
       pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation,
-      status: 'pending',
       isPreorder: isNextDay || false,
-      deliveryDate: deliveryDate,
       preorderDate: isNextDay ? (localStorage.getItem('imkum_preorder_date') || '') : null,
-      createdAt: serverTimestamp()
     });
 
-    // Earn stamp for customer
-    var stampMsg = null;
-    if (phone) {
-      stampMsg = await earnStamp(phone);
-    }
+    const { orderId, total: serverTotal, stampMsg } = result.data;
 
     localStorage.setItem('imkum_last_order', JSON.stringify({
-      orderId: ref.id, total, pickupTime, customerName, isPreorder: isNextDay,
+      orderId, total: serverTotal || total, pickupTime, customerName, isPreorder: isNextDay,
       pickupLocation: selectedLocation,
       pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || '',
-      stampMsg
+      stampMsg: stampMsg || null
     }));
     cart = {}; saveCart();
-    // Clear preorder mode after placing
     if (isNextDay) {
       localStorage.removeItem('imkum_preorder');
       localStorage.removeItem('imkum_preorder_date');
@@ -462,11 +435,14 @@ window.placeOrder = async function() {
     window.location.href = 'success.html';
   } catch(e) {
     console.error(e);
-    showToast('เกิดข้อผิดพลาด กรุณาตรวจสอบการเชื่อมต่อ');
+    showToast('เกิดข้อผิดพลาด: ' + (e.message || 'กรุณาลองใหม่'));
   } finally {
     showLoading(false);
   }
 };
+
+// compat alias (ป้องกัน submitCartLogin เรียก placeOrder เก่า)
+window.placeOrder = window.checkout;
 
 syncMenu();
 </script>
@@ -541,7 +517,7 @@ function submitCartLogin(){
   closeCartLogin();
   showToast('ยินดีต้อนรับ '+name+' 👋');
   // Try place order again
-  setTimeout(function(){ window.placeOrder && window.placeOrder(); }, 300);
+  setTimeout(function(){ window.placeOrder && window.placeOrder(); }, 800);
 }
 </script>
 

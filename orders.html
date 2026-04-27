@@ -221,6 +221,10 @@ import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDo
 const sess = sessionStorage.getItem('imkum_user');
 if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
 const user = JSON.parse(sess);
+// ตรวจ session expiry 8 ชั่วโมง
+if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
+  sessionStorage.clear(); window.location.href='login.html'; throw new Error('session expired');
+}
 if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html'; throw new Error('wrong role'); }
 
 const app = initializeApp({
@@ -604,7 +608,7 @@ function showCustBrowserNotif(title, body, tag) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     new Notification(title, {
-      body, icon: '/logo.png', badge: '/logo.png', tag,
+      body, icon: '/logo.webp', badge: '/logo.webp', tag,
       vibrate: [200, 100, 200]
     });
   } catch(e) {
