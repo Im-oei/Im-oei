@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>อิ่มเอ๋ย Im-Oei</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.app-topbar{position:sticky;top:0;z-index:50;background:#fff;padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.app-topbar .brand{display:flex;align-items:center;gap:8px;}
+.app-topbar .brand img{width:44px;height:44px;border-radius:50%;object-fit:cover;}
+.brand-name{font-size:16px;font-weight:800;color:#3E2000;}
+.brand-sub{font-size:11px;color:#999;}
+.user-btn{width:36px;height:36px;border-radius:50%;background:#FFF8E1;border:2px solid #FFC107;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+.hero-wrap img{width:100%;height:auto;object-fit:contain;display:block;}
+.search-wrap{margin:12px 16px 0;position:relative;}
+.search-wrap input{width:100%;padding:11px 16px 11px 42px;border-radius:14px;border:1.5px solid #F0E8D8;background:#fff;font-family:'Sarabun',sans-serif;font-size:14px;color:#2C2C2C;outline:none;box-shadow:0 2px 10px rgba(0,0,0,0.06);transition:border-color .2s;}
+.search-wrap input:focus{border-color:#FFC107;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;}
+.order-time-banner{background:#fff;margin:12px 16px;padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(255,193,7,0.15);border-left:3px solid #FFC107;}
+.order-time-banner .clock-icon{font-size:20px;}
+.order-time-banner .time-text strong{font-size:13px;font-weight:700;color:#2C2C2C;display:block;}
+.order-time-banner .time-text span{font-size:11px;color:#999;}
+/* PREORDER CHIP inside topbar */
+.preorder-chip{display:flex;align-items:center;background:#F5EFE6;border-radius:20px;padding:5px 10px 5px 8px;gap:2px;}
+.preorder-chip span{font-size:11px;font-weight:800;color:#5D3A00;white-space:nowrap;}
+.app-topbar.active-preorder{background:#E8F5E9;}
+.app-topbar.active-preorder .brand-name{color:#2E7D32;}
+.app-topbar.active-preorder .preorder-chip{background:#C8E6C9;}
+.app-topbar.active-preorder .preorder-chip span{color:#1B5E20;}
+/* Toggle switch */
+.toggle-sw{position:relative;width:46px;height:26px;flex-shrink:0;}
+.toggle-sw input{opacity:0;width:0;height:0;}
+.toggle-sw .sl{position:absolute;inset:0;background:#ccc;border-radius:26px;cursor:pointer;transition:.3s;}
+.toggle-sw .sl::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle-sw input:checked+.sl{background:#4CAF50;}
+.toggle-sw input:checked+.sl::before{transform:translateX(20px);}
+
+.cat-tabs-wrap{padding:0 16px 4px;overflow-x:auto;scrollbar-width:none;display:flex;gap:8px;}
+.cat-tabs-wrap::-webkit-scrollbar{display:none;}
+.cat-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid #E8E8E8;background:#fff;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#666;cursor:pointer;white-space:nowrap;transition:all .18s;}
+.cat-tab.active{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 3px 10px rgba(255,193,7,0.4);}
+.section-title{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;}
+.section-title .left{display:flex;align-items:center;gap:6px;}
+.section-title .icon{font-size:18px;}
+.section-title span{font-size:17px;font-weight:800;color:#2C2C2C;}
+.featured-row{display:flex;gap:12px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none;}
+.featured-row::-webkit-scrollbar{display:none;}
+.featured-card{flex-shrink:0;width:140px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,0.09);cursor:pointer;position:relative;transition:transform .18s;}
+.featured-card:active{transform:scale(0.97);}
+.featured-card .badge{position:absolute;top:7px;left:7px;background:#FF8C00;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.featured-card .fc-img{width:100%;height:100px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;}
+.featured-card .fc-img img{width:100%;height:100%;object-fit:cover;}
+.featured-card .fc-info{padding:8px 10px 38px;}
+.featured-card .fc-name{font-size:13px;font-weight:700;}
+.featured-card .fc-price{font-size:13px;font-weight:800;color:#FF8C00;margin-top:3px;}
+.featured-card .fc-add{position:absolute;bottom:8px;right:8px;width:30px;height:30px;border-radius:50%;background:#FFC107;border:none;cursor:pointer;font-size:22px;font-weight:700;color:#3E2000;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,193,7,0.5);transition:transform .15s;}
+.featured-card .fc-add:active{transform:scale(0.85);}
+.cat-section{margin-bottom:6px;}
+.cat-header{padding:10px 16px 8px;display:flex;align-items:center;gap:8px;}
+.cat-header .cat-name{font-size:16px;font-weight:800;color:#2C2C2C;}
+.cat-header .cat-line{flex:1;height:1.5px;background:linear-gradient(to right,#FFC107,transparent);border-radius:2px;}
+.card{background:#fff;margin:0 16px 8px;padding:12px 14px;border-radius:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.card .food-img{width:64px;height:64px;border-radius:14px;background:#F5EFE6;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;}
+.card .food-img img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.card .left{flex:1;min-width:0;}
+.card .name{font-size:15px;font-weight:700;}
+.card .desc{font-size:12px;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .price-tag{font-size:14px;font-weight:800;color:#FF8C00;margin-top:5px;}
+.card .qty{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.btn{width:30px;height:30px;border-radius:50%;border:1.5px solid #E0E0E0;background:#fff;font-size:18px;font-weight:700;color:#2C2C2C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.btn.plus{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 2px 8px rgba(255,193,7,0.45);}
+.btn:active{transform:scale(0.88);}
+.qty-num{font-size:15px;font-weight:700;min-width:18px;text-align:center;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;align-items:stretch;box-shadow:0 -3px 20px rgba(0,0,0,0.09);z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 4px 10px;font-size:10px;font-weight:700;color:#bbb;cursor:pointer;gap:2px;}
+.nav-item.active{color:#FFC107;}
+.nav-item .nav-icon{font-size:18px;}
+.nav-cart{flex:1.6;background:linear-gradient(135deg,#FFC107,#F5A623);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 4px 10px;gap:1px;cursor:pointer;position:relative;}
+.nav-cart .nav-icon{font-size:18px;}
+.nav-cart .nav-label{font-size:10px;font-weight:800;color:#3E2000;}
+.nav-cart .cart-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#E53935;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.nav-total{font-size:11px;font-weight:800;color:#3E2000;}
+.pb-footer{padding-bottom:72px;}
+.promo-slider{margin:10px 16px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);position:relative;}
+.promo-slides{display:flex;transition:transform .4s ease;will-change:transform;}
+.promo-slide{flex-shrink:0;width:100%;position:relative;}
+.promo-slide img{width:100%;height:var(--banner-h,130px);object-fit:cover;display:block;}
+.promo-slide .promo-text-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.45) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:center;padding:16px;}
+.promo-slide .promo-title{font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
+.promo-slide .promo-sub{font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;}
+.promo-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px;}
+.promo-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.5);transition:all .25s;}
+.promo-dot.active{background:#fff;width:18px;border-radius:4px;}
+.banner-img-wrap{margin:0 16px 10px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);}
+.banner-img-wrap img{width:100%;height:var(--banner-h,120px);object-fit:cover;display:block;}
+.closed-overlay{background:#f44336;color:#fff;text-align:center;padding:12px 16px;margin:8px 16px;border-radius:12px;font-weight:700;font-size:14px;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .28s;z-index:200;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.no-results{text-align:center;padding:40px 20px;color:#bbb;font-size:15px;}
+/* PROMO MID BANNER */
+.promo-mid{margin:4px 16px 12px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);position:relative;cursor:pointer;}
+.promo-mid img{width:100%;height:var(--banner-h,110px);object-fit:cover;display:block;}
+.promo-mid-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.45) 0%,transparent 65%);display:flex;flex-direction:column;justify-content:center;padding:16px;}
+.promo-mid-title{font-size:17px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.4);}
+.promo-mid-sub{font-size:12px;color:rgba(255,255,255,0.88);margin-top:3px;font-weight:600;}
+.promo-mid-badge{position:absolute;top:10px;right:10px;background:#FFC107;color:#3E2000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;}
+</style>
+</head>
+<body>
+
+<div class="app-topbar" id="preorder-topbar">
+  <div class="brand">
+    <img src="logo.png" alt="logo" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #FFC107;box-shadow:0 2px 8px rgba(255,193,7,0.3);">
+    <div>
+      <div class="brand-name">อิ่มเอ้ย</div>
+      <div class="brand-sub" id="preorder-sub">อร่อยง่ายๆ ใกล้บ้านคุณ</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+    <div class="preorder-chip" id="preorder-chip">
+      <span id="preorder-label">📅 พรุ่งนี้</span>
+      <label class="toggle-sw" style="margin-left:6px;">
+        <input type="checkbox" id="preorder-toggle" onchange="togglePreorder()">
+        <span class="sl"></span>
+      </label>
+    </div>
+    <div class="user-btn" id="user-badge" onclick="goProfile()" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FFF8E1,#FFE082);border:2.5px solid #FFC107;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(255,193,7,0.35);transition:transform .15s;active:scale(.95);">
+      <span id="user-avatar">👤</span>
+    </div>
+  </div>
+</div>
+
+<div class="hero-wrap"><img src="hero.webp" alt="อิ่มเอ้ย"></div>
+
+<div class="search-wrap">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="search-input" placeholder="ค้นหาเมนูอาหาร..." oninput="onSearch(this.value)">
+</div>
+
+<div class="order-time-banner">
+  <span class="clock-icon">🕐</span>
+  <div class="time-text">
+    <strong id="cutoff-text">รับออเดอร์ถึง 06:30 น.</strong>
+    <span id="pickup-text">รับอาหาร 07:00 - 08:00 น.</span>
+  </div>
+</div>
+
+<div id="closed-banner" style="display:none"></div>
+<div id="promo-slider-wrap"></div>
+<div id="banner-section"></div>
+
+
+
+<div class="cat-tabs-wrap" id="cat-tabs"></div>
+
+<div class="section-title">
+  <div class="left"><span class="icon">🔥</span><span>เมนูแนะนำ</span></div>
+</div>
+<div class="featured-row" id="featured-row"></div>
+
+<!-- PROMOTION BANNER (between featured and menu) -->
+<div id="promo-mid-wrap"></div>
+
+<div id="menu-list" class="pb-footer"></div>
+
+<div class="bottom-nav">
+  <div class="nav-item active">
+    <span class="nav-icon">🏠</span><span>หน้าหลัก</span>
+  </div>
+  <div class="nav-cart" onclick="location.href='cart.html'">
+    <span class="nav-icon">🛒</span>
+    <div class="cart-badge" id="cart-count">0</div>
+    <span class="nav-total" id="home-total">0 บาท</span>
+    <span class="nav-label">ตะกร้า</span>
+  </div>
+  <div class="nav-item" onclick="goProfile()">
+    <span class="nav-icon">👤</span><span>โปรไฟล์</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== PREORDER STATE ======
+var isPreorderMode = false;
+var preorderDate = null;
+
+function togglePreorder() {
+  isPreorderMode = document.getElementById('preorder-toggle').checked;
+  var topbar = document.getElementById('preorder-topbar');
+  var label = document.getElementById('preorder-label');
+  var sub = document.getElementById('preorder-sub');
+
+  if (isPreorderMode) {
+    var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    preorderDate = tomorrow.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'});
+    topbar.classList.add('active-preorder');
+    label.textContent = '📅 ' + preorderDate;
+    sub.textContent = '✅ โหมดสั่งล่วงหน้า';
+    localStorage.setItem('imkum_preorder','1');
+    localStorage.setItem('imkum_preorder_date', preorderDate);
+    showToast('📅 สั่งล่วงหน้าวันพรุ่งนี้: '+preorderDate);
+  } else {
+    topbar.classList.remove('active-preorder');
+    label.textContent = '📅 พรุ่งนี้';
+    sub.textContent = 'อร่อยง่ายๆ ใกล้บ้านคุณ';
+    localStorage.removeItem('imkum_preorder');
+    localStorage.removeItem('imkum_preorder_date');
+    showToast('กลับสู่การสั่งปกติ');
+  }
+}
+
+// Restore preorder state
+if (localStorage.getItem('imkum_preorder') === '1') {
+  isPreorderMode = true;
+  preorderDate = localStorage.getItem('imkum_preorder_date') || '';
+  document.getElementById('preorder-toggle').checked = true;
+  document.getElementById('preorder-topbar').classList.add('active-preorder');
+  document.getElementById('preorder-label').textContent = '📅 ' + preorderDate;
+  document.getElementById('preorder-sub').textContent = '✅ โหมดสั่งล่วงหน้า';
+}
+
+// ====== USER ======
+function getUser(){
+  try {
+    const u = JSON.parse(sessionStorage.getItem('imkum_user')||'null');
+    if (u && u.loginAt && (Date.now() - u.loginAt > 8*60*60*1000)) {
+      sessionStorage.clear(); return null; // หมดอายุ
+    }
+    return u;
+  } catch(e){ return null; }
+}
+function goProfile(){
+  var u=getUser();
+  if(!u){ window.location.href='login.html'; return; }
+  if(u.role==='admin'||u.role==='owner'){ window.location.href='admin.html'; return; }
+  window.location.href='orders.html';
+}
+function updateUserBadge(){
+  var u=getUser(); var av=document.getElementById('user-avatar');
+  if(!u){ av.textContent='👤'; return; }
+  if(u.role==='owner') av.textContent='👑';
+  else if(u.role==='admin') av.textContent='🧑‍🍳';
+  else av.textContent='😊';
+}
+updateUserBadge();
+
+
+// ====== MENU DATA ======
+var MENU=[
+  {category:"🥪 แซนวิช",catKey:"sandwich",items:[
+    {id:"tuna",name:"ปูอัดทูน่า",desc:"ปูอัด, ทูน่า, ผักสลัด",emoji:"🥪",price:20},
+    {id:"pork_salad",name:"หมูหยองสลัด",desc:"หมูหยอง, สลัด, มายองเนส",emoji:"🥙",price:20},
+    {id:"egg_sausage",name:"ไข่ดาวไส้กรอก",desc:"ไข่ดาว, ไส้กรอก, ซอส",emoji:"🍳",price:20},
+    {id:"shrimp",name:"ไข่กุ้งสาหร่าย",desc:"ไข่กุ้ง, สาหร่าย, มายองเนส",emoji:"🍤",price:20},
+  ]},
+  {category:"🍚 ข้าว",catKey:"rice",items:[
+    {id:"chicken_rice",name:"ข้าวไก่อบ",desc:"ไก่อบ, ไข่ต้ม, ผัก",emoji:"🍗",price:50},
+    {id:"chicken_lime",name:"ข้าวไก่อบมะนาว",desc:"ไก่มะนาว, ข้าว, ผัก",emoji:"🍋",price:50},
+  ]},
+  {category:"🍜 หมี่",catKey:"noodle",items:[
+    {id:"chicken_noodle",name:"หมี่ไก่ฉีก",desc:"หมี่เหลือง, ไก่ฉีก, น้ำซุป",emoji:"🍜",price:50},
+    {id:"pork_noodle",name:"หมี่หมูแดง",desc:"หมี่, หมูแดง, ไข่ต้ม",emoji:"🥢",price:50},
+  ]}
+];
+var ALL_ITEMS=[].concat.apply([],MENU.map(function(c){return c.items;}));
+var FEATURED_IDS=["tuna","chicken_noodle","egg_sausage"];
+var currentCat='all'; var currentSearch='';
+
+var cart=JSON.parse(localStorage.getItem('imkum_cart')||'{}');
+function saveCart(){localStorage.setItem('imkum_cart',JSON.stringify(cart));}
+function add(id){
+  var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
+  if(!item) return;
+  if(item.soldOut){ showToast('❌ '+item.name+' หมดแล้ว'); return; }
+  cart[id]=(cart[id]||0)+1; saveCart(); render();
+  showToast('เพิ่ม '+item.name+' ลงตะกร้า 🛒');
+}
+function remove(id){
+  if((cart[id]||0)>0){cart[id]--;if(!cart[id])delete cart[id];saveCart();render();}
+}
+function getTotal(){
+  var sum=0;
+  Object.keys(cart).forEach(function(id){
+    var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
+    if(item) sum+=item.price*cart[id];
+  });
+  return sum;
+}
+function getCount(){var s=0;Object.values(cart).forEach(function(v){s+=v;});return s;}
+function render(){
+  ALL_ITEMS.forEach(function(item){
+    var el=document.getElementById('qty-'+item.id);
+    if(el) el.textContent=cart[item.id]||0;
+  });
+  var t=getTotal(),c=getCount();
+  var te=document.getElementById('home-total');
+  var ce=document.getElementById('cart-count');
+  if(te) te.textContent=t+' บาท';
+  if(ce) ce.textContent=c;
+}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  if(!t) return;
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2200);
+}
+function foodImg(item){
+  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy">';
+  return '<span style="font-size:32px">'+(item.emoji||'🍽️')+'</span>';
+}
+function buildTabs(){
+  var wrap=document.getElementById('cat-tabs');
+  wrap.innerHTML='<div class="cat-tab active" onclick="filterCat(\'all\',this)">🍽️ ทั้งหมด</div>';
+  MENU.forEach(function(cat){
+    var vis=cat.items.filter(function(i){return !i.hidden;});
+    if(!vis.length) return;
+    wrap.innerHTML+='<div class="cat-tab" onclick="filterCat(\''+cat.catKey+'\',this)">'+cat.category+'</div>';
+  });
+}
+function filterCat(key,el){
+  currentCat=key;
+  document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+  if(el) el.classList.add('active');
+  buildMenuList();
+}
+function onSearch(val){currentSearch=val.toLowerCase().trim();buildMenuList();}
+function buildFeatured(){
+  var row=document.getElementById('featured-row');
+  row.innerHTML='';
+  FEATURED_IDS.forEach(function(fid){
+    var item=ALL_ITEMS.filter(function(i){return i.id===fid;})[0];
+    if(!item||item.hidden) return;
+    row.innerHTML+=
+      '<div class="featured-card">'+
+        '<div class="badge">BEST</div>'+
+        '<div class="fc-img">'+foodImg(item)+'</div>'+
+        '<div class="fc-info">'+
+          '<div class="fc-name">'+item.name+'</div>'+
+          '<div class="fc-price">'+item.price+' บาท</div>'+
+        '</div>'+
+        '<button class="fc-add" onclick="add(\''+item.id+'\')">+</button>'+
+      '</div>';
+  });
+}
+function buildMenuList(){
+  var list=document.getElementById('menu-list');
+  list.innerHTML=''; var hasAny=false;
+  MENU.forEach(function(cat){
+    if(currentCat!=='all'&&currentCat!==cat.catKey) return;
+    var vis=cat.items.filter(function(i){
+      if(i.hidden) return false;
+      if(currentSearch) return i.name.toLowerCase().includes(currentSearch)||(i.desc||'').toLowerCase().includes(currentSearch);
+      return true;
+    });
+    if(!vis.length) return;
+    hasAny=true;
+    list.innerHTML+='<div class="cat-section"><div class="cat-header"><span class="cat-name">'+cat.category+'</span><div class="cat-line"></div></div>';
+    vis.forEach(function(item){
+      var isSoldOut = item.soldOut === true;
+      var ratingBadge = '';
+      if (item.avgRating && item.ratingCount > 0) {
+        ratingBadge = '<span style="display:inline-flex;align-items:center;gap:2px;background:#FFF8E1;border:1px solid #FFE082;color:#F5A623;font-size:10px;font-weight:800;padding:1px 6px;border-radius:7px;margin-left:5px;vertical-align:middle;">⭐ '+item.avgRating.toFixed(1)+'</span>';
+      }
+      list.innerHTML+=
+        '<div class="card" style="'+(isSoldOut?'opacity:0.6;':'')+'">'+
+          '<div class="food-img">'+foodImg(item)+'</div>'+
+          '<div class="left">'+
+            '<div class="name">'+item.name+(isSoldOut?' <span style="background:#FFEBEE;color:#B71C1C;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;vertical-align:middle;">หมด</span>':'')+ratingBadge+'</div>'+
+            '<div class="desc">'+(item.desc||'')+'</div>'+
+            '<div class="price-tag">'+item.price+' บาท</div>'+
+          '</div>'+
+          '<div class="qty">'+
+            (isSoldOut
+              ? '<span style="font-size:12px;font-weight:700;color:#B71C1C;padding:0 8px;">หมดแล้ว</span>'
+              : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
+                '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
+                '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'
+            )+
+          '</div>'+
+        '</div>';
+    });
+    list.innerHTML+='</div>';
+  });
+  if(!hasAny) list.innerHTML='<div class="no-results">😔 ไม่พบเมนูที่ค้นหา</div>';
+}
+
+// ====== PUSH NOTIFICATION SUBSCRIBE ======
+async function requestPushPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission === 'granted') return;
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    showToast('🔔 เปิดรับการแจ้งเตือนแล้ว!');
+    // Store subscription flag
+    localStorage.setItem('imkum_push_enabled','1');
+  }
+}
+
+// Auto-ask for push permission after login
+var u = getUser();
+if (u && u.role === 'customer' && !localStorage.getItem('imkum_push_asked')) {
+  localStorage.setItem('imkum_push_asked','1');
+  setTimeout(requestPushPermission, 2000);
+}
+
+buildTabs(); buildFeatured(); buildMenuList(); render();
+
+window.openAdminLogin=function(){window.location.href='login.html';};
+window.closeAdminModal=function(){};
+window.doAdminLogin=function(){window.location.href='login.html';};
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ====== PROMO SLIDER ======
+let sliderTimer = null;
+function buildPromoSlider(banners) {
+  const wrap = document.getElementById('promo-slider-wrap');
+  if (!banners || !banners.length) { wrap.innerHTML = ''; return; }
+  let idx = 0;
+  const slides = banners.map((b) => {
+    const imgTag = b.imageUrl ? `<img src="${b.imageUrl}" alt="${b.title||''}">` : '';
+    const hasText = b.title || b.subtitle;
+    return `<div class="promo-slide">${imgTag}${hasText ? `<div class="promo-text-overlay"><div class="promo-title">${b.title||''}</div><div class="promo-sub">${b.subtitle||''}</div></div>` : ''}</div>`;
+  }).join('');
+  const dots = banners.map((_,i) => `<div class="promo-dot${i===0?' active':''}" id="pdot-${i}"></div>`).join('');
+  wrap.innerHTML = `<div class="promo-slider"><div class="promo-slides" id="promo-slides">${slides}</div><div class="promo-dots">${dots}</div></div>`;
+  function goTo(n) {
+    idx = (n + banners.length) % banners.length;
+    document.getElementById('promo-slides').style.transform = `translateX(-${idx*100}%)`;
+    wrap.querySelectorAll('.promo-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+  }
+  if (banners.length > 1) {
+    if (sliderTimer) clearInterval(sliderTimer);
+    sliderTimer = setInterval(() => goTo(idx + 1), 3500);
+  }
+}
+
+async function syncFirestore(){
+  try {
+    const app=initializeApp({apiKey:"AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",authDomain:"im-oei.firebaseapp.com",projectId:"im-oei"});
+    const db=getFirestore(app);
+    const sDoc=await getDoc(doc(db,'settings','store'));
+    if(sDoc.exists()){
+      const s=sDoc.data();
+      if(s.orderCutoff) document.getElementById('cutoff-text').textContent='รับออเดอร์ถึง '+s.orderCutoff+' น.';
+      if(s.pickupStart&&s.pickupEnd) document.getElementById('pickup-text').textContent='รับอาหาร '+s.pickupStart+' - '+s.pickupEnd+' น.';
+      if(s.bannerUrl) document.getElementById('banner-section').innerHTML='<div class="banner-img-wrap"><img src="'+s.bannerUrl+'" alt="banner"></div>';
+      // Apply banner size
+      const BANNER_HEIGHTS = {small:'100px',medium:'130px',large:'180px',xlarge:'220px',cinema:'47vw',square:'100vw'};
+      const bh = BANNER_HEIGHTS[s.bannerSize] || '130px';
+      document.documentElement.style.setProperty('--banner-h', bh);
+      if(s.isOpen===false){
+        document.getElementById('closed-banner').style.display='block';
+        document.getElementById('closed-banner').innerHTML='<div class="closed-overlay">🔴 ร้านปิดรับออเดอร์แล้ว กรุณามาใหม่วันพรุ่งนี้</div>';
+      }
+      if(s.featuredIds){ FEATURED_IDS=s.featuredIds; buildFeatured(); }
+      // Preorder config
+      if(s.preorderEnabled===false){
+        document.getElementById('preorder-chip').style.display='none';
+      }
+    }
+    // Load promo banners
+    const bannersSnap=await getDocs(collection(db,'banners'));
+    if(!bannersSnap.empty){
+      const banners=bannersSnap.docs.map(d=>({id:d.id,...d.data()})).filter(b=>b.active!==false).sort((a,b)=>(a.order||0)-(b.order||0));
+      buildPromoSlider(banners);
+      // Promotion banner between featured & menu list
+      const midBanner = banners.find(b=>b.midBanner) || (banners.length > 1 ? banners[1] : banners[0]);
+      if (midBanner && midBanner.imageUrl) {
+        const midWrap = document.getElementById('promo-mid-wrap');
+        if (midWrap) {
+          midWrap.innerHTML = `<div class="promo-mid"><img src="${midBanner.imageUrl}" alt="${midBanner.title||'โปรโมชัน'}"><div class="promo-mid-overlay"><div class="promo-mid-title">${midBanner.title||'โปรโมชันพิเศษ'}</div>${midBanner.subtitle?`<div class="promo-mid-sub">${midBanner.subtitle}</div>`:''}</div><div class="promo-mid-badge">📢 โปรโมชัน</div></div>`;
+        }
+      }
+    }
+    const mSnap=await getDocs(collection(db,'menu'));
+    if(!mSnap.empty){
+      const catMap={};
+      const catOrder=['sandwich','rice','noodle','drink','other'];
+      mSnap.forEach(d=>{
+        const data=Object.assign({id:d.id},d.data());
+        if(data.hidden) return;
+        const k=data.catKey||'other';
+        if(!catMap[k]) catMap[k]={category:data.category||k,catKey:k,items:[],sortOrder:catOrder.indexOf(k)};
+        catMap[k].items.push(data);
+      });
+      MENU=Object.values(catMap).sort((a,b)=>(a.sortOrder||99)-(b.sortOrder||99));
+      ALL_ITEMS=[].concat(...MENU.map(c=>c.items));
+      buildTabs(); buildFeatured(); buildMenuList(); render();
+    }
+
+    // โหลด ratings รวม (avg per item) เพื่อแสดงดาวข้างชื่อเมนู
+    try {
+      const rSnap = await getDocs(collection(db,'ratings'));
+      const ratingMap = {}; // itemId → {sum, count}
+      rSnap.forEach(d => {
+        const r = d.data();
+        if (!r.itemId || !r.star) return;
+        if (!ratingMap[r.itemId]) ratingMap[r.itemId] = { sum: 0, count: 0 };
+        ratingMap[r.itemId].sum += r.star;
+        ratingMap[r.itemId].count += 1;
+      });
+      // ใส่ avgRating ลงใน ALL_ITEMS
+      ALL_ITEMS.forEach(item => {
+        const rd = ratingMap[item.id];
+        item.avgRating = rd ? (rd.sum / rd.count) : null;
+        item.ratingCount = rd ? rd.count : 0;
+      });
+      window._ratingMap = ratingMap;
+      buildMenuList(); // re-render พร้อมดาว
+    } catch(re) { console.log('ratings load skipped:', re.message); }
+
+  }catch(e){console.log('Firebase sync skipped:',e.message);}
+}
+syncFirestore();
+
+// Register SW
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+</script>
+
+<!-- ====== PWA Install Prompt ====== -->
+<div id="pwa-install-bar" style="display:none;position:fixed;bottom:80px;left:12px;right:12px;z-index:800;background:linear-gradient(135deg,#3E2000,#7B3F00);border-radius:16px;padding:12px 16px;box-shadow:0 6px 20px rgba(0,0,0,0.25);display:none;align-items:center;gap:10px;">
+  <img src="logo.png" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;" onerror="this.textContent='🍱';this.style.fontSize='28px';" alt="logo">
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:13px;font-weight:800;color:#FFC107;">เพิ่มลงหน้าจอหลัก</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);">ใช้งานได้เหมือน App จริง ออฟไลน์ได้</div>
+  </div>
+  <button id="pwa-install-btn" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:9px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;white-space:nowrap;flex-shrink:0;">ติดตั้ง</button>
+  <button id="pwa-dismiss-btn" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
+</div>
+<script>
+(function() {
+  let _deferredPrompt = null;
+  const bar = document.getElementById('pwa-install-bar');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+  // ไม่แสดงถ้าเคย dismiss ไปแล้ว
+  if (localStorage.getItem('imkum_pwa_dismissed') === '1') return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _deferredPrompt = e;
+    bar.style.display = 'flex';
+  });
+
+  installBtn && installBtn.addEventListener('click', async () => {
+    if (!_deferredPrompt) return;
+    bar.style.display = 'none';
+    _deferredPrompt.prompt();
+    const { outcome } = await _deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      localStorage.setItem('imkum_pwa_dismissed', '1');
+    }
+    _deferredPrompt = null;
+  });
+
+  dismissBtn && dismissBtn.addEventListener('click', () => {
+    bar.style.display = 'none';
+    localStorage.setItem('imkum_pwa_dismissed', '1');
+  });
+
+  // ซ่อนถ้า install สำเร็จแล้ว
+  window.addEventListener('appinstalled', () => {
+    bar.style.display = 'none';
+    _deferredPrompt = null;
+    localStorage.setItem('imkum_pwa_dismissed', '1');
+  });
+})();
+</script>
+</html>
