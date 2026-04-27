@@ -255,7 +255,7 @@ function renderCart(){
     buildLocationSection()+
     '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
     '<div class="total-row"><span class="total-label">รวมทั้งหมด</span><span><span class="total-amount" id="cart-total">'+getTotal()+'</span><span class="total-unit">บาท</span></span></div>'+
-    '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="placeOrder()">ยืนยันการสั่งซื้อ</button></div>';
+    '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="checkout()">ยืนยันคำสั่งซื้อ</button></div>';
 
   body.innerHTML=html;
 }
