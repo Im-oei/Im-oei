@@ -3,158 +3,131 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>อิ่มเอ๋ย Im-Oei</title>
+<title>อิ่มเอ๋ย Im-Oei — เข้าสู่ระบบ</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--yellow:#FFC107;--yellow-dark:#F5A623;--yellow-light:#FFF8E1;--orange:#FF8C00;--bg:#F7F3EE;--white:#FFFFFF;--text:#2C2C2C;--text-sub:#999;--green:#4CAF50;--red:#E53935;--shadow:0 4px 20px rgba(0,0,0,0.09)}
+:root{
+  --yellow:#FFC107;--yellow-dark:#F5A623;--yellow-light:#FFF8E1;
+  --orange:#FF8C00;--bg:#F7F3EE;--white:#FFFFFF;
+  --text:#2C2C2C;--text-sub:#999;--green:#4CAF50;--red:#E53935;
+  --shadow:0 4px 20px rgba(0,0,0,0.09)
+}
 html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--text)}
-
-.hero-top{position:relative;overflow:hidden;border-radius:0 0 32px 32px;}
-.hero-top-img{width:100%;height:220px;object-fit:cover;display:block;}
-.hero-top-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(62,32,0,0.65) 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:24px;}
-.hero-title{font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.5);}
-.hero-sub{font-size:13px;color:rgba(255,255,255,0.88);font-weight:600;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
-
-.card-wrap{margin:-28px 16px 0;position:relative;z-index:10}.login-card{background:var(--white);border-radius:24px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);margin-bottom:16px}
-
-/* TABS */
-.role-tabs{display:flex;border-radius:14px;overflow:hidden;background:#F0E8D8;padding:4px;gap:4px;margin-bottom:20px}
-.role-tab{flex:1;padding:10px 4px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;border-radius:10px;color:var(--text-sub);transition:all 0.2s;text-align:center}
-.role-tab.active{background:var(--white);color:var(--orange);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-
-/* PANELS */
-.panel{display:none}.panel.active{display:block}
-
-/* FORM */
+.hero-top{position:fixed;inset:0;z-index:0;}
+.hero-top-img{width:100%;height:100%;object-fit:cover;display:block;}
+.hero-top-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(30,12,0,0.72) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:0;}
+.hero-title{font-size:32px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.6);}
+.hero-sub{font-size:14px;color:rgba(255,255,255,0.88);font-weight:600;margin-top:6px;text-shadow:0 1px 6px rgba(0,0,0,0.5);}
+.page-wrap{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 0 24px;}
+.card-wrap{margin:0 16px;position:relative;}
+.login-card{background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);border-radius:24px;padding:24px 20px;box-shadow:0 8px 40px rgba(0,0,0,0.28);margin-bottom:12px}
 .form-label{font-size:13px;font-weight:700;color:var(--text-sub);margin-bottom:6px;display:block}
 .form-input{width:100%;border:2px solid #E8E8E8;border-radius:12px;padding:13px 16px;font-family:'Sarabun',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s;background:var(--white)}
 .form-input:focus{border-color:var(--yellow)}
 .form-group{margin-bottom:14px;position:relative}
-.pwd-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0}
-
-.login-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4);transition:transform 0.15s;margin-top:4px}
+.pwd-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;line-height:1}
+.login-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4);transition:transform 0.15s,opacity 0.15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
 .login-btn:active{transform:scale(0.97)}
-.line-btn{width:100%;padding:15px;border-radius:14px;border:none;background:#06C755;font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(6,199,85,0.4);transition:transform 0.15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:10px}
-.line-btn:active{transform:scale(0.97)}
-.line-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#B0B0B0;font-size:13px}
-.line-divider::before,.line-divider::after{content:'';flex:1;height:1px;background:#EBEBEB}
-
+.login-btn:disabled{opacity:0.6;cursor:not-allowed}
+.step-wrap{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:20px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:#E8E8E8;transition:all 0.3s}
+.step-dot.active{background:var(--yellow-dark);width:22px;border-radius:4px}
+.step-dot.done{background:var(--green)}
+.step-panel{display:none}
+.step-panel.active{display:block}
+.info-box{background:var(--yellow-light);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;color:#5D3A00;margin-bottom:16px}
 .error-box{display:none;background:#FFEBEE;color:#B71C1C;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;margin-bottom:14px;text-align:center}
-.info-box{background:var(--yellow-light);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;color:#5D3A00;margin-bottom:14px}
-
-/* PHONE FORMAT */
 .phone-hint{font-size:11px;color:var(--text-sub);margin-top:4px}
-
-/* DIVIDER */
-.divider{text-align:center;font-size:12px;color:var(--text-sub);margin:14px 0;position:relative}
-.divider::before,.divider::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:#E8E8E8}
-.divider::before{left:0}.divider::after{right:0}
-
-/* BACK LINK */
 .back-link{text-align:center;padding:12px;font-size:13px;color:var(--text-sub)}
 .back-link a{color:var(--orange);font-weight:700;text-decoration:none}
-
-/* LOADING */
+.divider{display:flex;align-items:center;gap:10px;color:var(--text-sub);font-size:12px;margin:16px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#E8E8E8}
+.skip-link{width:100%;padding:12px;border-radius:12px;border:2px solid #E8E8E8;background:transparent;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:var(--text-sub);cursor:pointer;transition:all 0.2s;margin-top:8px}
+.skip-link:hover{border-color:var(--yellow);color:var(--orange)}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity 0.2s}
 .loading-overlay.show{opacity:1;pointer-events:all}
 .spinner{width:44px;height:44px;border-radius:50%;border:4px solid #FFE082;border-top-color:var(--yellow-dark);animation:spin 0.75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.28s;z-index:600;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.checking-ring{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(62,32,0,0.3);border-top-color:#3E2000;animation:spin 0.7s linear infinite;vertical-align:middle}
 </style>
-  <!-- LIFF SDK removed - ใช้ชื่อ-เบอร์แทน -->
 </head>
 <body>
 
 <div class="hero-top">
   <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ้ย">
-
+  <div class="hero-top-overlay">
+    <div class="hero-title">🍜 อิ่มเอ๋ย</div>
+    <div class="hero-sub">เข้าสู่ระบบ</div>
+  </div>
 </div>
 
+<div class="page-wrap">
 <div class="card-wrap">
   <div class="login-card">
 
-    <!-- ROLE TABS -->
-    <div class="role-tabs">
-      <button class="role-tab active" onclick="switchRole('customer',this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>ลูกค้า
-      </button>
-      <button class="role-tab" onclick="switchRole('staff',this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg>แอดมิน
-      </button>
-      <button class="role-tab" onclick="switchRole('owner',this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>เจ้าของร้าน
-      </button>
+    <div class="step-wrap">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
     </div>
 
-    <!-- ERROR -->
     <div class="error-box" id="error-box">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span id="error-msg">เกิดข้อผิดพลาด</span>
     </div>
 
-    <!-- ====== CUSTOMER PANEL ====== -->
-    <div id="panel-customer" class="panel active">
+    <!-- STEP 1: กรอกรหัสผ่าน -->
+    <div id="step-1" class="step-panel active">
+      <div class="info-box">
+        🔑 กรอกรหัสผ่านเพื่อเข้าระบบแอดมิน หรือกด <strong>"ฉันเป็นลูกค้า"</strong> เพื่อสั่งอาหาร
+      </div>
+      <div class="form-group">
+        <label class="form-label">รหัสผ่าน</label>
+        <input type="password" class="form-input" id="pwd-input"
+          placeholder="กรอกรหัสผ่าน (admin / เจ้าของร้าน)"
+          onkeydown="if(event.key==='Enter')checkPassword()">
+        <button class="pwd-toggle" id="pwd-eye" onclick="togglePwd()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <button class="login-btn" id="pwd-btn" onclick="checkPassword()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        ตรวจสอบรหัสผ่าน
+      </button>
+      <div class="divider">หรือ</div>
+      <button class="skip-link" onclick="goCustomer()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        ฉันเป็นลูกค้า (สั่งอาหาร)
+      </button>
+    </div>
+
+    <!-- STEP 2: กรอกชื่อ-เบอร์ลูกค้า -->
+    <div id="step-2" class="step-panel">
       <div class="info-box">📱 กรอกชื่อและเบอร์โทรเพื่อติดตามออเดอร์ของคุณ</div>
       <div class="form-group">
         <label class="form-label">ชื่อของคุณ</label>
-        <input type="text" class="form-input" id="cust-name" placeholder="เช่น สมชาย, นิสา" maxlength="30">
+        <input type="text" class="form-input" id="cust-name"
+          placeholder="เช่น สมชาย, นิสา" maxlength="30">
       </div>
       <div class="form-group">
         <label class="form-label">เบอร์โทรศัพท์</label>
-        <input type="tel" class="form-input" id="cust-phone" placeholder="0812345678" maxlength="10"
-          oninput="this.value=this.value.replace(/\D/g,'')">
+        <input type="tel" class="form-input" id="cust-phone"
+          placeholder="0812345678" maxlength="10"
+          oninput="this.value=this.value.replace(/\D/g,'')"
+          onkeydown="if(event.key==='Enter')customerLogin()">
         <div class="phone-hint">ใช้สำหรับติดตามออเดอร์ ไม่มีการส่ง SMS</div>
       </div>
-      <button class="line-btn" onclick="loginWithLine()" style="display:none;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.02 2 11c0 3.67 2.17 6.88 5.38 8.65-.08.38-.52 2.44-.6 2.8 0 0-.01.08.04.11.05.03.11.01.11.01.47-.07 5.47-3.59 6.41-4.22.41.06.83.09 1.26.09C18.52 18.44 23 15.42 23 11S18.52 2 12 2z"/></svg>
-        เข้าสู่ระบบด้วย LINE
-      </button>
-      <div class="line-divider" style="display:none;">หรือ</div>
       <button class="login-btn" onclick="customerLogin()">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>เข้าสู่ระบบด้วยชื่อ-เบอร์
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        เข้าสู่ระบบ
       </button>
-    </div>
-
-    <!-- ====== STAFF (ADMIN) PANEL ====== -->
-    <div id="panel-staff" class="panel">
-      <div class="info-box">🧑‍🍳 สำหรับพนักงานจัดการออเดอร์และเมนู</div>
-      <div class="form-group">
-        <label class="form-label">รหัสผ่านแอดมิน</label>
-        <input type="password" class="form-input" id="staff-pwd" placeholder="กรอกรหัสผ่าน"
-          onkeydown="if(event.key==='Enter')staffLogin()">
-        <button class="pwd-toggle" onclick="togglePwd('staff-pwd',this)">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <button class="login-btn" onclick="staffLogin()">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>เข้าสู่ระบบแอดมิน
-      </button>
-    </div>
-
-    <!-- ====== OWNER PANEL ====== -->
-    <div id="panel-owner" class="panel">
-      <div class="info-box">👑 สำหรับเจ้าของร้าน ดูสถิติและตั้งค่าทุกอย่าง</div>
-      <div class="form-group">
-        <label class="form-label">รหัสผ่านเจ้าของร้าน</label>
-        <input type="password" class="form-input" id="owner-pwd" placeholder="กรอกรหัสผ่าน"
-          onkeydown="if(event.key==='Enter')ownerLogin()">
-        <button class="pwd-toggle" onclick="togglePwd('owner-pwd',this)">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <button class="login-btn" onclick="ownerLogin()">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>เข้าสู่ระบบเจ้าของร้าน
-      </button>
+      <button class="skip-link" onclick="backToStep1()">← ย้อนกลับ</button>
     </div>
 
   </div>
-
-  <div class="back-link">
-    <a href="index.html">← กลับหน้าหลัก</a>
-  </div>
+  <div class="back-link"><a href="index.html" style="color:rgba(255,255,255,0.85);text-shadow:0 1px 4px rgba(0,0,0,0.5);">← กลับหน้าหลัก</a></div>
+</div>
 </div>
 
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
@@ -171,228 +144,165 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-// ========== UTILS ==========
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
-function showError(msg){ const b=document.getElementById('error-box'); document.getElementById('error-msg').textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
+function showError(msg){ const b=document.getElementById('error-box'); document.getElementById('error-msg').textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3500); }
+function hideError(){ document.getElementById('error-box').style.display='none'; }
 
-window.switchRole = function(role, btn) {
-  document.querySelectorAll('.role-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('panel-'+role).classList.add('active');
-  document.getElementById('error-box').style.display='none';
-};
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
-window.togglePwd = function(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
-  else { inp.type='password'; btn.textContent='👁️'; }
-};
+function showStep(n){
+  document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('step-'+n).classList.add('active');
+  document.getElementById('dot-1').className = 'step-dot' + (n>1?' done':' active');
+  document.getElementById('dot-2').className = 'step-dot' + (n===2?' active':'');
+  hideError();
+}
 
-// ========== LINE LOGIN ==========
-// 🔧 ใส่ LIFF ID ของคุณที่นี่ (สร้างได้ที่ LINE Developers Console)
-const LIFF_ID = 'YOUR_LIFF_ID_HERE';
+window.backToStep1 = ()=>showStep(1);
 
-window.loginWithLine = async function() {
-  if(!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID_HERE'){
-    showError('ปิดการใช้งาน LINE Login กรุณาใช้ชื่อ-เบอร์แทน');
-    return;
+window.togglePwd = function(){
+  const inp=document.getElementById('pwd-input');
+  const eye=document.getElementById('pwd-eye');
+  if(inp.type==='password'){
+    inp.type='text';
+    eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  } else {
+    inp.type='password';
+    eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   }
-  showLoading(true);
+};
+
+window.checkPassword = async function(){
+  const pwd = document.getElementById('pwd-input').value;
+  if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
+
+  const btn = document.getElementById('pwd-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="checking-ring"></span> กำลังตรวจสอบ…';
+
   try {
-    await liff.init({ liffId: LIFF_ID });
-    if(!liff.isLoggedIn()){
-      liff.login({ redirectUri: window.location.href });
+    const snap = await getDoc(doc(db,'settings','auth'));
+    const inputHash = await sha256(pwd);
+
+    if(snap.exists()){
+      const data = snap.data();
+
+      // เจ้าของร้าน
+      if(data.ownerHash && inputHash===data.ownerHash){
+        sessionStorage.setItem('imkum_user', JSON.stringify({role:'owner',name:'เจ้าของร้าน',loginAt:Date.now()}));
+        sessionStorage.setItem('imkum_admin_auth','1');
+        showToast('👑 ยินดีต้อนรับ เจ้าของร้าน!');
+        setTimeout(()=>window.location.href='admin.html',700);
+        return;
+      }
+
+      // แอดมิน
+      if(data.adminHash && inputHash===data.adminHash){
+        sessionStorage.setItem('imkum_user', JSON.stringify({role:'admin',name:'แอดมิน',loginAt:Date.now()}));
+        sessionStorage.setItem('imkum_admin_auth','1');
+        showToast('🧑‍🍳 ยินดีต้อนรับ แอดมิน!');
+        setTimeout(()=>window.location.href='admin.html',700);
+        return;
+      }
+
+      // ไม่ตรง
+      showError('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่');
+      document.getElementById('pwd-input').value='';
       return;
     }
-    const profile = await liff.getProfile();
-    const name = profile.displayName;
-    const lineId = profile.userId;
-    const avatar = profile.pictureUrl || '';
 
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, lineId, avatar }));
-    localStorage.setItem('imkum_name', name);
-    // บันทึกลง Firestore แบบ background
-    const custRef = doc(db, 'customers', 'line_' + lineId);
-    const now = new Date().toISOString();
-    setDoc(custRef, { name, lineId, avatar, lastLogin: now, loginType: 'line' }, { merge: true }).catch(()=>{});
-    window.location.href = 'index.html';
-  } catch(e) {
-    console.error(e);
-    showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย LINE');
+    // ยังไม่มีรหัสในระบบ
+    btn.disabled=false; btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ตรวจสอบรหัสผ่าน';
+    const role = prompt('ยังไม่มีรหัสในระบบ ต้องการตั้งรหัสนี้เป็น:\n1 = แอดมิน\n2 = เจ้าของร้าน\n\nกรอก 1 หรือ 2');
+    if(!role) return;
+    btn.disabled=true; btn.innerHTML='<span class="checking-ring"></span> กำลังตั้งรหัส…';
+
+    if(role.trim()==='1'){
+      await setDoc(doc(db,'settings','auth'),{adminHash:inputHash},{merge:true});
+      sessionStorage.setItem('imkum_user', JSON.stringify({role:'admin',name:'แอดมิน',loginAt:Date.now()}));
+      sessionStorage.setItem('imkum_admin_auth','1');
+      showToast('✅ ตั้งรหัสแอดมินสำเร็จ!');
+      setTimeout(()=>window.location.href='admin.html',900);
+    } else if(role.trim()==='2'){
+      await setDoc(doc(db,'settings','auth'),{ownerHash:inputHash},{merge:true});
+      sessionStorage.setItem('imkum_user', JSON.stringify({role:'owner',name:'เจ้าของร้าน',loginAt:Date.now()}));
+      sessionStorage.setItem('imkum_admin_auth','1');
+      showToast('✅ ตั้งรหัสเจ้าของร้านสำเร็จ!');
+      setTimeout(()=>window.location.href='admin.html',900);
+    } else {
+      showError('กรุณากรอก 1 หรือ 2 เท่านั้น');
+    }
+  } catch(e){
+    console.error('checkPassword error:',e);
+    showError('เชื่อมต่อระบบไม่ได้: '+e.message);
   } finally {
-    showLoading(false);
+    btn.disabled=false;
+    btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ตรวจสอบรหัสผ่าน';
   }
 };
 
-// ========== CUSTOMER LOGIN ==========
-window.customerLogin = async function() {
+window.goCustomer = function(){
+  const savedName = localStorage.getItem('imkum_name')||'';
+  const savedPhone = localStorage.getItem('imkum_phone')||'';
+  if(savedName) document.getElementById('cust-name').value=savedName;
+  if(savedPhone) document.getElementById('cust-phone').value=savedPhone;
+  showStep(2);
+};
+
+window.customerLogin = async function(){
   const name = document.getElementById('cust-name').value.trim();
   const phone = document.getElementById('cust-phone').value.trim();
   if(!name){ showError('กรุณากรอกชื่อของคุณ'); return; }
-  if(!phone || phone.length < 9){ showError('กรุณากรอกเบอร์โทรให้ครบถ้วน'); return; }
+  if(!phone||phone.length<9){ showError('กรุณากรอกเบอร์โทรให้ครบถ้วน'); return; }
 
   showLoading(true);
   try {
-    // ตรวจสอบว่าเบอร์นี้มีในระบบแล้วหรือไม่
-    const existing = await getDoc(doc(db, 'customers', phone));
-    if (existing.exists()) {
-      const existingData = existing.data();
-      const existingName = existingData.name || '';
-      // ถ้าชื่อตรงกัน = เจ้าของคนเดิม → เข้าได้เลย
-      if (existingName === name) {
-        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
-        localStorage.setItem('imkum_name', name);
-        localStorage.setItem('imkum_phone', phone);
-        // อัปเดต lastLogin
-        setDoc(doc(db, 'customers', phone), { lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
-        window.location.href = 'index.html';
+    const existing = await getDoc(doc(db,'customers',phone));
+    if(existing.exists()){
+      const existingName = existing.data().name||'';
+      if(existingName===name){
+        sessionStorage.setItem('imkum_user', JSON.stringify({role:'customer',name,phone,loginAt:Date.now()}));
+        localStorage.setItem('imkum_name',name);
+        localStorage.setItem('imkum_phone',phone);
+        setDoc(doc(db,'customers',phone),{lastLogin:new Date().toISOString()},{merge:true}).catch(()=>{});
+        window.location.href='index.html';
         return;
       } else {
-        // เบอร์นี้ถูกใช้โดยชื่ออื่น
-        showLoading(false);
-        showError('เบอร์ ' + phone + ' ถูกลงทะเบียนโดย "' + existingName + '" แล้ว\nกรุณาใช้เบอร์อื่น หรือกรอกชื่อให้ตรงกัน');
+        showError('เบอร์ '+phone+' ถูกลงทะเบียนโดย "'+existingName+'" แล้ว\nกรุณาใช้เบอร์อื่น หรือกรอกชื่อให้ตรงกัน');
         return;
       }
     }
-    // เบอร์ใหม่ → บันทึก session และ Firestore
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
-    localStorage.setItem('imkum_name', name);
-    localStorage.setItem('imkum_phone', phone);
-    const now = new Date().toISOString();
-    setDoc(doc(db, 'customers', phone), { name, phone, lastLogin: now }, { merge: true }).catch(()=>{});
-    window.location.href = 'index.html';
-  } catch(e) {
+    sessionStorage.setItem('imkum_user', JSON.stringify({role:'customer',name,phone,loginAt:Date.now()}));
+    localStorage.setItem('imkum_name',name);
+    localStorage.setItem('imkum_phone',phone);
+    setDoc(doc(db,'customers',phone),{name,phone,lastLogin:new Date().toISOString()},{merge:true}).catch(()=>{});
+    window.location.href='index.html';
+  } catch(e){
     console.error(e);
-    // ถ้า Firestore error → ยังให้เข้าได้ แต่ warn
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
-    localStorage.setItem('imkum_name', name);
-    localStorage.setItem('imkum_phone', phone);
-    window.location.href = 'index.html';
+    sessionStorage.setItem('imkum_user', JSON.stringify({role:'customer',name,phone,loginAt:Date.now()}));
+    localStorage.setItem('imkum_name',name);
+    localStorage.setItem('imkum_phone',phone);
+    window.location.href='index.html';
   } finally {
     showLoading(false);
   }
 };
 
-// ========== HASH HELPER ==========
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-window.sha256 = sha256; // expose to global scope
-
-// ========== STAFF LOGIN (ตรวจสอบ hash จาก Firestore) ==========
-window.staffLogin = async function() {
-  const pwd = document.getElementById('staff-pwd').value;
-  if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
-  showLoading(true);
-  try {
-    const snap = await getDoc(doc(db, 'settings', 'auth'));
-    if (!snap.exists()) {
-      // ยังไม่เคยตั้งรหัส → ตั้งรหัสครั้งแรกได้เลย
-      showLoading(false);
-      if (confirm('ยังไม่มีรหัสผ่านในระบบ\nต้องการตั้งรหัสผ่านแอดมินเป็น "' + pwd + '" ใช่ไหม?')) {
-        showLoading(true);
-        const h = await sha256(pwd);
-        await setDoc(doc(db, 'settings', 'auth'), { adminHash: h }, { merge: true });
-        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
-        sessionStorage.setItem('imkum_admin_auth','1');
-        window.location.href = 'admin.html';
-      }
-      return;
-    }
-    const storedHash = snap.data().adminHash || '';
-    if(!storedHash){
-      showLoading(false);
-      if (confirm('ยังไม่ได้ตั้งรหัสผ่านแอดมิน\nต้องการตั้งเป็น "' + pwd + '" ใช่ไหม?')) {
-        showLoading(true);
-        const h = await sha256(pwd);
-        await setDoc(doc(db, 'settings', 'auth'), { adminHash: h }, { merge: true });
-        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
-        sessionStorage.setItem('imkum_admin_auth','1');
-        window.location.href = 'admin.html';
-      }
-      return;
-    }
-    const inputHash = await sha256(pwd);
-    if(inputHash === storedHash){
-      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
-      sessionStorage.setItem('imkum_admin_auth','1');
-      window.location.href = 'admin.html';
-    } else {
-      showError('รหัสผ่านไม่ถูกต้อง');
-      document.getElementById('staff-pwd').value='';
-    }
-  } catch(e) {
-    console.error('staffLogin error:', e);
-    showError('เชื่อมต่อ Firestore ไม่ได้: ' + e.message);
-  } finally {
-    showLoading(false);
-  }
-};
-
-// ========== OWNER LOGIN (ตรวจสอบ hash จาก Firestore) ==========
-window.ownerLogin = async function() {
-  const pwd = document.getElementById('owner-pwd').value;
-  if(!pwd){ showError('กรุณากรอกรหัสผ่าน'); return; }
-  showLoading(true);
-  try {
-    const snap = await getDoc(doc(db, 'settings', 'auth'));
-    if (!snap.exists()) {
-      showLoading(false);
-      if (confirm('ยังไม่มีรหัสผ่านในระบบ\nต้องการตั้งรหัสผ่านเจ้าของร้านเป็น "' + pwd + '" ใช่ไหม?')) {
-        showLoading(true);
-        const h = await sha256(pwd);
-        await setDoc(doc(db, 'settings', 'auth'), { ownerHash: h }, { merge: true });
-        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
-        sessionStorage.setItem('imkum_admin_auth','1');
-        window.location.href = 'admin.html';
-      }
-      return;
-    }
-    const storedHash = snap.data().ownerHash || '';
-    if(!storedHash){
-      showLoading(false);
-      if (confirm('ยังไม่ได้ตั้งรหัสผ่านเจ้าของร้าน\nต้องการตั้งเป็น "' + pwd + '" ใช่ไหม?')) {
-        showLoading(true);
-        const h = await sha256(pwd);
-        await setDoc(doc(db, 'settings', 'auth'), { ownerHash: h }, { merge: true });
-        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
-        sessionStorage.setItem('imkum_admin_auth','1');
-        window.location.href = 'admin.html';
-      }
-      return;
-    }
-    const inputHash = await sha256(pwd);
-    if(inputHash === storedHash){
-      sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
-      sessionStorage.setItem('imkum_admin_auth','1');
-      window.location.href = 'admin.html';
-    } else {
-      showError('รหัสผ่านไม่ถูกต้อง');
-      document.getElementById('owner-pwd').value='';
-    }
-  } catch(e) {
-    console.error('ownerLogin error:', e);
-    showError('เชื่อมต่อ Firestore ไม่ได้: ' + e.message);
-  } finally {
-    showLoading(false);
-  }
-};
-
-// Auto redirect ถ้า login อยู่แล้ว (ตรวจ expiry 8 ชั่วโมง)
+// Auto-redirect
 const sess = sessionStorage.getItem('imkum_user');
 if(sess){
-  const user = JSON.parse(sess);
-  const loginAt = user.loginAt || 0;
-  const EIGHT_HOURS = 8 * 60 * 60 * 1000;
-  if(Date.now() - loginAt > EIGHT_HOURS){
-    sessionStorage.clear(); // หมดอายุ
-  } else {
-    if(user.role === 'customer') window.location.href = 'index.html';
-    else window.location.href = 'admin.html';
-  }
+  try {
+    const user = JSON.parse(sess);
+    if(Date.now()-(user.loginAt||0) > 8*60*60*1000){
+      sessionStorage.clear();
+    } else {
+      window.location.href = user.role==='customer' ? 'index.html' : 'admin.html';
+    }
+  } catch(e){ sessionStorage.clear(); }
 }
 </script>
 </body>
