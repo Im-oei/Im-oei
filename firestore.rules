@@ -5,108 +5,76 @@ service cloud.firestore {
     // ===== ORDERS =====
     match /orders/{orderId} {
       allow read: if true;
-      allow create: if isValidOrder();
+      allow create: if true;
       allow update: if true;
-      allow delete: if false;
+      allow delete: if true;
     }
 
     // ===== MENU =====
     match /menu/{itemId} {
       allow read: if true;
-      allow write: if hasAdminToken();
+      allow write: if true;
     }
 
     // ===== CATEGORIES =====
     match /categories/{catId} {
       allow read: if true;
-      allow write: if hasAdminToken();
+      allow write: if true;
     }
 
     // ===== BANNERS =====
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if hasAdminToken();
+      allow write: if true;
     }
 
     // ===== STAMPS =====
     match /stamps/{phone} {
       allow read: if true;
-      allow create: if request.resource.data.phone == phone;
-      allow update: if request.resource.data.phone == phone;
-      allow delete: if false;
+      allow write: if true;
     }
 
     // ===== SETTINGS =====
-    // อ่านได้ทุกคน (login.html ต้องอ่าน settings/auth เพื่อ verify รหัสผ่าน)
-    // เขียนได้เฉพาะ admin ที่มี token
+    // settings/auth เก็บ hash รหัสผ่าน — อ่านได้ (แค่ hash ไม่ใช่ plain text)
     match /settings/{docId} {
       allow read: if true;
-      allow write: if hasAdminToken();
+      allow write: if true;
     }
 
     // ===== PUSH SUBSCRIPTIONS =====
     match /pushSubscriptions/{phone} {
-      allow read: if false;
-      allow create: if request.resource.data.phone == phone;
-      allow update: if request.resource.data.phone == phone;
-      allow delete: if false;
+      allow read: if true;
+      allow write: if true;
     }
 
-    // ===== PUSH / LINE QUEUE =====
+    // ===== PUSH QUEUE =====
     match /pushQueue/{docId} {
       allow read: if false;
-      allow create: if true;
-      allow update, delete: if false;
+      allow write: if true;
     }
+
+    // ===== LINE QUEUE =====
     match /lineQueue/{docId} {
       allow read: if false;
-      allow create: if true;
-      allow update, delete: if false;
+      allow write: if true;
     }
 
     // ===== RATINGS =====
     match /ratings/{ratingId} {
       allow read: if true;
-      allow create: if isValidRating();
-      allow update, delete: if false;
+      allow write: if true;
     }
 
     // ===== STORE CONFIG =====
     match /store/{docId} {
       allow read: if true;
-      allow write: if hasAdminToken();
+      allow write: if true;
     }
 
     // ===== CUSTOMERS =====
     match /customers/{customerId} {
       allow read: if true;
-      allow create: if request.resource.data.phone == customerId;
-      allow update: if request.resource.data.phone == customerId;
-      allow delete: if false;
+      allow write: if true;
     }
-  }
-
-  // ตรวจ _adminToken ที่ส่งมาพร้อม write request
-  // เทียบกับ token ที่เก็บใน settings/auth.adminToken (ตั้งค่าผ่าน Firebase Console)
-  function hasAdminToken() {
-    return '_adminToken' in request.resource.data
-        && request.resource.data._adminToken != null
-        && request.resource.data._adminToken != ''
-        && request.resource.data._adminToken ==
-           get(/databases/$(database)/documents/settings/auth).data.adminToken;
-  }
-
-  function isValidOrder() {
-    let d = request.resource.data;
-    return d.keys().hasAll(['items', 'total', 'phone', 'createdAt'])
-        && d.total is number && d.total > 0
-        && d.items is list && d.items.size() > 0
-        && d.phone is string && d.phone.size() >= 9;
-  }
-
-  function isValidRating() {
-    let d = request.resource.data;
-    return d.keys().hasAll(['score', 'phone'])
-        && d.score is number && d.score >= 1 && d.score <= 5;
   }
 }

@@ -69,7 +69,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 <body>
 
 <div class="hero-top">
-  <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ๋ย">
+  <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ้ย">
 
 </div>
 
@@ -194,13 +194,6 @@ window.togglePwd = function(inputId, btn) {
 // 🔧 ใส่ LIFF ID ของคุณที่นี่ (สร้างได้ที่ LINE Developers Console)
 const LIFF_ID = 'YOUR_LIFF_ID_HERE';
 
-
-// ===== RETURN URL HELPER =====
-function getReturnUrl() {
-  var ret = sessionStorage.getItem('imkum_return');
-  if(ret){ sessionStorage.removeItem('imkum_return'); return ret; }
-  return 'index.html';
-}
 window.loginWithLine = async function() {
   if(!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID_HERE'){
     showError('ปิดการใช้งาน LINE Login กรุณาใช้ชื่อ-เบอร์แทน');
@@ -224,7 +217,7 @@ window.loginWithLine = async function() {
     const custRef = doc(db, 'customers', 'line_' + lineId);
     const now = new Date().toISOString();
     setDoc(custRef, { name, lineId, avatar, lastLogin: now, loginType: 'line' }, { merge: true }).catch(()=>{});
-    window.location.href = getReturnUrl();
+    window.location.href = 'index.html';
   } catch(e) {
     console.error(e);
     showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย LINE');
@@ -242,18 +235,41 @@ window.customerLogin = async function() {
 
   showLoading(true);
   try {
-    // บันทึก session ทันที (ไม่รอ Firestore)
+    // ตรวจสอบว่าเบอร์นี้มีในระบบแล้วหรือไม่
+    const existing = await getDoc(doc(db, 'customers', phone));
+    if (existing.exists()) {
+      const existingData = existing.data();
+      const existingName = existingData.name || '';
+      // ถ้าชื่อตรงกัน = เจ้าของคนเดิม → เข้าได้เลย
+      if (existingName === name) {
+        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
+        localStorage.setItem('imkum_name', name);
+        localStorage.setItem('imkum_phone', phone);
+        // อัปเดต lastLogin
+        setDoc(doc(db, 'customers', phone), { lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
+        window.location.href = 'index.html';
+        return;
+      } else {
+        // เบอร์นี้ถูกใช้โดยชื่ออื่น
+        showLoading(false);
+        showError('เบอร์ ' + phone + ' ถูกลงทะเบียนโดย "' + existingName + '" แล้ว\nกรุณาใช้เบอร์อื่น หรือกรอกชื่อให้ตรงกัน');
+        return;
+      }
+    }
+    // เบอร์ใหม่ → บันทึก session และ Firestore
     sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
     localStorage.setItem('imkum_name', name);
     localStorage.setItem('imkum_phone', phone);
-    // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
     const now = new Date().toISOString();
     setDoc(doc(db, 'customers', phone), { name, phone, lastLogin: now }, { merge: true }).catch(()=>{});
-    window.location.href = getReturnUrl();
+    window.location.href = 'index.html';
   } catch(e) {
     console.error(e);
-    // ถ้า error ก็ยังเข้าได้ เพราะ session บันทึกไปแล้ว
-    window.location.href = getReturnUrl();
+    // ถ้า Firestore error → ยังให้เข้าได้ แต่ warn
+    sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
+    localStorage.setItem('imkum_name', name);
+    localStorage.setItem('imkum_phone', phone);
+    window.location.href = 'index.html';
   } finally {
     showLoading(false);
   }
@@ -264,6 +280,7 @@ async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
+window.sha256 = sha256; // expose to global scope
 
 // ========== STAFF LOGIN (ตรวจสอบ hash จาก Firestore) ==========
 window.staffLogin = async function() {
@@ -272,8 +289,32 @@ window.staffLogin = async function() {
   showLoading(true);
   try {
     const snap = await getDoc(doc(db, 'settings', 'auth'));
-    const storedHash = snap.exists() ? (snap.data().adminHash || '') : '';
-    if(!storedHash){ showError('ยังไม่ได้ตั้งรหัสผ่านแอดมิน กรุณาติดต่อเจ้าของร้าน'); return; }
+    if (!snap.exists()) {
+      // ยังไม่เคยตั้งรหัส → ตั้งรหัสครั้งแรกได้เลย
+      showLoading(false);
+      if (confirm('ยังไม่มีรหัสผ่านในระบบ\nต้องการตั้งรหัสผ่านแอดมินเป็น "' + pwd + '" ใช่ไหม?')) {
+        showLoading(true);
+        const h = await sha256(pwd);
+        await setDoc(doc(db, 'settings', 'auth'), { adminHash: h }, { merge: true });
+        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
+        sessionStorage.setItem('imkum_admin_auth','1');
+        window.location.href = 'admin.html';
+      }
+      return;
+    }
+    const storedHash = snap.data().adminHash || '';
+    if(!storedHash){
+      showLoading(false);
+      if (confirm('ยังไม่ได้ตั้งรหัสผ่านแอดมิน\nต้องการตั้งเป็น "' + pwd + '" ใช่ไหม?')) {
+        showLoading(true);
+        const h = await sha256(pwd);
+        await setDoc(doc(db, 'settings', 'auth'), { adminHash: h }, { merge: true });
+        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
+        sessionStorage.setItem('imkum_admin_auth','1');
+        window.location.href = 'admin.html';
+      }
+      return;
+    }
     const inputHash = await sha256(pwd);
     if(inputHash === storedHash){
       sessionStorage.setItem('imkum_user', JSON.stringify({ role:'admin', name:'แอดมิน', loginAt: Date.now() }));
@@ -284,8 +325,8 @@ window.staffLogin = async function() {
       document.getElementById('staff-pwd').value='';
     }
   } catch(e) {
-    console.error(e);
-    showError('เชื่อมต่อ Firestore ไม่ได้ กรุณาลองใหม่');
+    console.error('staffLogin error:', e);
+    showError('เชื่อมต่อ Firestore ไม่ได้: ' + e.message);
   } finally {
     showLoading(false);
   }
@@ -298,8 +339,31 @@ window.ownerLogin = async function() {
   showLoading(true);
   try {
     const snap = await getDoc(doc(db, 'settings', 'auth'));
-    const storedHash = snap.exists() ? (snap.data().ownerHash || '') : '';
-    if(!storedHash){ showError('ยังไม่ได้ตั้งรหัสผ่านเจ้าของร้าน กรุณาติดต่อเจ้าของร้าน'); return; }
+    if (!snap.exists()) {
+      showLoading(false);
+      if (confirm('ยังไม่มีรหัสผ่านในระบบ\nต้องการตั้งรหัสผ่านเจ้าของร้านเป็น "' + pwd + '" ใช่ไหม?')) {
+        showLoading(true);
+        const h = await sha256(pwd);
+        await setDoc(doc(db, 'settings', 'auth'), { ownerHash: h }, { merge: true });
+        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
+        sessionStorage.setItem('imkum_admin_auth','1');
+        window.location.href = 'admin.html';
+      }
+      return;
+    }
+    const storedHash = snap.data().ownerHash || '';
+    if(!storedHash){
+      showLoading(false);
+      if (confirm('ยังไม่ได้ตั้งรหัสผ่านเจ้าของร้าน\nต้องการตั้งเป็น "' + pwd + '" ใช่ไหม?')) {
+        showLoading(true);
+        const h = await sha256(pwd);
+        await setDoc(doc(db, 'settings', 'auth'), { ownerHash: h }, { merge: true });
+        sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
+        sessionStorage.setItem('imkum_admin_auth','1');
+        window.location.href = 'admin.html';
+      }
+      return;
+    }
     const inputHash = await sha256(pwd);
     if(inputHash === storedHash){
       sessionStorage.setItem('imkum_user', JSON.stringify({ role:'owner', name:'เจ้าของร้าน', loginAt: Date.now() }));
@@ -310,8 +374,8 @@ window.ownerLogin = async function() {
       document.getElementById('owner-pwd').value='';
     }
   } catch(e) {
-    console.error(e);
-    showError('เชื่อมต่อ Firestore ไม่ได้ กรุณาลองใหม่');
+    console.error('ownerLogin error:', e);
+    showError('เชื่อมต่อ Firestore ไม่ได้: ' + e.message);
   } finally {
     showLoading(false);
   }
@@ -326,7 +390,7 @@ if(sess){
   if(Date.now() - loginAt > EIGHT_HOURS){
     sessionStorage.clear(); // หมดอายุ
   } else {
-    if(user.role === 'customer') window.location.href = getReturnUrl();
+    if(user.role === 'customer') window.location.href = 'index.html';
     else window.location.href = 'admin.html';
   }
 }

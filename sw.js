@@ -1,4 +1,4 @@
-// Service Worker v20 - อิ่มเอ๋ย PWA + Push Notifications
+// Service Worker v20 - อิ่มเอ้ย PWA + Push Notifications
 const CACHE_NAME = 'im-oei-v20';
 
 self.addEventListener('install', e => { self.skipWaiting(); });
@@ -21,7 +21,7 @@ self.addEventListener('fetch', e => {
 // ====== PUSH: รับ push จาก server ======
 self.addEventListener('push', e => {
   let data = {
-    title: 'อิ่มเอ๋ย 🍱',
+    title: 'อิ่มเอ้ย 🍱',
     body: 'มีการอัพเดทออเดอร์ของคุณ',
     icon: '/logo.png',
     tag: 'order-update',
@@ -46,7 +46,7 @@ self.addEventListener('push', e => {
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SHOW_NOTIFICATION') {
     const d = e.data;
-    self.registration.showNotification(d.title || 'อิ่มเอ๋ย', {
+    self.registration.showNotification(d.title || 'อิ่มเอ้ย', {
       body: d.body || '',
       icon: '/logo.png',
       badge: '/logo.png',

@@ -58,34 +58,21 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== AUTH CHECK — บังคับ login ก่อนเข้าหน้าตะกร้า =====
+// ===== AUTH CHECK =====
 (function(){
   var sess = sessionStorage.getItem('imkum_user');
-  if(!sess){
-    // ไม่มี session → redirect ไป login พร้อม returnUrl
-    sessionStorage.setItem('imkum_return', 'cart.html');
-    window.location.href = 'login.html';
-    return;
+  if(sess){
+    var user = JSON.parse(sess);
+    // ตรวจ session expiry 8 ชั่วโมง
+    if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
+      sessionStorage.clear(); return;
+    }
+    if(user.role === 'admin' || user.role === 'owner'){
+      window.location.href = 'admin.html'; return;
+    }
+    if(user.name) localStorage.setItem('imkum_name', user.name);
+    if(user.phone) localStorage.setItem('imkum_phone', user.phone);
   }
-  var user;
-  try { user = JSON.parse(sess); } catch(e) { user = null; }
-  if(!user || !user.phone){
-    sessionStorage.setItem('imkum_return', 'cart.html');
-    window.location.href = 'login.html';
-    return;
-  }
-  // ตรวจ session expiry 8 ชั่วโมง
-  if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-    sessionStorage.clear();
-    sessionStorage.setItem('imkum_return', 'cart.html');
-    window.location.href = 'login.html';
-    return;
-  }
-  if(user.role === 'admin' || user.role === 'owner'){
-    window.location.href = 'admin.html'; return;
-  }
-  if(user.name) localStorage.setItem('imkum_name', user.name);
-  if(user.phone) localStorage.setItem('imkum_phone', user.phone);
 })();
 
 // ===== PREORDER =====
@@ -114,20 +101,23 @@ var PICKUP_LOCATIONS = [
 var selectedLocation = localStorage.getItem('imkum_location') || '';
 
 function loadPickupLocations(db) {
-  onSnapshot(collection(db, 'pickupLocations'), (snap) => {
+  // Use getDocs via module - stored in window after module loads
+  window._pickupDb = db;
+  // Will be called from module after it loads
+}
+function _execLoadPickup(db, getDocs, collection) {
+  getDocs(collection(db, 'pickupLocations')).then((snap) => {
     if (!snap.empty) {
       PICKUP_LOCATIONS = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-      // ถ้า selectedLocation ไม่อยู่ใน list → reset เป็นตัวแรก
       if (!PICKUP_LOCATIONS.find(l => l.id === selectedLocation)) {
         selectedLocation = PICKUP_LOCATIONS[0]?.id || '';
         localStorage.setItem('imkum_location', selectedLocation);
       }
     }
-    // re-render cart ถ้าแสดงอยู่แล้ว
     if (document.getElementById('cart-body')) renderCart();
-  }, () => {}); // silent fail
+  }).catch(() => {});
 }
 function selectLocation(id) {
   selectedLocation = id;
@@ -159,18 +149,10 @@ var STORE_SETTINGS = { pickupStart:'07:00', pickupEnd:'08:00' };
 var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
 // Cache ราคา กรณี ALL_ITEMS ยังไม่ sync จาก Firestore
 var cartPriceCache = JSON.parse(localStorage.getItem('imkum_cart_prices') || '{}');
-var cartNameCache = JSON.parse(localStorage.getItem('imkum_cart_names') || '{}');
-var cartEmojiCache = JSON.parse(localStorage.getItem('imkum_cart_emojis') || '{}');
 function saveCart(){
   localStorage.setItem('imkum_cart', JSON.stringify(cart));
-  ALL_ITEMS.forEach(function(i){
-    cartPriceCache[i.id] = i.price;
-    cartNameCache[i.id] = i.name;
-    cartEmojiCache[i.id] = i.emoji || i.imageUrl || '🍽️';
-  });
+  ALL_ITEMS.forEach(function(i){ cartPriceCache[i.id] = i.price; });
   localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
-  localStorage.setItem('imkum_cart_names', JSON.stringify(cartNameCache));
-  localStorage.setItem('imkum_cart_emojis', JSON.stringify(cartEmojiCache));
 }
 function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2200); }
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
@@ -219,11 +201,6 @@ function renderCart(){
   var body=document.getElementById('cart-body');
   var entries=Object.keys(cart).filter(function(id){ return cart[id]>0; });
   if(!entries.length){
-    // ถ้ายังรอ Firestore sync ให้แสดง loading แทน
-    if(!window._cartSyncDone){
-      body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;color:#999"><div style="font-size:48px">⏳</div><div style="font-size:15px;font-weight:700">กำลังโหลดรายการ...</div></div>';
-      return;
-    }
     body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:#999"><div style="font-size:60px;opacity:.4">🛒</div><div style="font-size:15px">ยังไม่มีรายการ</div><a href="index.html" style="margin-top:8px;background:var(--yellow);color:#3E2000;font-weight:800;padding:12px 28px;border-radius:14px;text-decoration:none;font-size:15px">เลือกเมนู</a></div>';
     return;
   }
@@ -247,22 +224,6 @@ function renderCart(){
   }
 
   var html='';
-  // Fallback: แสดง item จาก cache ถ้า Firestore ยังไม่ sync
-  var knownIds = ALL_ITEMS.map(function(i){ return i.id; });
-  entries.forEach(function(id){
-    if(knownIds.indexOf(id) === -1 && (cartNameCache[id] || cartPriceCache[id])){
-      var savedName = cartNameCache[id] || id;
-      var savedPrice = cartPriceCache[id] || 0;
-      var savedEmoji = cartEmojiCache[id] || '🍽️';
-      var otherCat = MENU.filter(function(c){ return c.catKey==='_cache'; })[0];
-      if(!otherCat){
-        otherCat = { category:'รายการสินค้า', catKey:'_cache', items:[] };
-        MENU.push(otherCat);
-      }
-      otherCat.items.push({ id:id, name:savedName, price:savedPrice, emoji:savedEmoji });
-      ALL_ITEMS.push({ id:id, name:savedName, price:savedPrice, emoji:savedEmoji });
-    }
-  });
   MENU.forEach(function(cat){
     var catItems=cat.items.filter(function(i){ return cart[i.id]>0; });
     if(!catItems.length) return;
@@ -346,6 +307,8 @@ renderCart();
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, getDocs, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+window._onSnapshot = onSnapshot;
+window._collection = collection;
 
 const app = initializeApp({
   apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
@@ -354,6 +317,7 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 loadPickupLocations(db);
+_execLoadPickup(db, getDocs, collection);
 
 async function syncMenu() {
   try {
@@ -375,20 +339,12 @@ async function syncMenu() {
       });
       MENU = Object.values(catMap);
       ALL_ITEMS = [].concat(...MENU.map(c => c.items));
-      // อัปเดต cache หลัง Firestore sync
-      ALL_ITEMS.forEach(i => {
-        cartPriceCache[i.id] = i.price;
-        cartNameCache[i.id] = i.name;
-        cartEmojiCache[i.id] = i.emoji || i.imageUrl || '🍽️';
-      });
+      // อัปเดต price cache หลัง Firestore sync
+      ALL_ITEMS.forEach(i => { cartPriceCache[i.id] = i.price; });
       localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
-      localStorage.setItem('imkum_cart_names', JSON.stringify(cartNameCache));
-      localStorage.setItem('imkum_cart_emojis', JSON.stringify(cartEmojiCache));
       renderCart();
     }
-    window._cartSyncDone = true;
-    renderCart(); // re-render หลัง sync เสร็จ
-  } catch(e) { console.log('Cart sync skipped:', e.message); window._cartSyncDone = true; renderCart(); }
+  } catch(e) { console.log('Cart sync skipped:', e.message); }
 
   // Sync stamp จาก Firestore เมื่อ login
   try {
@@ -438,9 +394,7 @@ window.placeOrder = async function() {
   const userSess = sessionStorage.getItem('imkum_user');
   const userObj = userSess ? JSON.parse(userSess) : null;
   if (!userObj || !userObj.phone) {
-    if (confirm('กรุณาเข้าสู่ระบบก่อนสั่งอาหาร\nกด OK เพื่อไป login')) {
-      window.location.href = 'login.html';
-    }
+    showCartLoginPrompt();
     return;
   }
   var nameEl = document.getElementById('name-input');
@@ -516,5 +470,80 @@ window.placeOrder = async function() {
 
 syncMenu();
 </script>
+
+<style>
+@keyframes cartFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes cartSlide{from{transform:translateY(40px) scale(0.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+#cart-login-modal{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;padding:20px;}
+#cart-login-modal.open{display:flex;}
+</style>
+<div id="cart-login-modal">
+  <div onclick="closeCartLogin()" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);animation:cartFadeIn .2s;"></div>
+  <div style="position:relative;z-index:1;background:#fff;border-radius:28px;width:100%;max-width:340px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:cartSlide .35s cubic-bezier(.34,1.56,.64,1);">
+    <div style="background:linear-gradient(135deg,#FFC107,#FF8C00);padding:28px 24px 22px;text-align:center;position:relative;">
+      <div style="width:64px;height:64px;background:rgba(255,255,255,0.25);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.45);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.2);">เข้าสู่ระบบก่อนสั่ง</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:5px;font-weight:600;">เพื่อติดตามออเดอร์ของคุณ ⭐</div>
+      <button onclick="closeCartLogin()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.22);border:none;cursor:pointer;color:#fff;font-size:15px;font-weight:800;">✕</button>
+    </div>
+    <div style="padding:20px 20px 24px;">
+      <p style="font-size:13px;color:#888;text-align:center;margin-bottom:18px;line-height:1.7;">กรอกข้อมูลง่ายๆ ไม่ต้องสมัครสมาชิก<br>ใช้แค่ชื่อกับเบอร์โทรเท่านั้น 😊</p>
+      <label style="font-size:12px;font-weight:700;color:#999;margin-bottom:5px;display:block;">ชื่อของคุณ</label>
+      <input type="text" id="cl-name" placeholder="เช่น สมชาย, นิสา" maxlength="30"
+        style="width:100%;border:2px solid #EBEBEB;border-radius:12px;padding:12px 14px;font-family:'Sarabun',sans-serif;font-size:15px;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:12px;"
+        onfocus="this.style.borderColor='#FFC107'" onblur="this.style.borderColor='#EBEBEB'">
+      <label style="font-size:12px;font-weight:700;color:#999;margin-bottom:5px;display:block;">เบอร์โทรศัพท์</label>
+      <input type="tel" id="cl-phone" placeholder="0812345678" maxlength="10"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        style="width:100%;border:2px solid #EBEBEB;border-radius:12px;padding:12px 14px;font-family:'Sarabun',sans-serif;font-size:15px;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:12px;"
+        onfocus="this.style.borderColor='#FFC107'" onblur="this.style.borderColor='#EBEBEB'"
+        onkeydown="if(event.key==='Enter')submitCartLogin()">
+      <div id="cl-error" style="display:none;background:#FFF0F0;color:#C62828;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;margin-bottom:12px;text-align:center;"></div>
+      <button onclick="submitCartLogin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4);margin-bottom:10px;" onclick="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+        เข้าสู่ระบบ &amp; สั่งอาหาร
+      </button>
+      <a href="login.html" style="text-align:center;font-size:13px;color:#FF8C00;font-weight:700;text-decoration:none;display:block;">เข้าสู่ระบบแบบเต็ม →</a>
+    </div>
+  </div>
+</div>
+<script>
+function showCartLoginPrompt(){
+  document.getElementById('cart-login-modal').classList.add('open');
+  var saved = localStorage.getItem('imkum_name') || '';
+  var savedPhone = localStorage.getItem('imkum_phone') || '';
+  if(saved) document.getElementById('cl-name').value = saved;
+  if(savedPhone) document.getElementById('cl-phone').value = savedPhone;
+  setTimeout(function(){ document.getElementById('cl-name').focus(); }, 300);
+}
+function closeCartLogin(){
+  document.getElementById('cart-login-modal').classList.remove('open');
+  document.getElementById('cl-error').style.display='none';
+}
+function submitCartLogin(){
+  var name = document.getElementById('cl-name').value.trim();
+  var phone = document.getElementById('cl-phone').value.trim();
+  var err = document.getElementById('cl-error');
+  if(!name){ err.textContent='กรุณากรอกชื่อ'; err.style.display='block'; return; }
+  if(!phone || phone.length < 9){ err.textContent='กรุณากรอกเบอร์โทรให้ครบ'; err.style.display='block'; return; }
+  err.style.display='none';
+  // ตรวจสอบเบอร์ซ้ำจาก localStorage
+  var savedPhone = localStorage.getItem('imkum_phone');
+  var savedName = localStorage.getItem('imkum_name');
+  if (savedPhone && savedPhone === phone && savedName && savedName !== name) {
+    err.textContent = 'เบอร์ ' + phone + ' ถูกใช้โดย "' + savedName + '" แล้ว กรุณาตรวจสอบชื่อ';
+    err.style.display='block'; return;
+  }
+  sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
+  localStorage.setItem('imkum_name', name);
+  localStorage.setItem('imkum_phone', phone);
+  closeCartLogin();
+  showToast('ยินดีต้อนรับ '+name+' 👋');
+  // Try place order again
+  setTimeout(function(){ window.placeOrder && window.placeOrder(); }, 300);
+}
+</script>
+
 </body>
 </html>
