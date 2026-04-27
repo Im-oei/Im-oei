@@ -58,21 +58,34 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== AUTH CHECK =====
+// ===== AUTH CHECK — บังคับ login ก่อนเข้าหน้าตะกร้า =====
 (function(){
   var sess = sessionStorage.getItem('imkum_user');
-  if(sess){
-    var user = JSON.parse(sess);
-    // ตรวจ session expiry 8 ชั่วโมง
-    if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-      sessionStorage.clear(); return;
-    }
-    if(user.role === 'admin' || user.role === 'owner'){
-      window.location.href = 'admin.html'; return;
-    }
-    if(user.name) localStorage.setItem('imkum_name', user.name);
-    if(user.phone) localStorage.setItem('imkum_phone', user.phone);
+  if(!sess){
+    // ไม่มี session → redirect ไป login พร้อม returnUrl
+    sessionStorage.setItem('imkum_return', 'cart.html');
+    window.location.href = 'login.html';
+    return;
   }
+  var user;
+  try { user = JSON.parse(sess); } catch(e) { user = null; }
+  if(!user || !user.phone){
+    sessionStorage.setItem('imkum_return', 'cart.html');
+    window.location.href = 'login.html';
+    return;
+  }
+  // ตรวจ session expiry 8 ชั่วโมง
+  if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
+    sessionStorage.clear();
+    sessionStorage.setItem('imkum_return', 'cart.html');
+    window.location.href = 'login.html';
+    return;
+  }
+  if(user.role === 'admin' || user.role === 'owner'){
+    window.location.href = 'admin.html'; return;
+  }
+  if(user.name) localStorage.setItem('imkum_name', user.name);
+  if(user.phone) localStorage.setItem('imkum_phone', user.phone);
 })();
 
 // ===== PREORDER =====
@@ -206,6 +219,11 @@ function renderCart(){
   var body=document.getElementById('cart-body');
   var entries=Object.keys(cart).filter(function(id){ return cart[id]>0; });
   if(!entries.length){
+    // ถ้ายังรอ Firestore sync ให้แสดง loading แทน
+    if(!window._cartSyncDone){
+      body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;color:#999"><div style="font-size:48px">⏳</div><div style="font-size:15px;font-weight:700">กำลังโหลดรายการ...</div></div>';
+      return;
+    }
     body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:#999"><div style="font-size:60px;opacity:.4">🛒</div><div style="font-size:15px">ยังไม่มีรายการ</div><a href="index.html" style="margin-top:8px;background:var(--yellow);color:#3E2000;font-weight:800;padding:12px 28px;border-radius:14px;text-decoration:none;font-size:15px">เลือกเมนู</a></div>';
     return;
   }
@@ -368,7 +386,9 @@ async function syncMenu() {
       localStorage.setItem('imkum_cart_emojis', JSON.stringify(cartEmojiCache));
       renderCart();
     }
-  } catch(e) { console.log('Cart sync skipped:', e.message); }
+    window._cartSyncDone = true;
+    renderCart(); // re-render หลัง sync เสร็จ
+  } catch(e) { console.log('Cart sync skipped:', e.message); window._cartSyncDone = true; renderCart(); }
 
   // Sync stamp จาก Firestore เมื่อ login
   try {

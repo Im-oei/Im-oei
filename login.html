@@ -69,7 +69,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 <body>
 
 <div class="hero-top">
-  <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ้ย">
+  <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ๋ย">
 
 </div>
 
@@ -194,6 +194,13 @@ window.togglePwd = function(inputId, btn) {
 // 🔧 ใส่ LIFF ID ของคุณที่นี่ (สร้างได้ที่ LINE Developers Console)
 const LIFF_ID = 'YOUR_LIFF_ID_HERE';
 
+
+// ===== RETURN URL HELPER =====
+function getReturnUrl() {
+  var ret = sessionStorage.getItem('imkum_return');
+  if(ret){ sessionStorage.removeItem('imkum_return'); return ret; }
+  return 'index.html';
+}
 window.loginWithLine = async function() {
   if(!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID_HERE'){
     showError('ปิดการใช้งาน LINE Login กรุณาใช้ชื่อ-เบอร์แทน');
@@ -217,7 +224,7 @@ window.loginWithLine = async function() {
     const custRef = doc(db, 'customers', 'line_' + lineId);
     const now = new Date().toISOString();
     setDoc(custRef, { name, lineId, avatar, lastLogin: now, loginType: 'line' }, { merge: true }).catch(()=>{});
-    window.location.href = 'index.html';
+    window.location.href = getReturnUrl();
   } catch(e) {
     console.error(e);
     showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย LINE');
@@ -242,11 +249,11 @@ window.customerLogin = async function() {
     // พยายามบันทึกลง Firestore แบบ background (ไม่บล็อก)
     const now = new Date().toISOString();
     setDoc(doc(db, 'customers', phone), { name, phone, lastLogin: now }, { merge: true }).catch(()=>{});
-    window.location.href = 'index.html';
+    window.location.href = getReturnUrl();
   } catch(e) {
     console.error(e);
     // ถ้า error ก็ยังเข้าได้ เพราะ session บันทึกไปแล้ว
-    window.location.href = 'index.html';
+    window.location.href = getReturnUrl();
   } finally {
     showLoading(false);
   }
@@ -319,7 +326,7 @@ if(sess){
   if(Date.now() - loginAt > EIGHT_HOURS){
     sessionStorage.clear(); // หมดอายุ
   } else {
-    if(user.role === 'customer') window.location.href = 'index.html';
+    if(user.role === 'customer') window.location.href = getReturnUrl();
     else window.location.href = 'admin.html';
   }
 }

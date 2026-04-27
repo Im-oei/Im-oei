@@ -2024,7 +2024,7 @@ window.notifyCustomer = async function(orderId, name, pickupTime) {
   const orderEl = document.getElementById('order-' + orderId);
   const locTag = orderEl ? orderEl.querySelector('.order-location-tag') : null;
   const locName = locTag ? locTag.textContent.replace('📍 ','').trim() : '';
-  const msg = '🍱 อิ่มเอ้ย\nสวัสดีคุณ ' + name + '!\nออเดอร์ของคุณพร้อมแล้ว 🟢\nรับได้เลย ⏰ ' + pickupTime + ' น.' + (locName ? '\n📍 จุดรับ: ' + locName : '');
+  const msg = '🍱 อิ่มเอ๋ย\nสวัสดีคุณ ' + name + '!\nออเดอร์ของคุณพร้อมแล้ว 🟢\nรับได้เลย ⏰ ' + pickupTime + ' น.' + (locName ? '\n📍 จุดรับ: ' + locName : '');
   openNotifyDialog(name, msg);
 };
 

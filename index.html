@@ -115,7 +115,7 @@
   <div class="brand">
     <img src="logo.png" alt="logo" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #FFC107;box-shadow:0 2px 8px rgba(255,193,7,0.3);">
     <div>
-      <div class="brand-name">อิ่มเอ้ย</div>
+      <div class="brand-name">อิ่มเอ๋ย</div>
       <div class="brand-sub" id="preorder-sub">อร่อยง่ายๆ ใกล้บ้านคุณ</div>
     </div>
   </div>
@@ -133,7 +133,7 @@
   </div>
 </div>
 
-<div class="hero-wrap"><img src="hero.webp" alt="อิ่มเอ้ย"></div>
+<div class="hero-wrap"><img src="hero.webp" alt="อิ่มเอ๋ย"></div>
 
 <div class="search-wrap">
   <span class="search-icon">🔍</span>
@@ -272,7 +272,22 @@ var currentCat='all'; var currentSearch='';
 
 var cart=JSON.parse(localStorage.getItem('imkum_cart')||'{}');
 function saveCart(){localStorage.setItem('imkum_cart',JSON.stringify(cart));}
+function isLoggedIn(){
+  try{
+    var u=JSON.parse(sessionStorage.getItem('imkum_user')||'null');
+    if(!u||!u.phone) return false;
+    if(u.loginAt&&(Date.now()-u.loginAt>8*60*60*1000)){ sessionStorage.clear(); return false; }
+    return true;
+  }catch(e){ return false; }
+}
 function add(id){
+  if(!isLoggedIn()){
+    sessionStorage.setItem('imkum_return','cart.html');
+    if(confirm('กรุณาเข้าสู่ระบบก่อนสั่งอาหาร\nกด OK เพื่อไปหน้า Login')){
+      window.location.href='login.html';
+    }
+    return;
+  }
   var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
   if(!item) return;
   if(item.soldOut){ showToast('❌ '+item.name+' หมดแล้ว'); return; }
