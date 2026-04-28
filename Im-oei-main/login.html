@@ -107,12 +107,23 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
         ตรวจสอบรหัสผ่าน
       </button>
       <div class="divider">หรือ</div>
+      <button onclick="lineLogin()" style="
+width:100%;
+padding:12px;
+background:#06C755;
+color:white;
+border:none;
+border-radius:8px;">
+เข้าสู่ระบบด้วย LINE
+</button>
       <button class="skip-link" onclick="goCustomer()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         ฉันเป็นลูกค้า (สั่งอาหาร)
       </button>
     </div>
-
+ <button type="button" onclick="lineLogin()">
+    เข้าสู่ระบบด้วย LINE
+  </button>
     <!-- STEP 2: กรอกชื่อ-เบอร์ลูกค้า -->
     <div id="step-2" class="step-panel">
       <div class="info-box">📱 กรอกชื่อและเบอร์โทรเพื่อติดตามออเดอร์ของคุณ</div>
@@ -300,5 +311,32 @@ try {
   }
 } catch(e){ sessionStorage.clear(); }
 </script>
+  <!-- script LINE LOGIN -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<script>
+const LIFF_ID = "2009910221-ySbGklzJ"; // ของคุณ
+
+async function lineLogin() {
+  await liff.init({ liffId: LIFF_ID });
+
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
+  }
+
+  const profile = await liff.getProfile();
+
+  localStorage.setItem("user", JSON.stringify({
+    name: profile.displayName,
+    userId: profile.userId
+  }));
+
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
 </body>
 </html>
