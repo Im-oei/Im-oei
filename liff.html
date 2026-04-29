@@ -163,7 +163,8 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
     <div id="state-linked" style="display:none">
       <div class="status-icon success">🎉</div>
       <div id="linked-profile-card" class="profile-card">
-        <div class="profile-avatar-placeholder">😊</div>
+        <img id="linked-avatar" class="profile-avatar" src="" alt="" style="display:none">
+        <div id="linked-avatar-placeholder" class="profile-avatar-placeholder">😊</div>
         <div>
           <div id="linked-name" class="profile-name">คุณลูกค้า</div>
           <div id="linked-phone" class="profile-id"></div>
@@ -225,11 +226,14 @@ let lineProfile = null;
 // ============================================================
 async function initLiff() {
   try {
-    await liff.init({ liffId: LIFF_ID });
+    await liff.init({ 
+      liffId: LIFF_ID,
+      withLoginOnExternalBrowser: true
+    });
 
     // รองรับทั้ง LINE app และ browser ปกติ (PC/Phone)
     if (!liff.isLoggedIn()) {
-      liff.login({ redirectUri: location.href });
+      liff.login();
       return;
     }
 
@@ -272,6 +276,13 @@ async function initLiff() {
       // แสดง UI linked
       document.getElementById("linked-name").textContent = displayName;
       document.getElementById("linked-phone").textContent = phone ? "📞 " + phone : "ยังไม่ผูกเบอร์";
+      // แสดงรูปโปรไฟล์จริง
+      if (pictureUrl) {
+        const avatarImg = document.getElementById("linked-avatar");
+        avatarImg.src = pictureUrl;
+        avatarImg.style.display = "block";
+        document.getElementById("linked-avatar-placeholder").style.display = "none";
+      }
       showState("linked");
 
     } else {

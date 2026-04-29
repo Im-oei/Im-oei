@@ -785,7 +785,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     <input type="hidden" id="banner-edit-id">
     <div class="form-group">
       <label>ประเภทแบนเนอร์</label>
-      <select class="form-input" id="banner-type">
+      <select class="form-input" id="banner-type" onchange="previewBannerModal()">
         <option value="slider">🖼️ Slider ปกติ</option>
         <option value="promo">🎉 โปรโมชัน (สีม่วง-ชมพู)</option>
         <option value="gradient">🌅 Gradient สีส้ม</option>
@@ -794,12 +794,29 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       </select>
     </div>
     <div class="form-group">
+      <label>ตำแหน่งการแสดง</label>
+      <select class="form-input" id="banner-position">
+        <option value="hero">📍 Hero (บนสุดหน้าแรก)</option>
+        <option value="mid">📢 กลางหน้า (ระหว่างเมนูแนะนำ)</option>
+        <option value="bottom">⬇️ ล่างสุด (ก่อน footer)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>ขนาดแบนเนอร์</label>
+      <select class="form-input" id="banner-size" onchange="previewBannerModal()">
+        <option value="small">📐 เล็ก (120px)</option>
+        <option value="medium" selected>📐 กลาง (180px)</option>
+        <option value="large">📐 ใหญ่ (240px)</option>
+        <option value="full">📐 เต็มจอ (300px)</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label>ชื่อ/หัวข้อ (ไม่บังคับ)</label>
-      <input type="text" class="form-input" id="banner-title" placeholder="เช่น โปรโมชันพิเศษ">
+      <input type="text" class="form-input" id="banner-title" placeholder="เช่น โปรโมชันพิเศษ" oninput="previewBannerModal()">
     </div>
     <div class="form-group">
       <label>คำอธิบายย่อ (ไม่บังคับ)</label>
-      <input type="text" class="form-input" id="banner-subtitle" placeholder="เช่น ลด 20% ทุกเมนู">
+      <input type="text" class="form-input" id="banner-subtitle" placeholder="เช่น ลด 20% ทุกเมนู" oninput="previewBannerModal()">
     </div>
     <div class="form-group">
       <label>ลำดับการแสดง (1 = แรกสุด)</label>
@@ -808,7 +825,6 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     <div class="form-group">
       <label>รูปภาพ (URL)</label>
       <input type="url" class="form-input" id="banner-img-url" placeholder="https://..." oninput="previewBannerModal()">
-      <img id="banner-modal-preview" class="banner-preview" style="display:none;margin-top:8px" alt="">
     </div>
     <div class="form-group">
       <label>หรืออัพโหลดรูป</label>
@@ -818,13 +834,26 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       </div>
       <input type="file" id="banner-upload-file" accept="image/*" style="display:none" onchange="uploadBannerModal(this)">
     </div>
+
+    <!-- LIVE PREVIEW -->
+    <div id="banner-live-preview" style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:8px">👁️ ตัวอย่างแบนเนอร์</div>
+      <div id="banner-preview-box" style="border-radius:12px;overflow:hidden;position:relative;background:#f0e8d8;height:180px;transition:height 0.3s">
+        <img id="banner-modal-preview" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" alt="">
+        <div id="banner-preview-bg" style="position:absolute;inset:0;opacity:0.85"></div>
+        <div id="banner-preview-overlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:12px;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 60%)">
+          <div id="banner-preview-title" style="font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>
+          <div id="banner-preview-sub" style="font-size:12px;color:rgba(255,255,255,0.88);margin-top:2px"></div>
+        </div>
+        <div id="banner-preview-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;position:absolute;inset:0">🖼️</div>
+        <div id="banner-preview-badge" style="position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px"></div>
+      </div>
+      <div id="banner-preview-info" style="font-size:11px;color:#999;margin-top:6px;text-align:center"></div>
+    </div>
+
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <label style="font-size:13px;font-weight:700;color:var(--text-sub)">เปิดใช้งาน</label>
       <input type="checkbox" id="banner-active" checked style="width:20px;height:20px;accent-color:var(--yellow)">
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <label style="font-size:13px;font-weight:700;color:var(--text-sub)">📢 แสดงเป็น Promotion Banner (ระหว่างเมนูแนะนำ)</label>
-      <input type="checkbox" id="banner-mid" style="width:20px;height:20px;accent-color:var(--orange)">
     </div>
     <button class="save-btn" onclick="saveBannerItem()">💾 บันทึก</button>
   </div>
@@ -1283,6 +1312,11 @@ window.openAddBanner = function() {
   document.getElementById('banner-modal-preview').style.display = 'none';
   const typeEl = document.getElementById('banner-type');
   if (typeEl) typeEl.value = 'slider';
+  const sizeEl = document.getElementById('banner-size');
+  if (sizeEl) sizeEl.value = 'medium';
+  const posEl = document.getElementById('banner-position');
+  if (posEl) posEl.value = 'hero';
+  previewBannerModal();
   document.getElementById('modal-banner').classList.add('show');
 };
 
@@ -1298,19 +1332,59 @@ window.openEditBanner = function(id) {
   document.getElementById('banner-active').checked = b.active !== false;
   const typeEl = document.getElementById('banner-type');
   if (typeEl) typeEl.value = b.type || 'slider';
-  const midEl = document.getElementById('banner-mid');
-  if (midEl) midEl.checked = b.midBanner === true;
-  const prev = document.getElementById('banner-modal-preview');
-  if (b.imageUrl) { prev.src = b.imageUrl; prev.style.display = 'block'; }
-  else prev.style.display = 'none';
+  const sizeEl2 = document.getElementById('banner-size');
+  if (sizeEl2) sizeEl2.value = b.size || 'medium';
+  const posEl2 = document.getElementById('banner-position');
+  if (posEl2) posEl2.value = b.position || 'hero';
+  previewBannerModal();
   document.getElementById('modal-banner').classList.add('show');
 };
 
 window.previewBannerModal = function() {
   const url = document.getElementById('banner-img-url').value;
   const img = document.getElementById('banner-modal-preview');
-  if (url) { img.src = url; img.style.display = 'block'; }
-  else img.style.display = 'none';
+  const placeholder = document.getElementById('banner-preview-placeholder');
+  const box = document.getElementById('banner-preview-box');
+  const bg = document.getElementById('banner-preview-bg');
+  const badge = document.getElementById('banner-preview-badge');
+  const info = document.getElementById('banner-preview-info');
+
+  // รูปภาพ
+  if (url) { img.src = url; img.style.display = 'block'; if(placeholder) placeholder.style.display='none'; }
+  else { img.style.display = 'none'; if(placeholder) placeholder.style.display='flex'; }
+
+  // ขนาด
+  const sizeMap = { small:120, medium:180, large:240, full:300 };
+  const size = document.getElementById('banner-size') ? document.getElementById('banner-size').value : 'medium';
+  if (box) box.style.height = (sizeMap[size] || 180) + 'px';
+
+  // ประเภท - สีพื้นหลัง
+  const typeColors = {
+    slider: 'transparent',
+    promo: 'linear-gradient(135deg,#9C27B0,#E91E63)',
+    gradient: 'linear-gradient(135deg,#FF8C00,#FFC107)',
+    announcement: 'linear-gradient(135deg,#2E7D32,#66BB6A)',
+    sale: 'linear-gradient(135deg,#C62828,#EF5350)'
+  };
+  const typeBadge = { slider:'Slider', promo:'🎉 โปรโมชัน', gradient:'🌅 Gradient', announcement:'📢 ประกาศ', sale:'🔥 Flash Sale' };
+  const typeBadgeColor = { slider:'rgba(255,193,7,0.9)', promo:'rgba(156,39,176,0.9)', gradient:'rgba(255,140,0,0.9)', announcement:'rgba(46,125,50,0.9)', sale:'rgba(198,40,40,0.9)' };
+  const type = document.getElementById('banner-type') ? document.getElementById('banner-type').value : 'slider';
+  if (bg) bg.style.background = (!url && typeColors[type] !== 'transparent') ? typeColors[type] : 'transparent';
+  if (badge) { badge.textContent = typeBadge[type]||type; badge.style.background = typeBadgeColor[type]||'rgba(255,193,7,0.9)'; badge.style.color = type==='slider'?'#3E2000':'#fff'; }
+
+  // ข้อความ preview
+  const title = document.getElementById('banner-title') ? document.getElementById('banner-title').value : '';
+  const sub = document.getElementById('banner-subtitle') ? document.getElementById('banner-subtitle').value : '';
+  const pt = document.getElementById('banner-preview-title');
+  const ps = document.getElementById('banner-preview-sub');
+  if (pt) pt.textContent = title;
+  if (ps) ps.textContent = sub;
+
+  // ตำแหน่ง info
+  const posLabel = { hero:'📍 Hero (บนสุดหน้าแรก)', mid:'📢 กลางหน้า (ระหว่างเมนูแนะนำ)', bottom:'⬇️ ล่างสุด (ก่อน footer)' };
+  const sizeLabel = { small:'เล็ก 120px', medium:'กลาง 180px', large:'ใหญ่ 240px', full:'เต็มจอ 300px' };
+  const pos = document.getElementById('banner-position') ? document.getElementById('banner-position').value : 'hero';
+  if (info) info.textContent = (posLabel[pos]||pos) + ' · ' + (sizeLabel[size]||size);
 };
 
 window.uploadBannerModal = function(input) {
@@ -1337,7 +1411,9 @@ window.saveBannerItem = async function() {
     order: parseInt(document.getElementById('banner-order').value) || 1,
     active: document.getElementById('banner-active').checked,
     type: (document.getElementById('banner-type') ? document.getElementById('banner-type').value : 'slider'),
-    midBanner: document.getElementById('banner-mid') ? document.getElementById('banner-mid').checked : false,
+    size: (document.getElementById('banner-size') ? document.getElementById('banner-size').value : 'medium'),
+    position: (document.getElementById('banner-position') ? document.getElementById('banner-position').value : 'hero'),
+    midBanner: (document.getElementById('banner-position') ? document.getElementById('banner-position').value === 'mid' : false),
   };
   showLoading(true);
   try {
