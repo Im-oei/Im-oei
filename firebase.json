@@ -26,6 +26,6 @@
     ]
   },
   "firestore": {
-    "rules": "Im-oei-main/firestore.rules"
+    "rules": "firestore.rules"
   }
 }
