@@ -315,7 +315,7 @@ try {
 async function lineLogin() {
   const { LIFF_ID } = await import("./config.js");
 
-  await liff.init({ 
+  await liff.init({
     liffId: LIFF_ID,
     withLoginOnExternalBrowser: true
   });
@@ -327,12 +327,26 @@ async function lineLogin() {
 
   const profile = await liff.getProfile();
 
-  localStorage.setItem("user", JSON.stringify({
-    name: profile.displayName,
-    userId: profile.userId
-  }));
+  // ✅ เก็บ profile
+  localStorage.setItem("profile", JSON.stringify(profile));
 
-  window.location.href = "index.html";
+  // ✅ เช็ค admin จาก Firestore
+  const doc = await firebase.firestore()
+    .collection("settings")
+    .doc("admins")
+    .get();
+
+  const users = doc.data()?.users || {};
+  const role = users[profile.userId]?.role || null;
+
+  localStorage.setItem("role", role || "");
+
+  // ✅ แยกหน้า
+  if (role) {
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "index.html";
+  }
 }
 </script>
 
