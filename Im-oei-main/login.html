@@ -121,9 +121,6 @@ border-radius:8px;">
         ฉันเป็นลูกค้า (สั่งอาหาร)
       </button>
     </div>
- <button type="button" onclick="lineLogin()">
-    เข้าสู่ระบบด้วย LINE
-  </button>
     <!-- STEP 2: กรอกชื่อ-เบอร์ลูกค้า -->
     <div id="step-2" class="step-panel">
       <div class="info-box">📱 กรอกชื่อและเบอร์โทรเพื่อติดตามออเดอร์ของคุณ</div>
@@ -311,7 +308,7 @@ try {
   }
 } catch(e){ sessionStorage.clear(); }
 </script>
-<!-- script LINE LOGIN -->
+  <!-- script LINE LOGIN -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <script>
@@ -338,4 +335,3 @@ async function lineLogin() {
 
 </body>
 </html>
-
