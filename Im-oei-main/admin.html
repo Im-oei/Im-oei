@@ -2964,21 +2964,24 @@ window.playStatusSound = playStatusSound;
 window.showBrowserNotif = showBrowserNotif;
 
 // init เมื่อ DOM พร้อม
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const toggle = document.getElementById('notif-sound-toggle');
   if (toggle) toggle.checked = _isSoundEnabled();
+
   if (typeof Notification !== 'undefined') {
     const bar = document.getElementById('notif-permission-bar');
-    if (bar) bar.style.display = Notification.permission === 'granted' ? 'none' : 'flex';
+    if (bar) bar.style.display =
+      Notification.permission === 'granted' ? 'none' : 'block';
   }
 });
 </script>
-  <script src="core.js"></script>
+
+<!-- 🔥 ใส่ตรงนี้ -->
+<script src="/core.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   Core.requireAdmin();
 });
 </script>
-</body>
 </body>
 </html>
