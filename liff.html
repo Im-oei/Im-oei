@@ -234,7 +234,14 @@ async function initLiff() {
     }
 
     // ดึง Profile จาก LINE
-    lineProfile = await liff.getProfile();
+    let lineProfile;
+    try {
+      lineProfile = await liff.getProfile();
+    } catch(profileErr) {
+      console.error("getProfile error:", profileErr);
+      showError("ดึงข้อมูล LINE ไม่ได้", "กรุณาลองใหม่อีกครั้ง");
+      return;
+    }
     const { userId, displayName, pictureUrl } = lineProfile;
 
     // ตรวจว่าเคยผูกเบอร์แล้วหรือยัง
@@ -383,9 +390,11 @@ window.changePhone = function() {
 // Go to Order Page
 // ============================================================
 window.goOrder = function() {
-  if (liff.isInClient()) {
-    liff.closeWindow();
-  }
+  try {
+    if (liff.isInClient()) {
+      liff.closeWindow();
+    }
+  } catch(e) { /* ไม่ต้องทำอะไร ถ้าไม่ได้อยู่ใน LINE */ }
   window.location.href = ORDER_URL;
 };
 
