@@ -314,8 +314,8 @@ try {
   <!-- script LINE LOGIN -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-<script>
-const LIFF_ID = "2009910221-ySbGklzJ"; // ของคุณ
+<script type="module">
+import { LIFF_ID } from "./config.js"; // ของคุณ
 
 async function lineLogin() {
   await liff.init({ liffId: LIFF_ID });
@@ -333,6 +333,7 @@ async function lineLogin() {
   }));
 
   window.location.href = "index.html";
+  window.lineLogin = lineLogin;
 }
 </script>
 
