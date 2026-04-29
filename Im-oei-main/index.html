@@ -727,5 +727,13 @@ function closeLightbox() {
 }
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeLightbox(); });
 </script>
+  <button onclick="setAdmin()">ตั้งเป็น Admin</button>
 
+<script>
+function setAdmin() {
+  localStorage.setItem("role", "admin");
+  alert("ตั้ง Admin สำเร็จ");
+}
+</script>
+</body>
 </html>
