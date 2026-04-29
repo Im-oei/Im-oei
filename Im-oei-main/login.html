@@ -311,13 +311,13 @@ try {
   }
 } catch(e){ sessionStorage.clear(); }
 </script>
-  <!-- script LINE LOGIN -->
+<!-- script LINE LOGIN -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-<script type="module">
-import { LIFF_ID } from "./config.js"; // ของคุณ
-
+<script>
 async function lineLogin() {
+  const { LIFF_ID } = await import("./config.js");
+
   await liff.init({ liffId: LIFF_ID });
 
   if (!liff.isLoggedIn()) {
@@ -333,7 +333,6 @@ async function lineLogin() {
   }));
 
   window.location.href = "index.html";
-  window.lineLogin = lineLogin;
 }
 </script>
 
