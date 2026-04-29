@@ -13,11 +13,11 @@ const Core = {
   },
   requireAdmin() {
     if (!this.getRole()) {
-      location.href = "/login.html";
+      location.href = "login.html";
     }
   },
   logout() {
     localStorage.clear();
-    location.href = "/login.html";
+    location.href = "login.html";
   }
 };
