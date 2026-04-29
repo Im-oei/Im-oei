@@ -227,11 +227,7 @@ async function initLiff() {
   try {
     await liff.init({ liffId: LIFF_ID });
 
-    if (!liff.isInClient()) {
-      showState("not-line");
-      return;
-    }
-
+    // รองรับทั้ง LINE app และ browser ปกติ (PC/Phone)
     if (!liff.isLoggedIn()) {
       liff.login({ redirectUri: location.href });
       return;
@@ -389,9 +385,8 @@ window.changePhone = function() {
 window.goOrder = function() {
   if (liff.isInClient()) {
     liff.closeWindow();
-  } else {
-    window.location.href = ORDER_URL;
   }
+  window.location.href = ORDER_URL;
 };
 
 // ============================================================
@@ -430,9 +425,6 @@ if (typeof liff === "undefined") {
   initLiff();
 }
 </script>
-
-<!-- LIFF SDK (โหลดก่อน module script) -->
-
 
 </body>
 </html>
