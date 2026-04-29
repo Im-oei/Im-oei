@@ -260,7 +260,7 @@ async function initLiff() {
       // ผูกแล้ว → เซ็ต session ให้ครบทั้ง sessionStorage และ localStorage
       // [สำคัญ] cart.html อ่านจาก sessionStorage('imkum_user') เป็นหลัก
       if (phone) {
-        saveUserSession(displayName, phone, userId);
+        saveUserSession(displayName, phone, userId, pictureUrl);
         await setDoc(doc(db, "linePhoneMap", phone), {
           userId, displayName, pictureUrl: pictureUrl || null, updatedAt: Date.now()
         }, { merge: true });
@@ -299,12 +299,13 @@ async function initLiff() {
 // saveUserSession — เขียนทั้ง sessionStorage และ localStorage
 // cart.html ใช้ sessionStorage('imkum_user') เป็นหลัก
 // ============================================================
-function saveUserSession(name, phone, userId) {
+function saveUserSession(name, phone, userId, pictureUrl) {
   const userData = {
     role: "customer",
     name,
     phone,
     lineUserId: userId,
+    photoURL: pictureUrl || null,
     loginAt: Date.now()
   };
   // cart.html อ่านจาก sessionStorage
@@ -357,7 +358,7 @@ window.submitPhone = async function() {
     });
 
     // เซ็ต session ทั้ง sessionStorage และ localStorage
-    saveUserSession(displayName, phone, userId);
+    saveUserSession(displayName, phone, userId, pictureUrl);
 
     document.getElementById("success-phone").textContent = phone;
     showState("success");

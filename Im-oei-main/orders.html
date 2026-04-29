@@ -309,15 +309,31 @@ function formatPhone(p){
   img.src = base + 'hero.webp';
 })();
 
-// โหลดรูป profile ถ้ามี
-if (user.photoURL) {
+// โหลดรูป profile — ลอง session ก่อน ถ้าไม่มีดึงจาก Firestore
+function setAvatarImg(url) {
+  if (!url) return;
   const wrap = document.getElementById('profile-avatar-wrap');
   const img = document.createElement('img');
-  img.src = user.photoURL;
+  img.src = url;
   img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
-  img.onerror = function(){ this.remove(); }; // fallback กลับ SVG ถ้าโหลดไม่ได้
+  img.onerror = function(){ this.remove(); };
   wrap.innerHTML = '';
   wrap.appendChild(img);
+}
+
+if (user.photoURL) {
+  setAvatarImg(user.photoURL);
+} else if (user.lineUserId) {
+  // session เก่าไม่มี photoURL → ดึงจาก Firestore
+  (async () => {
+    try {
+      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const snap = await getDoc(doc(db, 'lineUsers', user.lineUserId));
+      if (snap.exists() && snap.data().pictureUrl) {
+        setAvatarImg(snap.data().pictureUrl);
+      }
+    } catch(e) { console.warn('avatar fetch:', e); }
+  })();
 }
 
 window.doLogout = function(){
