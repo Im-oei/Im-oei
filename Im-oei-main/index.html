@@ -113,7 +113,6 @@
 </style>
 </head>
 <body>
-<button onclick="setAdmin()">ตั้งเป็น Admin</button>
 <div class="app-topbar" id="preorder-topbar">
   <div class="brand">
     <img src="logo.webp" alt="logo" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #FFC107;box-shadow:0 2px 8px rgba(255,193,7,0.3);">
@@ -728,12 +727,5 @@ function closeLightbox() {
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeLightbox(); });
 </script>
   <button onclick="setAdmin()">ตั้งเป็น Admin</button>
-
-<script>
-function setAdmin() {
-  localStorage.setItem("role", "admin");
-  alert("ตั้ง Admin สำเร็จ");
-}
-</script>
 </body>
 </html>
