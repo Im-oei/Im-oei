@@ -282,21 +282,48 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .danger-btn-red:active { opacity: .8; }
 
 /* BANNER MANAGEMENT */
-.banner-card{background:var(--white);border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;}
-.banner-card-img{width:100%;height:90px;object-fit:cover;display:block;background:#F0E8D8;}
+.banner-card{background:var(--white);border-radius:16px;margin-bottom:12px;box-shadow:0 3px 12px rgba(0,0,0,0.08);overflow:hidden;border:1px solid #F0E8D8;}
+.banner-card-img{width:100%;height:110px;object-fit:cover;display:block;background:#F0E8D8;}
+.banner-card-img-placeholder{width:100%;height:110px;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#FFF8E1,#FFE082);}
+.banner-type-gradient .banner-card-img-placeholder{background:linear-gradient(135deg,#FF8C00,#FFC107);}
+.banner-type-promo .banner-card-img-placeholder{background:linear-gradient(135deg,#9C27B0,#E91E63);}
 .banner-card-body{padding:10px 14px;display:flex;align-items:center;gap:10px;}
 .banner-card-body .info{flex:1;min-width:0;}
 .banner-card-body .info .b-title{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.banner-card-body .info .b-order{font-size:12px;color:var(--text-sub);}
+.banner-card-body .info .b-order{font-size:12px;color:var(--text-sub);margin-top:2px;}
+.banner-type-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;margin-right:4px;}
 .banner-card-toggle{width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;font-size:10px;font-weight:700;transition:background .2s;flex-shrink:0;}
 .btn-delete-red{background:#FFEBEE;color:#B71C1C;padding:7px 12px;border-radius:10px;border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 /* CATEGORY MANAGEMENT */
-.cat-admin-card{background:var(--white);border-radius:14px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:10px;}
-.cat-admin-card .cat-emoji{font-size:24px;width:40px;text-align:center;flex-shrink:0;}
+.cat-admin-card{background:var(--white);border-radius:14px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:10px;border:1px solid #F0E8D8;}
+.cat-admin-card .cat-emoji{font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#FFF8E1;border-radius:12px;flex-shrink:0;}
 .cat-admin-card .info{flex:1;}
 .cat-admin-card .info .c-name{font-size:14px;font-weight:700;}
 .cat-admin-card .info .c-key{font-size:12px;color:var(--text-sub);}
 .section-sep{height:1px;background:#F0E8D8;margin:16px 0;}
+
+/* CUSTOMER TABLE */
+.customer-table-wrap{background:var(--white);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin:0 0 16px;}
+.customer-search-bar{display:flex;gap:8px;margin-bottom:14px;}
+.customer-card{background:var(--white);border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);border:1px solid #F0E8D8;display:flex;align-items:center;gap:12px;}
+.customer-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#FFC107,#FF8C00);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;}
+.customer-info{flex:1;min-width:0;}
+.customer-name{font-size:15px;font-weight:800;color:var(--text);}
+.customer-meta{font-size:12px;color:var(--text-sub);margin-top:2px;}
+.customer-points{background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:10px;padding:4px 12px;text-align:center;flex-shrink:0;}
+.customer-points .pts-val{font-size:18px;font-weight:800;color:var(--orange);display:block;line-height:1.2;}
+.customer-points .pts-label{font-size:10px;color:#888;font-weight:600;}
+.customer-actions{display:flex;gap:6px;flex-shrink:0;}
+
+/* IMPROVED MENU ITEM CARD */
+.menu-item-admin{background:var(--white);border-radius:16px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;border:1px solid #F5F0E8;transition:box-shadow .2s;}
+.menu-item-admin:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);}
+.menu-item-admin .food-emoji{font-size:28px;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:linear-gradient(135deg,#FFF8E1,#FFE082);flex-shrink:0;overflow:hidden;}
+.menu-item-admin .food-emoji img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.menu-item-admin .info{flex:1;min-width:0;}
+.menu-item-admin .info .name{font-size:15px;font-weight:800;color:var(--text);}
+.menu-item-admin .info .price{font-size:13px;font-weight:700;color:var(--orange);margin-top:2px;}
+.menu-item-admin .actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
 /* PHOTO UPLOAD */
 .photo-upload-area { border: 2px dashed #E0E0E0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
 .photo-upload-area:hover { border-color: var(--yellow); }
@@ -352,6 +379,7 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
   <button class="tab-btn" onclick="switchTab('menu', this)">🍽️ เมนู</button>
   <button class="tab-btn" onclick="switchTab('banners', this)">📢 แบนเนอร์</button>
   <button class="tab-btn" onclick="switchTab('stamps', this)">⭐ แต้ม</button>
+  <button class="tab-btn" onclick="switchTab('customers', this)">👥 ลูกค้า</button>
   <button class="tab-btn" onclick="switchTab('stats', this)">📊 สถิติ</button>
   <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ ตั้งค่า</button>
 </div>
@@ -433,9 +461,23 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
   </div>
 </div>
 
-<div id="panel-stats" class="panel">
+<!-- ====== CUSTOMERS PANEL ====== -->
+<div id="panel-customers" class="panel">
   <div class="menu-admin-section">
-    <h3>สถิติเมนูยอดนิยม</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="margin-bottom:0">👥 ตารางลูกค้า</h3>
+      <button class="action-btn btn-preparing" onclick="openAddCustomer()" style="padding:8px 14px">+ เพิ่มลูกค้า</button>
+    </div>
+    <div class="customer-search-bar">
+      <input type="text" class="form-input" id="cust-search" placeholder="🔍 ค้นหาชื่อ / เบอร์ / userId" oninput="filterCustomers()" style="flex:1">
+    </div>
+    <div id="customers-list">
+      <div class="empty-state"><div class="icon">👥</div><p>กำลังโหลด...</p></div>
+    </div>
+  </div>
+</div>
+
+<div id="panel-stats" class="panel">
     <div id="stats-chart" class="chart-bar-wrap"></div>
     <h3 style="margin-top:20px">ออเดอร์ตามช่วงเวลา</h3>
     <div id="stats-time" class="chart-bar-wrap"></div>
@@ -465,40 +507,70 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       <button class="save-btn" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
     </div>
 
-    <div class="settings-card">
-      <h3>🖼️ รูปภาพ Banner</h3>
-      <div class="form-group">
-        <label>URL รูปภาพ Banner</label>
-        <input type="url" class="form-input" id="set-banner-url" placeholder="https://..." oninput="previewBanner()">
-        <img id="banner-preview-img" class="banner-preview" alt="Banner preview">
-      </div>
-      <div class="form-group" style="margin-top:10px">
-        <label>หรืออัพโหลดรูป</label>
-        <div class="photo-upload-area" onclick="document.getElementById('banner-file').click()">
-          <div style="font-size:30px;margin-bottom:6px">📤</div>
-          <div style="font-size:13px;color:var(--text-sub)">แตะเพื่อเลือกรูป</div>
-        </div>
-        <input type="file" id="banner-file" accept="image/*" style="display:none" onchange="uploadBannerFile(this)">
-      </div>
-      <button class="save-btn" onclick="saveBanner()">💾 บันทึก Banner</button>
-    </div>
+    <!-- ====== BRAND PANEL ====== -->
+    <div class="settings-card" style="border:2px solid #FFE082;background:linear-gradient(135deg,#FFFDF5,#FFF8E1);">
+      <h3 style="color:#5D3A00;">🎨 ตราร้าน &amp; อัตลักษณ์แบรนด์</h3>
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:16px">เปลี่ยนชื่อร้าน, โลโก้, และรูปพื้นหลังได้ที่นี่</p>
 
-    <div class="settings-card">
-      <h3>🏷️ รูป Logo Hero Section</h3>
-      <div class="form-group">
-        <label>URL รูปภาพ Logo</label>
-        <input type="url" class="form-input" id="set-hero-logo-url" placeholder="https://..." oninput="previewHeroLogo()">
-        <img id="hero-logo-preview-img" class="banner-preview" alt="Hero logo preview">
-      </div>
-      <div class="form-group" style="margin-top:10px">
-        <label>หรืออัพโหลดรูป Logo</label>
-        <div class="photo-upload-area" onclick="document.getElementById('hero-logo-file').click()">
-          <div style="font-size:30px;margin-bottom:6px">🖼️</div>
-          <div style="font-size:13px;color:var(--text-sub)">แตะเพื่อเลือกรูป Logo</div>
+      <!-- ชื่อร้าน -->
+      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #F0E8D8;">
+        <div style="font-size:14px;font-weight:800;color:#3E2000;margin-bottom:12px;">📝 ชื่อร้าน</div>
+        <div class="form-group">
+          <label>ชื่อร้าน (แสดงใน Header)</label>
+          <input type="text" class="form-input" id="set-store-name" placeholder="เช่น อิ่มเอ๋ย">
         </div>
-        <input type="file" id="hero-logo-file" accept="image/*" style="display:none" onchange="uploadHeroLogoFile(this)">
+        <div class="form-group">
+          <label>ชื่อรอง / Tagline</label>
+          <input type="text" class="form-input" id="set-store-tagline" placeholder="เช่น แซนวิช • ข้าวกล่อง • เครื่องดื่ม">
+        </div>
+        <div class="form-group">
+          <label>ชื่อเว็บ (Tab Browser)</label>
+          <input type="text" class="form-input" id="set-site-title" placeholder="เช่น อิ่มเอ๋ย | สั่งอาหาร">
+        </div>
+        <button class="save-btn" onclick="saveStoreName()">💾 บันทึกชื่อร้าน</button>
       </div>
-      <button class="save-btn" onclick="saveHeroLogo()">💾 บันทึก Logo</button>
+
+      <!-- โลโก้ร้าน -->
+      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #F0E8D8;">
+        <div style="font-size:14px;font-weight:800;color:#3E2000;margin-bottom:12px;">🏷️ โลโก้ร้าน</div>
+        <!-- Preview current logo -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+          <div style="width:70px;height:70px;border-radius:50%;border:3px solid #FFC107;overflow:hidden;flex-shrink:0;background:#FFF8E1;display:flex;align-items:center;justify-content:center;">
+            <img id="brand-logo-preview" src="logo.webp" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">
+          </div>
+          <div style="font-size:13px;color:#888;">โลโก้ปัจจุบัน<br><span style="font-size:11px">แสดงใน Header และหน้าแรก</span></div>
+        </div>
+        <div class="photo-upload-area" onclick="document.getElementById('brand-logo-file').click()" style="margin-bottom:10px">
+          <div style="font-size:28px;margin-bottom:4px">📷</div>
+          <div style="font-size:13px;color:var(--text-sub);font-weight:700">แตะเพื่ออัพโหลดโลโก้ใหม่</div>
+          <div style="font-size:11px;color:#bbb;margin-top:2px">PNG / JPG แนะนำรูปวงกลม</div>
+        </div>
+        <input type="file" id="brand-logo-file" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
+        <div class="form-group">
+          <label>หรือใส่ URL โลโก้</label>
+          <input type="url" class="form-input" id="set-hero-logo-url" placeholder="https://..." oninput="previewHeroLogo()">
+          <img id="hero-logo-preview-img" class="banner-preview" alt="Hero logo preview" style="border-radius:12px;margin-top:8px;">
+        </div>
+        <button class="save-btn" onclick="saveHeroLogo()">💾 บันทึกโลโก้</button>
+      </div>
+
+      <!-- Hero / Banner หลัก -->
+      <div style="background:#fff;border-radius:14px;padding:16px;border:1px solid #F0E8D8;">
+        <div style="font-size:14px;font-weight:800;color:#3E2000;margin-bottom:12px;">🖼️ รูปพื้นหลัง Hero (หน้าแรก)</div>
+        <img id="brand-hero-preview" class="banner-preview" style="display:none;border-radius:12px;height:140px;margin-bottom:10px;" alt="">
+        <div class="photo-upload-area" onclick="document.getElementById('brand-hero-file').click()" style="margin-bottom:10px">
+          <div style="font-size:28px;margin-bottom:4px">🌅</div>
+          <div style="font-size:13px;color:var(--text-sub);font-weight:700">แตะเพื่ออัพโหลดรูป Hero</div>
+          <div style="font-size:11px;color:#bbb;margin-top:2px">แนะนำขนาด 1200×400px</div>
+        </div>
+        <input type="file" id="brand-hero-file" accept="image/*" style="display:none" onchange="uploadBrandHero(this)">
+        <div class="form-group">
+          <label>หรือใส่ URL รูปพื้นหลัง</label>
+          <input type="url" class="form-input" id="set-banner-url" placeholder="https://..." oninput="previewBanner()">
+          <img id="banner-preview-img" class="banner-preview" alt="Banner preview" style="border-radius:12px;margin-top:8px;">
+        </div>
+        <button class="save-btn" onclick="saveBanner()">💾 บันทึกรูป Hero</button>
+      </div>
     </div>
 
     <div class="settings-card">
@@ -712,6 +784,16 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
     <h3 id="modal-banner-title">เพิ่มแบนเนอร์</h3>
     <input type="hidden" id="banner-edit-id">
     <div class="form-group">
+      <label>ประเภทแบนเนอร์</label>
+      <select class="form-input" id="banner-type">
+        <option value="slider">🖼️ Slider ปกติ</option>
+        <option value="promo">🎉 โปรโมชัน (สีม่วง-ชมพู)</option>
+        <option value="gradient">🌅 Gradient สีส้ม</option>
+        <option value="announcement">📢 ประกาศ (สีเขียว)</option>
+        <option value="sale">🔥 Flash Sale (สีแดง)</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label>ชื่อ/หัวข้อ (ไม่บังคับ)</label>
       <input type="text" class="form-input" id="banner-title" placeholder="เช่น โปรโมชันพิเศษ">
     </div>
@@ -771,6 +853,40 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
       <input type="number" class="form-input" id="cat-sort" placeholder="1" value="10" min="1">
     </div>
     <button class="save-btn" onclick="saveCategoryItem()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- ====== MODAL: CUSTOMER ====== -->
+<div class="modal-overlay" id="modal-customer">
+  <div class="modal-sheet">
+    <button class="modal-close" onclick="closeModal('modal-customer')">✕</button>
+    <h3 id="modal-customer-title">เพิ่มลูกค้า</h3>
+    <input type="hidden" id="cust-edit-id">
+    <div class="form-group">
+      <label>ชื่อลูกค้า</label>
+      <input type="text" class="form-input" id="cust-name" placeholder="ชื่อ-นามสกุล">
+    </div>
+    <div class="form-group">
+      <label>User ID (LINE / ระบบ)</label>
+      <input type="text" class="form-input" id="cust-userid" placeholder="เช่น U1234abcd...">
+    </div>
+    <div class="form-group">
+      <label>เบอร์โทรศัพท์</label>
+      <input type="tel" class="form-input" id="cust-phone" placeholder="0812345678">
+    </div>
+    <div class="form-group">
+      <label>ที่อยู่</label>
+      <input type="text" class="form-input" id="cust-address" placeholder="บ้านเลขที่ ถนน ตำบล...">
+    </div>
+    <div class="form-group">
+      <label>แต้มสะสม</label>
+      <input type="number" class="form-input" id="cust-points" placeholder="0" value="0" min="0">
+    </div>
+    <div class="form-group">
+      <label>หมายเหตุ</label>
+      <input type="text" class="form-input" id="cust-note" placeholder="เพิ่มเติม...">
+    </div>
+    <button class="save-btn" onclick="saveCustomer()">💾 บันทึก</button>
   </div>
 </div>
 
@@ -1127,21 +1243,35 @@ function renderBannersAdmin() {
   const container = document.getElementById('banners-list');
   if (!container) return;
   if (!allBanners.length) {
-    container.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>ยังไม่มีแบนเนอร์</p></div>';
+    container.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>ยังไม่มีแบนเนอร์<br><span style="font-size:13px;color:#aaa">กด "+ เพิ่มแบนเนอร์" เพื่อเริ่มต้น</span></p></div>';
     return;
   }
-  container.innerHTML = allBanners.map(b => `
-    <div class="banner-card">
-      ${b.imageUrl ? `<img class="banner-card-img" src="${b.imageUrl}" alt="${b.title||''}">` : '<div class="banner-card-img" style="display:flex;align-items:center;justify-content:center;font-size:40px">🖼️</div>'}
+  const typeLabel = { slider:'🖼️ Slider', promo:'🎉 โปรโมชัน', gradient:'🌅 Gradient', announcement:'📢 ประกาศ', sale:'🔥 Flash Sale' };
+  const typeColor = { slider:'#E3F2FD', promo:'#F3E5F5', gradient:'#FFF3E0', announcement:'#E8F5E9', sale:'#FFEBEE' };
+  const typeTextColor = { slider:'#1565C0', promo:'#6A1B9A', gradient:'#E65100', announcement:'#2E7D32', sale:'#B71C1C' };
+  const typePlaceholderBg = { slider:'linear-gradient(135deg,#E3F2FD,#90CAF9)', promo:'linear-gradient(135deg,#9C27B0,#E91E63)', gradient:'linear-gradient(135deg,#FF8C00,#FFC107)', announcement:'linear-gradient(135deg,#4CAF50,#81C784)', sale:'linear-gradient(135deg,#E53935,#FF8A65)' };
+  container.innerHTML = allBanners.map(b => {
+    const t = b.type || 'slider';
+    const tc = typeColor[t]||'#F5F5F5';
+    const ttc = typeTextColor[t]||'#333';
+    const ph = typePlaceholderBg[t]||'linear-gradient(135deg,#EEE,#DDD)';
+    return `
+    <div class="banner-card" style="border-left:4px solid ${ttc}">
+      ${b.imageUrl ? `<img class="banner-card-img" src="${b.imageUrl}" alt="${b.title||''}">` : `<div class="banner-card-img-placeholder" style="background:${ph};color:#fff;font-size:36px">🖼️</div>`}
       <div class="banner-card-body">
         <div class="info">
           <div class="b-title">${b.title||'(ไม่มีชื่อ)'}</div>
-          <div class="b-order">ลำดับ: ${b.order||1} &nbsp;|&nbsp; ${b.active!==false?'✅ เปิด':'❌ ปิด'}</div>
+          <div class="b-order" style="margin-top:4px">
+            <span class="banner-type-tag" style="background:${tc};color:${ttc}">${typeLabel[t]||t}</span>
+            ลำดับ: ${b.order||1} &nbsp;|&nbsp; ${b.active!==false?'✅ เปิดใช้':'❌ ปิด'}
+            ${b.subtitle ? `<div style="margin-top:2px;font-size:11px;color:#888">${b.subtitle}</div>` : ''}
+          </div>
         </div>
         <button class="icon-btn btn-edit" onclick="openEditBanner('${b.id}')" title="แก้ไข">✏️</button>
         <button class="icon-btn" style="background:#FFEBEE" onclick="deleteBannerItem('${b.id}')" title="ลบ">🗑️</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 window.openAddBanner = function() {
@@ -1151,6 +1281,8 @@ window.openAddBanner = function() {
   document.getElementById('banner-order').value = (allBanners.length + 1);
   document.getElementById('banner-active').checked = true;
   document.getElementById('banner-modal-preview').style.display = 'none';
+  const typeEl = document.getElementById('banner-type');
+  if (typeEl) typeEl.value = 'slider';
   document.getElementById('modal-banner').classList.add('show');
 };
 
@@ -1164,6 +1296,8 @@ window.openEditBanner = function(id) {
   document.getElementById('banner-order').value = b.order || 1;
   document.getElementById('banner-img-url').value = b.imageUrl || '';
   document.getElementById('banner-active').checked = b.active !== false;
+  const typeEl = document.getElementById('banner-type');
+  if (typeEl) typeEl.value = b.type || 'slider';
   const midEl = document.getElementById('banner-mid');
   if (midEl) midEl.checked = b.midBanner === true;
   const prev = document.getElementById('banner-modal-preview');
@@ -1202,6 +1336,7 @@ window.saveBannerItem = async function() {
     imageUrl: document.getElementById('banner-img-url').value.trim(),
     order: parseInt(document.getElementById('banner-order').value) || 1,
     active: document.getElementById('banner-active').checked,
+    type: (document.getElementById('banner-type') ? document.getElementById('banner-type').value : 'slider'),
     midBanner: document.getElementById('banner-mid') ? document.getElementById('banner-mid').checked : false,
   };
   showLoading(true);
@@ -1225,14 +1360,13 @@ window.saveBannerItem = async function() {
 window.deleteBannerItem = async function(id) {
   var ok = await showConfirmDialog({ icon:'🖼️', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบแบนเนอร์?', desc:'แบนเนอร์นี้จะถูกลบออกถาวร', confirmText:'ลบแบนเนอร์', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
   if (!ok) return;
-  showLoading(true);
-  try {
-    await deleteDoc(doc(db, 'banners', id));
-    allBanners = allBanners.filter(b => b.id !== id);
-    renderBannersAdmin();
-    showToast('ลบแบนเนอร์แล้ว');
-  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
-  finally { showLoading(false); }
+  // Optimistic local remove first
+  allBanners = allBanners.filter(b => b.id !== id);
+  renderBannersAdmin();
+  showToast('ลบแบนเนอร์แล้ว');
+  deleteDoc(doc(db, 'banners', id)).catch(e => {
+    console.warn('deleteBanner Firestore:', e.code, e.message);
+  });
 };
 
 // ====== CATEGORIES ======
@@ -1267,7 +1401,7 @@ window.openEditCategory = function(key) {
   document.getElementById('cat-edit-key').value = key;
   document.getElementById('modal-cat-title').textContent = 'แก้ไขหมวดหมู่';
   document.getElementById('cat-key').value = c.key;
-  document.getElementById('cat-key').readOnly = true;
+  document.getElementById('cat-key').readOnly = false; // allow editing
   document.getElementById('cat-name').value = c.name || '';
   document.getElementById('cat-emoji').value = c.emoji || '';
   document.getElementById('cat-sort').value = c.sortOrder || 10;
@@ -1282,23 +1416,28 @@ window.saveCategoryItem = async function() {
   const sortOrder = parseInt(document.getElementById('cat-sort').value) || 10;
   if (!key || !name) { showToast('กรุณากรอก Key และชื่อหมวดหมู่'); return; }
   const data = { key, name, emoji, sortOrder, category: `${emoji} ${name}` };
+  // Optimistic update local state first
+  if (editKey && editKey !== key) {
+    allCategories = allCategories.filter(c => c.key !== editKey);
+  }
+  const idx = allCategories.findIndex(c => c.key === key);
+  if (idx >= 0) allCategories[idx] = { id: key, ...data };
+  else allCategories.push({ id: key, ...data });
+  allCategories.sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  renderCategoryAdmin();
+  updateCatSelect();
+  closeModal('modal-category');
   showLoading(true);
   try {
     await setDoc(doc(db, 'categories', key), data);
     if (editKey && editKey !== key) {
-      // key changed — delete old
-      await deleteDoc(doc(db, 'categories', editKey));
-      allCategories = allCategories.filter(c => c.key !== editKey);
+      await deleteDoc(doc(db, 'categories', editKey)).catch(()=>{});
     }
-    const idx = allCategories.findIndex(c => c.key === key);
-    if (idx >= 0) allCategories[idx] = { id: key, ...data };
-    else allCategories.push({ id: key, ...data });
-    allCategories.sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
-    renderCategoryAdmin();
-    updateCatSelect();
-    closeModal('modal-category');
     showToast('บันทึกหมวดหมู่แล้ว ✓');
-  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+  } catch(e) {
+    console.warn('saveCat Firestore:', e.code, e.message);
+    showToast('บันทึกในหน้าจอแล้ว (Firestore: ' + (e.code||e.message) + ')');
+  }
   finally { showLoading(false); }
 };
 
@@ -1309,15 +1448,16 @@ window.deleteCategoryItem = async function(key) {
     : 'หมวดหมู่จะถูกลบออกถาวร';
   var ok = await showConfirmDialog({ icon:'📂', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบหมวดหมู่?', desc, confirmText:'ลบหมวดหมู่', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
   if (!ok) return;
-  showLoading(true);
-  try {
-    await deleteDoc(doc(db, 'categories', key));
-    allCategories = allCategories.filter(c => c.key !== key);
-    renderCategoryAdmin();
-    updateCatSelect();
-    showToast('ลบหมวดหมู่แล้ว');
-  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
-  finally { showLoading(false); }
+  // Optimistic local delete first
+  allCategories = allCategories.filter(c => c.key !== key);
+  renderCategoryAdmin();
+  updateCatSelect();
+  showToast('ลบหมวดหมู่แล้ว');
+  // Then try Firestore
+  deleteDoc(doc(db, 'categories', key)).catch(e => {
+    console.warn('deleteCat Firestore:', e.code, e.message);
+    // Already removed from UI, just log
+  });
 };
 
 
@@ -1336,12 +1476,28 @@ async function loadSettings() {
       const img = document.getElementById('banner-preview-img');
       img.src = s.bannerUrl; img.style.display = 'block';
     }
+    if (s.storeName) {
+      const nameEl = document.getElementById('admin-brand-name');
+      if (nameEl) nameEl.textContent = s.storeName;
+      const inp = document.getElementById('set-store-name');
+      if (inp) inp.value = s.storeName;
+    }
+    if (s.storeTagline) {
+      const inp = document.getElementById('set-store-tagline');
+      if (inp) inp.value = s.storeTagline;
+    }
+    if (s.siteTitle) {
+      document.title = s.siteTitle;
+      const inp = document.getElementById('set-site-title');
+      if (inp) inp.value = s.siteTitle;
+    }
     if (s.heroLogoUrl) {
       document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
       const logoImg = document.getElementById('hero-logo-preview-img');
       logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
-      window._storeLogo = s.heroLogoUrl; // ใช้ใน order card
-      // โหลดโลโก้ใน header
+      window._storeLogo = s.heroLogoUrl;
+      const brandLogoPreview = document.getElementById('brand-logo-preview');
+      if (brandLogoPreview) { brandLogoPreview.src = s.heroLogoUrl; brandLogoPreview.style.display = 'block'; }
       const logoWrap = document.getElementById('admin-logo-wrap');
       if (logoWrap) { logoWrap.innerHTML = `<img src="${s.heroLogoUrl}" alt="logo" style="width:44px;height:44px;object-fit:cover;border-radius:50%;">`; }
       const nameEl = document.getElementById('admin-brand-name');
@@ -1463,6 +1619,138 @@ async function loadRatingStats() {
   }
 }
 
+// ====== CUSTOMERS ======
+let allCustomers = [];
+let filteredCustomers = [];
+
+async function loadCustomers() {
+  try {
+    const snap = await getDocs(collection(db, 'customers'));
+    allCustomers = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (b.points||0) - (a.points||0));
+    filteredCustomers = [...allCustomers];
+    renderCustomers();
+  } catch(e) {
+    console.warn('loadCustomers:', e.message);
+    document.getElementById('customers-list').innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>ยังไม่มีข้อมูลลูกค้า</p></div>';
+  }
+}
+
+function renderCustomers() {
+  const container = document.getElementById('customers-list');
+  if (!container) return;
+  if (!filteredCustomers.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>ไม่พบลูกค้าที่ค้นหา</p></div>';
+    return;
+  }
+  container.innerHTML = filteredCustomers.map(c => {
+    const initials = (c.name||'?').slice(0,1).toUpperCase();
+    return `
+    <div class="customer-card" id="cust-card-${c.id}">
+      <div class="customer-avatar">${initials}</div>
+      <div class="customer-info">
+        <div class="customer-name">${c.name||'ไม่ระบุชื่อ'}</div>
+        <div class="customer-meta">
+          ${c.phone ? `📞 ${c.phone}` : ''}
+          ${c.userId ? `<br>🆔 ${c.userId.slice(0,16)}...` : ''}
+          ${c.address ? `<br>📍 ${c.address}` : ''}
+          ${c.note ? `<br>📝 ${c.note}` : ''}
+        </div>
+      </div>
+      <div class="customer-points">
+        <span class="pts-val">${c.points||0}</span>
+        <span class="pts-label">แต้ม</span>
+      </div>
+      <div class="customer-actions">
+        <button class="icon-btn btn-edit" onclick="openEditCustomer('${c.id}')" title="แก้ไข">✏️</button>
+        <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCustomer('${c.id}')" title="ลบ">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filterCustomers = function() {
+  const q = (document.getElementById('cust-search')?.value || '').toLowerCase().trim();
+  if (!q) { filteredCustomers = [...allCustomers]; }
+  else { filteredCustomers = allCustomers.filter(c =>
+    (c.name||'').toLowerCase().includes(q) ||
+    (c.phone||'').includes(q) ||
+    (c.userId||'').toLowerCase().includes(q) ||
+    (c.address||'').toLowerCase().includes(q)
+  ); }
+  renderCustomers();
+};
+
+window.openAddCustomer = function() {
+  document.getElementById('cust-edit-id').value = '';
+  document.getElementById('modal-customer-title').textContent = 'เพิ่มลูกค้า';
+  ['cust-name','cust-userid','cust-phone','cust-address','cust-note'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('cust-points').value = 0;
+  document.getElementById('modal-customer').classList.add('show');
+};
+
+window.openEditCustomer = function(id) {
+  const c = allCustomers.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cust-edit-id').value = id;
+  document.getElementById('modal-customer-title').textContent = 'แก้ไขข้อมูลลูกค้า';
+  document.getElementById('cust-name').value = c.name || '';
+  document.getElementById('cust-userid').value = c.userId || '';
+  document.getElementById('cust-phone').value = c.phone || '';
+  document.getElementById('cust-address').value = c.address || '';
+  document.getElementById('cust-points').value = c.points || 0;
+  document.getElementById('cust-note').value = c.note || '';
+  document.getElementById('modal-customer').classList.add('show');
+};
+
+window.saveCustomer = async function() {
+  const id = document.getElementById('cust-edit-id').value;
+  const data = {
+    name: document.getElementById('cust-name').value.trim(),
+    userId: document.getElementById('cust-userid').value.trim(),
+    phone: document.getElementById('cust-phone').value.trim(),
+    address: document.getElementById('cust-address').value.trim(),
+    points: parseInt(document.getElementById('cust-points').value) || 0,
+    note: document.getElementById('cust-note').value.trim(),
+    updatedAt: new Date().toISOString(),
+  };
+  if (!data.name && !data.phone && !data.userId) { showToast('กรุณากรอกชื่อหรือเบอร์โทร'); return; }
+  showLoading(true);
+  try {
+    if (id) {
+      await updateDoc(doc(db, 'customers', id), data);
+      const idx = allCustomers.findIndex(c => c.id === id);
+      if (idx >= 0) allCustomers[idx] = { ...allCustomers[idx], ...data };
+    } else {
+      data.createdAt = new Date().toISOString();
+      const ref = await addDoc(collection(db, 'customers'), data);
+      allCustomers.unshift({ id: ref.id, ...data });
+    }
+    allCustomers.sort((a,b)=>(b.points||0)-(a.points||0));
+    filteredCustomers = [...allCustomers];
+    renderCustomers();
+    closeModal('modal-customer');
+    showToast(id ? 'แก้ไขข้อมูลลูกค้าแล้ว ✓' : 'เพิ่มลูกค้าแล้ว ✓');
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+  finally { showLoading(false); }
+};
+
+window.deleteCustomer = async function(id) {
+  const c = allCustomers.find(x => x.id === id);
+  const name = c?.name || 'ลูกค้า';
+  var ok = await showConfirmDialog({ icon:'👤', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:`ลบ "${name}"?`, desc:'ข้อมูลลูกค้าจะถูกลบถาวร', confirmText:'ลบลูกค้า', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
+  showLoading(true);
+  try {
+    await deleteDoc(doc(db, 'customers', id));
+    allCustomers = allCustomers.filter(c => c.id !== id);
+    filteredCustomers = filteredCustomers.filter(c => c.id !== id);
+    renderCustomers();
+    showToast('ลบลูกค้าแล้ว');
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+  finally { showLoading(false); }
+};
+
 // ====== GLOBAL FUNCTIONS ======
 window.switchTab = function(tab, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1471,6 +1759,7 @@ window.switchTab = function(tab, btn) {
   btn.classList.add('active');
   if (tab === 'stats') renderStats();
   if (tab === 'banners') renderBannersAdmin();
+  if (tab === 'customers') loadCustomers();
   if (tab === 'settings') {
     renderFeaturedCheckboxes();
     loadStampConfig();
@@ -1588,10 +1877,14 @@ window.updateStatus = async function(id, status) {
 window.deleteOrder = async function(id) {
   var ok = await showConfirmDialog({ icon:'🧾', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบออเดอร์นี้?', desc:'ออเดอร์จะถูกลบออกถาวร', confirmText:'ลบออเดอร์', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
   if (!ok) return;
-  showLoading(true);
-  try { await deleteDoc(doc(db, 'orders', id)); showToast('ลบออเดอร์แล้ว'); }
-  catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
-  finally { showLoading(false); }
+  // Optimistic remove from UI
+  allOrders = allOrders.filter(o => o.id !== id);
+  updateSummary();
+  renderOrders();
+  showToast('ลบออเดอร์แล้ว');
+  deleteDoc(doc(db, 'orders', id)).catch(e => {
+    console.warn('deleteOrder Firestore:', e.code, e.message);
+  });
 };
 
 window.toggleStore = async function() {
@@ -1599,6 +1892,54 @@ window.toggleStore = async function() {
   document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
   await setDoc(doc(db, 'settings', 'store'), { isOpen: storeIsOpen }, { merge: true });
   showToast(storeIsOpen ? '🟢 เปิดร้านแล้ว' : '🔴 ปิดร้านแล้ว');
+};
+
+window.saveStoreName = async function() {
+  const name = (document.getElementById('set-store-name')?.value || '').trim();
+  const tagline = (document.getElementById('set-store-tagline')?.value || '').trim();
+  const siteTitle = (document.getElementById('set-site-title')?.value || '').trim();
+  if (!name) { showToast('กรุณากรอกชื่อร้าน'); return; }
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { storeName: name, storeTagline: tagline, siteTitle: siteTitle || name }, { merge: true });
+    // Update UI immediately
+    const nameEl = document.getElementById('admin-brand-name');
+    if (nameEl) nameEl.textContent = name;
+    const subEl = document.getElementById('admin-brand-sub');
+    // keep role sub as-is
+    if (siteTitle) document.title = siteTitle;
+    showToast('บันทึกชื่อร้านแล้ว ✓');
+  } catch(e) { console.error(e); showToast('❌ ' + (e.code||e.message||'เกิดข้อผิดพลาด')); }
+  finally { showLoading(false); }
+};
+
+window.uploadBrandLogo = function(input) {
+  const file = input.files[0]; if (!file) return;
+  showLoading(true);
+  compressImageToBase64(file, 800, compressed => {
+    document.getElementById('set-hero-logo-url').value = compressed;
+    // preview ใน panel ใหม่
+    const prev = document.getElementById('brand-logo-preview');
+    if (prev) { prev.src = compressed; prev.style.display = 'block'; }
+    const prev2 = document.getElementById('hero-logo-preview-img');
+    if (prev2) { prev2.src = compressed; prev2.style.display = 'block'; }
+    showToast('โหลดโลโก้สำเร็จ กด "บันทึกโลโก้" เพื่อบันทึก');
+    showLoading(false);
+  });
+};
+
+window.uploadBrandHero = function(input) {
+  const file = input.files[0]; if (!file) return;
+  showLoading(true);
+  compressImageToBase64(file, 600, compressed => {
+    document.getElementById('set-banner-url').value = compressed;
+    const prev = document.getElementById('brand-hero-preview');
+    if (prev) { prev.src = compressed; prev.style.display = 'block'; }
+    const prev2 = document.getElementById('banner-preview-img');
+    if (prev2) { prev2.src = compressed; prev2.style.display = 'block'; }
+    showToast('โหลดรูป Hero สำเร็จ กด "บันทึกรูป Hero" เพื่อบันทึก');
+    showLoading(false);
+  });
 };
 
 window.saveSettings = async function() {
@@ -1681,15 +2022,26 @@ window.doLogout = async function() {
 window.previewBanner = function() {
   const url = document.getElementById('set-banner-url').value;
   const img = document.getElementById('banner-preview-img');
-  if (url) { img.src = url; img.style.display = 'block'; }
-  else { img.style.display = 'none'; }
+  const img2 = document.getElementById('brand-hero-preview');
+  if (url) {
+    img.src = url; img.style.display = 'block';
+    if (img2) { img2.src = url; img2.style.display = 'block'; }
+  } else {
+    img.style.display = 'none';
+    if (img2) img2.style.display = 'none';
+  }
 };
 
 window.previewHeroLogo = function() {
   const url = document.getElementById('set-hero-logo-url').value;
   const img = document.getElementById('hero-logo-preview-img');
-  if (url) { img.src = url; img.style.display = 'block'; }
-  else { img.style.display = 'none'; }
+  const img2 = document.getElementById('brand-logo-preview');
+  if (url) {
+    img.src = url; img.style.display = 'block';
+    if (img2) { img2.src = url; img2.style.display = 'block'; }
+  } else {
+    img.style.display = 'none';
+  }
 };
 
 // compress image to base64 under ~800KB
