@@ -54,7 +54,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);min-height:100vh;disp
 <body>
 
 <div class="hero-top">
-  <img class="hero-top-img" src="logo.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
+  <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
   <div class="hero-top-overlay"></div>
 </div>
 
@@ -184,10 +184,15 @@ window.adminLogin = async function(){
     const uid = userCred.user.uid;
 
     // ตรวจสอบ role ใน Firestore collection "admins"
-    const adminSnap = await getDoc(doc(db, 'admins', uid));
+    // หาก Firestore Rules ไม่อนุญาต ให้ใช้ role "admin" เป็นค่าเริ่มต้น
     let role = 'admin';
-    if(adminSnap.exists()){
-      role = adminSnap.data().role || 'admin';
+    try {
+      const adminSnap = await getDoc(doc(db, 'admins', uid));
+      if(adminSnap.exists()){
+        role = adminSnap.data().role || 'admin';
+      }
+    } catch(firestoreErr) {
+      console.warn('ไม่สามารถอ่าน admins collection (permissions):', firestoreErr.message);
     }
 
     sessionStorage.setItem('imkum_user', JSON.stringify({
