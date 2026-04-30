@@ -346,7 +346,6 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 </style>
 </head>
 <body>
-<button onclick="login()">Login</button>
 <!-- HEADER -->
 <div class="admin-header">
   <div class="brand">
@@ -3003,13 +3002,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <!-- 🔥 ใส่ตรงนี้ -->
 <script src="/core.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  Core.requireAdmin();
-});
-  function login() {
-  firebase.auth().signInWithEmailAndPassword(email, password);
-}
-</script>
 </body>
 </html>
