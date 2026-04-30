@@ -9,18 +9,17 @@
 :root{--yellow:#FFC107;--yellow-dark:#FF8F00;--orange:#FF6B35;--white:#fff;--bg:#FFF8F0;--text:#2D1B00;--text-sub:#888;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Sarabun',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
-.hero-top{width:100%;max-width:480px;position:relative;height:240px;overflow:hidden;border-radius:0 0 28px 28px;box-shadow:0 4px 20px rgba(0,0,0,0.12);}
-.hero-top-img{width:100%;height:100%;object-fit:cover;object-position:center top;}
-.hero-top-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,transparent 40%,rgba(255,248,240,0.6) 85%,rgba(255,248,240,1) 100%);}
-.card-wrap{width:100%;max-width:420px;padding:0 16px 32px;}
+/* Hero as card - แสดงรูปเต็มไม่ตัด */
+.hero-top{width:100%;max-width:480px;position:relative;overflow:hidden;border-radius:20px;margin:12px 16px 0;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+.hero-top-img{width:100%;height:auto;display:block;object-fit:contain;}
+.hero-top-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.18) 100%);}
+.card-wrap{width:100%;max-width:480px;padding:12px 16px 32px;}
 .login-card{background:var(--white);border-radius:24px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);margin-bottom:16px;}
-.step-wrap{display:flex;gap:8px;justify-content:center;margin-bottom:20px;}
-.step-dot{width:8px;height:8px;border-radius:50%;background:#E0D0C0;transition:all .3s;}
-.step-dot.active{background:var(--yellow-dark);width:24px;border-radius:4px;}
-.step-dot.done{background:#4CAF50;}
+.step-wrap{display:none;}
+.step-dot{display:none;}
 .step-panel{display:none;}
 .step-panel.active{display:block;}
-.info-box{background:#FFF3E0;border-radius:12px;padding:12px 14px;font-size:13px;color:#5D4037;margin-bottom:16px;line-height:1.6;}
+.info-box{background:#FFF3E0;border-radius:12px;padding:10px 14px;font-size:12px;color:#5D4037;margin-bottom:14px;line-height:1.5;}
 .error-box{background:#FFEBEE;border-radius:12px;padding:11px 14px;font-size:13px;color:#C62828;margin-bottom:14px;display:none;}
 .form-label{font-size:13px;font-weight:700;color:var(--text-sub);margin-bottom:6px;display:block;}
 .form-input{width:100%;border:2px solid #E8E8E8;border-radius:12px;padding:13px 16px;font-family:'Sarabun',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s;background:var(--white);}
@@ -74,7 +73,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);min-height:100vh;disp
 
       <!-- Admin Login Form (Firebase Auth email/password) -->
       <div id="panel-admin">
-        <div class="info-box">เข้าสู่ระบบด้วย Email และ Password </div>
+        <div class="info-box">🔐 เข้าสู่ระบบด้วย Email และ Password </div>
         <div class="form-group">
           <label class="form-label">Email</label>
           <input type="email" class="form-input" id="admin-email" placeholder="admin@example.com"
