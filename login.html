@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>เข้าสู่ระบบ - อิ่มเอ๋ย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{--yellow:#FFC107;--yellow-dark:#FF8F00;--orange:#FF6B35;--white:#fff;--bg:#FFF8F0;--text:#2D1B00;--text-sub:#888;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+/* Hero full width */
+.hero-top{width:100%;position:relative;overflow:hidden;background:#1a0a00;}
+.hero-top-img{width:100%;height:auto;display:block;object-fit:cover;}
+.hero-top-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.18) 100%);}
+.card-wrap{width:100%;max-width:480px;padding:0 16px 32px;}
+.login-card{background:var(--white);border-radius:24px;padding:24px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);margin-top:12px;}
+.step-wrap{display:none;}
+.step-dot{display:none;}
+.step-panel{display:none;}
+.step-panel.active{display:block;}
+.info-box{background:#FFF3E0;border-radius:12px;padding:10px 14px;font-size:12px;color:#5D4037;margin-bottom:14px;line-height:1.5;}
+.error-box{background:#FFEBEE;border-radius:12px;padding:11px 14px;font-size:13px;color:#C62828;margin-bottom:14px;display:none;}
+.form-label{font-size:13px;font-weight:700;color:var(--text-sub);margin-bottom:6px;display:block;}
+.form-input{width:100%;border:2px solid #E8E8E8;border-radius:12px;padding:13px 16px;font-family:'Sarabun',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s;background:var(--white);}
+.form-input:focus{border-color:var(--yellow);}
+.form-group{margin-bottom:14px;position:relative;}
+.pwd-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;line-height:1;}
+.phone-hint{font-size:11px;color:#aaa;margin-top:4px;}
+.login-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4);transition:transform 0.15s,opacity 0.15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.login-btn:active{transform:scale(0.97);}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.back-btn{width:100%;margin-top:10px;padding:12px;border:1.5px solid #E8E8E8;background:#FAFAFA;border-radius:12px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;}
+.back-btn:hover{border-color:var(--orange);color:var(--orange);background:#FFF8F0;}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,248,240,0.75);display:none;align-items:center;justify-content:center;z-index:500;}
+.loading-overlay.show{display:flex;}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid #FFE082;border-top-color:var(--yellow-dark);animation:spin 0.75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.28s;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.checking-ring{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(62,32,0,0.3);border-top-color:#3E2000;animation:spin 0.7s linear infinite;}
+.tab-group{display:flex;gap:8px;margin-bottom:18px;}
+.tab-btn{flex:1;padding:10px;border-radius:10px;border:2px solid #E8E8E8;background:white;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:#999;cursor:pointer;transition:all .2s;}
+.tab-btn.active{border-color:var(--yellow-dark);background:#FFF8E1;color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="hero-top" style="width:100%;">
+  <img class="hero-top-img" src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
+  <div class="hero-top-overlay"></div>
+</div>
+
+<div class="card-wrap">
+    <div class="login-card">
+
+    <div class="step-wrap">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+    </div>
+
+    <div class="error-box" id="error-box">
+      <span id="error-msg">เกิดข้อผิดพลาด</span>
+    </div>
+
+    <!-- STEP 1: Admin/Customer -->
+    <div id="step-1" class="step-panel active">
+
+      <div class="tab-group">
+        <button class="tab-btn active" id="tab-admin" onclick="switchTab('admin')">🔑 แอดมิน</button>
+        <button class="tab-btn" id="tab-customer" onclick="switchTab('customer')">👤 ลูกค้า</button>
+      </div>
+
+      <!-- Admin Login Form (Firebase Auth email/password) -->
+      <div id="panel-admin">
+        <div class="info-box">🔐 เข้าสู่ระบบด้วย Email และ Password ที่ตั้งไว้ใน Firebase Authentication</div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="admin-email" placeholder="admin@example.com"
+            onkeydown="if(event.key==='Enter')document.getElementById('admin-password').focus()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="admin-password" placeholder="รหัสผ่าน"
+            onkeydown="if(event.key==='Enter')adminLogin()">
+          <button class="pwd-toggle" id="admin-eye" onclick="toggleAdminPwd()">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button class="login-btn" id="admin-btn" onclick="adminLogin()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          เข้าสู่ระบบแอดมิน
+        </button>
+      </div>
+
+      <!-- Customer shortcut -->
+      <div id="panel-customer" style="display:none">
+        <div class="info-box">📱 กรอกชื่อและเบอร์โทรเพื่อสั่งอาหาร</div>
+        <div class="form-group">
+          <label class="form-label">ชื่อของคุณ</label>
+          <input type="text" class="form-input" id="cust-name-1" placeholder="เช่น สมชาย, นิสา" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เบอร์โทรศัพท์</label>
+          <input type="tel" class="form-input" id="cust-phone-1" placeholder="0812345678" maxlength="10"
+            oninput="this.value=this.value.replace(/\D/g,'')"
+            onkeydown="if(event.key==='Enter')customerLogin()">
+          <div class="phone-hint">ใช้สำหรับติดตามออเดอร์ ไม่มีการส่ง SMS</div>
+        </div>
+        <button class="login-btn" onclick="customerLogin()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          เข้าสู่ระบบ
+        </button>
+      </div>
+
+    </div>
+
+    </div>
+
+  <button class="back-btn" onclick="window.location.href='index.html'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    กลับหน้าหลัก
+  </button>
+
+</div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { FIREBASE_CONFIG } from "./config.js";
+
+const app = initializeApp(FIREBASE_CONFIG);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ─── Helpers ────────────────────────────────────────────
+function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function showError(msg){ const b=document.getElementById('error-box'); document.getElementById('error-msg').textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',4000); }
+function hideError(){ document.getElementById('error-box').style.display='none'; }
+
+// ─── Tab switch ────────────────────────────────────────
+window.switchTab = function(tab) {
+  document.getElementById('tab-admin').classList.toggle('active', tab==='admin');
+  document.getElementById('tab-customer').classList.toggle('active', tab==='customer');
+  document.getElementById('panel-admin').style.display = tab==='admin' ? '' : 'none';
+  document.getElementById('panel-customer').style.display = tab==='customer' ? '' : 'none';
+  hideError();
+};
+
+// ─── Toggle password visibility ─────────────────────────
+window.toggleAdminPwd = function(){
+  const inp = document.getElementById('admin-password');
+  const eye = document.getElementById('admin-eye');
+  if(inp.type==='password'){
+    inp.type='text';
+    eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  } else {
+    inp.type='password';
+    eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  }
+};
+
+// ─── Admin Login with Firebase Auth ─────────────────────
+window.adminLogin = async function(){
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  if(!email){ showError('กรุณากรอก Email'); return; }
+  if(!password){ showError('กรุณากรอก Password'); return; }
+
+  const btn = document.getElementById('admin-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="checking-ring"></span> กำลังเข้าสู่ระบบ…';
+  showLoading(true);
+
+  try {
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const uid = userCred.user.uid;
+
+    // ตรวจสอบ role ใน Firestore collection "admins"
+    // หาก Firestore Rules ไม่อนุญาต ให้ใช้ role "admin" เป็นค่าเริ่มต้น
+    let role = 'admin';
+    try {
+      const adminSnap = await getDoc(doc(db, 'admins', uid));
+      if(adminSnap.exists()){
+        role = adminSnap.data().role || 'admin';
+      }
+    } catch(firestoreErr) {
+      console.warn('ไม่สามารถอ่าน admins collection (permissions):', firestoreErr.message);
+    }
+
+    sessionStorage.setItem('imkum_user', JSON.stringify({
+      role,
+      name: userCred.user.displayName || email.split('@')[0],
+      email,
+      uid,
+      loginAt: Date.now()
+    }));
+    sessionStorage.setItem('imkum_admin_auth','1');
+
+    showToast(role==='owner' ? '👑 ยินดีต้อนรับ เจ้าของร้าน!' : '🧑‍🍳 ยินดีต้อนรับ แอดมิน!');
+    setTimeout(()=>window.location.href='admin.html', 700);
+
+  } catch(e) {
+    console.error('adminLogin error:', e);
+    let msg = 'เข้าสู่ระบบไม่สำเร็จ';
+    if(e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'){
+      msg = 'Email หรือ Password ไม่ถูกต้อง';
+    } else if(e.code === 'auth/user-not-found'){
+      msg = 'ไม่พบบัญชีนี้ในระบบ';
+    } else if(e.code === 'auth/invalid-email'){
+      msg = 'รูปแบบ Email ไม่ถูกต้อง';
+    } else if(e.code === 'auth/too-many-requests'){
+      msg = 'ลองมากเกินไป กรุณารอสักครู่';
+    } else if(e.code === 'auth/network-request-failed'){
+      msg = 'ไม่สามารถเชื่อมต่อได้ ตรวจสอบเน็ตเวิร์ก';
+    }
+    showError(msg);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> เข้าสู่ระบบแอดมิน';
+    showLoading(false);
+  }
+};
+
+// ─── Customer Login ─────────────────────────────────────
+window.customerLogin = async function(){
+  const name = document.getElementById('cust-name-1').value.trim();
+  const phone = document.getElementById('cust-phone-1').value.trim();
+  if(!name){ showError('กรุณากรอกชื่อของคุณ'); return; }
+  if(!phone||phone.length<9){ showError('กรุณากรอกเบอร์โทรให้ครบถ้วน'); return; }
+  showLoading(true);
+  try {
+    const existing = await getDoc(doc(db,'customers',phone));
+    if(existing.exists()){
+      const existingName = existing.data().name||'';
+      if(existingName !== name){
+        showError('เบอร์ '+phone+' ถูกลงทะเบียนโดย "'+existingName+'" แล้ว กรุณาใช้เบอร์อื่น หรือกรอกชื่อให้ตรงกัน');
+        showLoading(false);
+        return;
+      }
+      setDoc(doc(db,'customers',phone),{lastLogin:new Date().toISOString()},{merge:true}).catch(()=>{});
+    } else {
+      setDoc(doc(db,'customers',phone),{name,phone,lastLogin:new Date().toISOString()},{merge:true}).catch(()=>{});
+    }
+    sessionStorage.setItem('imkum_user', JSON.stringify({role:'customer',name,phone,loginAt:Date.now()}));
+    localStorage.setItem('imkum_name',name);
+    localStorage.setItem('imkum_phone',phone);
+    window.location.href='index.html';
+  } catch(e){
+    sessionStorage.setItem('imkum_user', JSON.stringify({role:'customer',name,phone,loginAt:Date.now()}));
+    localStorage.setItem('imkum_name',name);
+    localStorage.setItem('imkum_phone',phone);
+    window.location.href='index.html';
+  } finally {
+    showLoading(false);
+  }
+};
+
+// ─── Auto-redirect if already logged in ─────────────────
+try {
+  const sess = sessionStorage.getItem('imkum_user');
+  if(sess){
+    const user = JSON.parse(sess);
+    if(Date.now()-(user.loginAt||0) < 8*60*60*1000){
+      window.location.href = user.role==='customer' ? 'index.html' : 'admin.html';
+    } else {
+      sessionStorage.clear();
+    }
+  }
+  // Pre-fill customer fields
+  const savedName = localStorage.getItem('imkum_name')||'';
+  const savedPhone = localStorage.getItem('imkum_phone')||'';
+  if(savedName) document.getElementById('cust-name-1').value=savedName;
+  if(savedPhone) document.getElementById('cust-phone-1').value=savedPhone;
+} catch(e){ sessionStorage.clear(); }
+</script>
+
+</body>
+</html>
