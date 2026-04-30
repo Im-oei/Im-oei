@@ -958,6 +958,30 @@ import {
 import { FIREBASE_CONFIG, LINE_CHANNEL_TOKEN } from "./config.js";
 
 const app = initializeApp(FIREBASE_CONFIG);
+  firebase.auth().onAuthStateChanged(async (user) => {
+  if (!user) {
+    console.log("ยังไม่ได้ login");
+    return;
+  }
+
+  const uid = user.uid;
+
+  const doc = await firebase.firestore()
+    .collection("users")
+    .doc(uid)
+    .get();
+
+  if (doc.exists && doc.data().role === "admin") {
+    console.log("✅ ADMIN");
+    
+    // 👉 ไปหน้า admin
+    window.location.href = "/admin.html";
+    
+  } else {
+    console.log("❌ ไม่ใช่ admin");
+    alert("คุณไม่มีสิทธิ์");
+  }
+});
 const db = getFirestore(app);
 
 
@@ -1949,6 +1973,7 @@ window.switchTab = function(tab, btn) {
   if (tab === 'settings') {
     renderFeaturedCheckboxes();
     loadStampConfig();
+  
     loadPreorderSetting();
   }
   if (tab === 'stamps') loadStampConfig();
