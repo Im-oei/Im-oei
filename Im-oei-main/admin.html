@@ -5,37 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>อิ่มเอ๋ย Im-Oei | แอดมิน</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<script>
-const firebaseConfig = { ... };
-firebase.initializeApp(firebaseConfig);
-</script>
-
-<!-- ✅ โค้ดที่คุณถาม -->
-<script>
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (user) {
-    const uid = user.uid;
-
-    const doc = await firebase.firestore()
-      .collection("admins")
-      .doc(uid)
-      .get();
-
-    if (doc.exists && doc.data().role === "admin") {
-      window.location.href = "/admin.html";
-    } else {
-      window.location.href = "/index.html";
-    }
-  } else {
-    window.location.href = "/index.html";
-  }
-});
-</script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root {
@@ -3126,6 +3096,37 @@ document.addEventListener('DOMContentLoaded', function () {
     const bar = document.getElementById('notif-permission-bar');
     if (bar) bar.style.display =
       Notification.permission === 'granted' ? 'none' : 'block';
+  }
+});
+</script>
+  <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { ... };
+firebase.initializeApp(firebaseConfig);
+</script>
+
+<!-- ✅ โค้ดที่คุณถาม -->
+<script>
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    const uid = user.uid;
+
+    const doc = await firebase.firestore()
+      .collection("admins")
+      .doc(uid)
+      .get();
+
+    if (doc.exists && doc.data().role === "admin") {
+      window.location.href = "/admin.html";
+    } else {
+      window.location.href = "/index.html";
+    }
+  } else {
+    window.location.href = "/index.html";
   }
 });
 </script>
