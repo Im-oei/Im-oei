@@ -23,6 +23,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 </script>
+ <script>
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    console.log("UID =", user.uid);
+  }
+});
+</script>
 <style>
 :root{--yellow:#FFC107;--yellow-dark:#FF8F00;--orange:#FF6B35;--white:#fff;--bg:#FFF8F0;--text:#2D1B00;--text-sub:#888;}
 *{box-sizing:border-box;margin:0;padding:0;}
