@@ -2,113 +2,106 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isLoggedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     // ===== ORDERS =====
     match /orders/{orderId} {
-      allow create: if true;
-      allow read:   if true;
-      allow update: if true;
-      allow delete: if true;
+      allow create: if isLoggedIn();   // ลูกค้าสั่งได้
+      allow read: if isLoggedIn();
+
+      // ❗ แก้ / ลบ → admin เท่านั้น
+      allow update, delete: if isAdmin();
     }
 
     // ===== MENU =====
     match /menu/{itemId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
     // ===== CATEGORIES =====
     match /categories/{catId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
     // ===== BANNERS =====
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
     // ===== STAMPS =====
     match /stamps/{phone} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if isAdmin();
     }
 
     // ===== SETTINGS =====
     match /settings/{docId} {
       allow read: if true;
-      allow write: if true;
-    }
-
-    // ===== PUSH SUBSCRIPTIONS =====
-    match /pushSubscriptions/{phone} {
-      allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
     // ===== PUSH QUEUE =====
     match /pushQueue/{docId} {
       allow read: if false;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
     // ===== LINE QUEUE =====
     match /lineQueue/{docId} {
       allow read: if false;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
     // ===== RATINGS =====
     match /ratings/{ratingId} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if true;
-    }
-
-    // ===== STORE CONFIG =====
-    match /store/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // ===== ADMINS =====
-    // อนุญาตให้ admin อ่านข้อมูล role ของตัวเองได้เท่านั้น
-    match /admins/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false;
+      allow create: if isLoggedIn();
+      allow update, delete: if isAdmin();
     }
 
     // ===== CUSTOMERS =====
     match /customers/{customerId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if isAdmin();
     }
 
     // ===== PICKUP LOCATIONS =====
     match /pickupLocations/{locId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
-    // ===== LINE USERS (LIFF) =====
-    // เก็บ { userId, displayName, pictureUrl, phone, linkedAt }
-    // liff.html เขียน/อ่าน document โดยใช้ userId เป็น key
+    // ===== LINE USERS =====
     match /lineUsers/{userId} {
-      allow read:   if true;
-      allow create: if true;
-      allow update: if true;
+      allow read: if isLoggedIn();
+      allow create: if isLoggedIn();
+      allow update: if request.auth.uid == userId;
       allow delete: if false;
     }
 
-    // ===== LINE PHONE MAP (LIFF) =====
-    // index: phone → userId  ให้ Cloud Function/admin ค้นหา userId จากเบอร์ได้เร็ว
-    // เก็บ { userId, displayName, pictureUrl, updatedAt }
+    // ===== LINE PHONE MAP =====
     match /linePhoneMap/{phone} {
-      allow read:   if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if false;
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
+    // ===== ADMINS =====
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // 🚫 ปิดทุกอย่างที่ไม่ได้กำหนด
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
