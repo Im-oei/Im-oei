@@ -1459,10 +1459,16 @@ window.previewBannerModal = function() {
 window.uploadBannerModal = function(input) {
   const file = input.files[0]; if (!file) return;
   showLoading(true);
-  compressImageToBase64(file, 600, compressed => {
+  // compress ลงให้เล็กที่สุด (max 400px wide) เพื่อให้ Firestore รับได้
+  compressImageToBase64(file, 400, compressed => {
+    const kb = Math.round(compressed.length / 1024);
+    if (compressed.length > 700000) {
+      showToast('❌ รูปยังใหญ่เกิน (' + kb + ' KB) กรุณาใช้รูปขนาดเล็กกว่านี้');
+      showLoading(false); return;
+    }
     document.getElementById('banner-img-url').value = compressed;
     previewBannerModal();
-    showToast('โหลดรูปสำเร็จ');
+    showToast('โหลดรูปสำเร็จ (' + kb + ' KB)');
     showLoading(false);
   });
 };
@@ -2478,7 +2484,10 @@ window.saveMenuItem = async function() {
     showToast('❌ รูปภาพใหญ่เกินไป กรุณาเลือกรูปใหม่'); return;
   }
   const catKey = document.getElementById('edit-catkey').value;
-  const catLabels = { sandwich:'🥪 แซนวิช', rice:'🍚 ข้าว', noodle:'🍜 หมี่', drink:'🥤 เครื่องดื่ม', other:'🍽️ อื่นๆ' };
+  // ดึง category label จาก allCategories (dynamic) แทน hardcode
+  const catObj = allCategories.find(c => c.key === catKey);
+  const categoryLabel = catObj ? `${catObj.emoji||''} ${catObj.name}`.trim() : catKey;
+  const sortOrd = catObj ? (catObj.sortOrder || 99) : 99;
   const data = {
     name,
     desc: document.getElementById('edit-desc').value.trim(),
@@ -2486,8 +2495,8 @@ window.saveMenuItem = async function() {
     emoji: document.getElementById('edit-emoji').value.trim() || '🍽️',
     imageUrl: document.getElementById('edit-image-url').value.trim(),
     catKey,
-    category: catLabels[catKey] || catKey,
-    sortOrder: ['sandwich','rice','noodle','drink','other'].indexOf(catKey) + 1,
+    category: categoryLabel,
+    sortOrder: sortOrd,
   };
   showLoading(true);
   try {
