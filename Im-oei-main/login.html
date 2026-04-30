@@ -10,21 +10,13 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<!-- ✅ ใส่ตรงนี้ -->
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei",
-  storageBucket: "im-oei.appspot.com",
-  messagingSenderId: "392812205535",
-  appId: "1:392812205535:web:65f6ce114feb3ce035a06a"
-};
-
+const firebaseConfig = { ... };
 firebase.initializeApp(firebaseConfig);
 </script>
 
- <script>
+<!-- ✅ โค้ดที่คุณถาม -->
+<script>
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     const uid = user.uid;
@@ -37,8 +29,10 @@ firebase.auth().onAuthStateChanged(async (user) => {
     if (doc.exists && doc.data().role === "admin") {
       window.location.href = "/admin.html";
     } else {
-      alert("คุณไม่ใช่แอดมิน");
+      window.location.href = "/index.html";
     }
+  } else {
+    window.location.href = "/index.html";
   }
 });
 </script>
