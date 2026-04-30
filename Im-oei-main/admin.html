@@ -5,17 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>อิ่มเอ๋ย Im-Oei | แอดมิน</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-:root {
-  --yellow: #FFC107; --yellow-dark: #F5A623; --yellow-light: #FFF8E1;
-  --orange: #FF8C00; --bg: #F7F3EE; --white: #FFFFFF;
-  --text: #2C2C2C; --text-sub: #999; --green: #4CAF50;
-  --red: #E53935; --blue: #2196F3; --purple: #9C27B0;
-  --shadow: 0 4px 20px rgba(0,0,0,0.09);
-}
-html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sans-serif; color: var(--text); }
-<!-- Firebase SDK -->
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -34,6 +23,17 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 </script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --yellow: #FFC107; --yellow-dark: #F5A623; --yellow-light: #FFF8E1;
+  --orange: #FF8C00; --bg: #F7F3EE; --white: #FFFFFF;
+  --text: #2C2C2C; --text-sub: #999; --green: #4CAF50;
+  --red: #E53935; --blue: #2196F3; --purple: #9C27B0;
+  --shadow: 0 4px 20px rgba(0,0,0,0.09);
+}
+html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sans-serif; color: var(--text); }
+
 /* HEADER - index style */
 .admin-header { background: #fff; padding: 10px 16px 8px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
 .admin-header .brand { display: flex; align-items: center; gap: 10px; }
