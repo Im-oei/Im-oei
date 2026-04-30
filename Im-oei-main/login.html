@@ -30,6 +30,24 @@ firebase.auth().onAuthStateChanged(user => {
   }
 });
 </script>
+ <script>
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    const uid = user.uid;
+
+    const doc = await firebase.firestore()
+      .collection("admins")
+      .doc(uid)
+      .get();
+
+    if (doc.exists && doc.data().role === "admin") {
+      window.location.href = "/admin.html";
+    } else {
+      alert("คุณไม่ใช่แอดมิน");
+    }
+  }
+});
+</script>
 <style>
 :root{--yellow:#FFC107;--yellow-dark:#FF8F00;--orange:#FF6B35;--white:#fff;--bg:#FFF8F0;--text:#2D1B00;--text-sub:#888;}
 *{box-sizing:border-box;margin:0;padding:0;}
