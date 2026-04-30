@@ -3098,6 +3098,31 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 </script>
+<script>
+firebase.auth().onAuthStateChanged(async (user) => {
 
+  // ❌ ยังไม่ login → เด้งออก
+  if (!user) {
+    window.location.href = "/login.html";
+    return;
+  }
+
+  // 🔍 เช็คว่าเป็น admin ไหม
+  const doc = await firebase.firestore()
+    .collection("admins")
+    .doc(user.uid)
+    .get();
+
+  // ❌ ไม่ใช่ admin → เด้งออก
+  if (!doc.exists) {
+    alert("คุณไม่ใช่แอดมิน");
+    window.location.href = "/";
+    return;
+  }
+
+  // ✅ ผ่าน → ให้โหลดหน้า admin ต่อ
+  console.log("Admin access granted");
+});
+</script>
 </body>
 </html>
