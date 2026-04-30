@@ -16,9 +16,24 @@
 }
 html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sans-serif; color: var(--text); }
 <!-- Firebase SDK -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<!-- ✅ ใส่ตรงนี้ -->
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBjzTASSDozeaH2lPTUP1Fn9js6RR-0Uo",
+  authDomain: "im-oei.firebaseapp.com",
+  projectId: "im-oei",
+  storageBucket: "im-oei.appspot.com",
+  messagingSenderId: "392812205535",
+  appId: "1:392812205535:web:65f6ce114feb3ce035a06a"
+};
+
+firebase.initializeApp(firebaseConfig);
+</script>
 /* HEADER - index style */
 .admin-header { background: #fff; padding: 10px 16px 8px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
 .admin-header .brand { display: flex; align-items: center; gap: 10px; }
