@@ -1262,6 +1262,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
+window._db = db; // expose for non-module scripts
 
 
 // ====== AUTH & ROLE ======
@@ -3451,6 +3452,32 @@ window.uploadBrandHero = function(input) {
   };
   reader.readAsDataURL(file);
 };
+</script>
+
+<script>
+// Double-safety: ensure updateStatus/deleteOrder are always available globally
+// Module sets window._db; this fallback uses dynamic import as backup
+if (!window.updateStatus) {
+  window.updateStatus = async function(orderId, newStatus) {
+    const db = window._db;
+    if (!db) { alert('กรุณารอสักครู่แล้วลองใหม่'); return; }
+    try {
+      const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await updateDoc(doc(db, 'orders', orderId), { status: newStatus });
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+}
+if (!window.deleteOrder) {
+  window.deleteOrder = async function(orderId) {
+    const db = window._db;
+    if (!db) { alert('กรุณารอสักครู่แล้วลองใหม่'); return; }
+    if (!confirm('ยืนยันลบออเดอร์ #' + orderId.slice(0,8).toUpperCase() + '?')) return;
+    try {
+      const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await deleteDoc(doc(db, 'orders', orderId));
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+}
 </script>
 </body>
 </html>

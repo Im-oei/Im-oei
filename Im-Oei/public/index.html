@@ -198,10 +198,10 @@ body.view-list .card .qty{padding:0 12px 0 0;flex-direction:row;}
 
 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 4px;">
   <span style="font-size:15px;font-weight:800;color:#2C2C2C;" id="menu-count-label">เมนูทั้งหมด</span>
-  <button id="view-toggle-btn" onclick="toggleView()" style="background:#fff;border:1.5px solid #E0D6C8;border-radius:20px;padding:6px 14px;display:flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#555;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
-    <span id="view-toggle-icon">☰</span>
-    <span id="view-toggle-label">รายการ</span>
-  </button>
+  <div style="display:flex;gap:6px;">
+    <button onclick="setView('grid')" id="btn-grid" style="background:#FFC107;border:1.5px solid #FFC107;border-radius:20px;padding:6px 14px;display:flex;align-items:center;gap:5px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#3E2000;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.08);">⊞ กริด</button>
+    <button onclick="setView('list')" id="btn-list" style="background:#fff;border:1.5px solid #E0D6C8;border-radius:20px;padding:6px 14px;display:flex;align-items:center;gap:5px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#555;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.08);">☰ รายการ</button>
+  </div>
 </div>
 
 <div id="menu-list" class="pb-footer"></div>
@@ -375,23 +375,24 @@ var currentCat='all'; var currentSearch='';
 // ====== VIEW TOGGLE ======
 var viewMode = localStorage.getItem('imkum_view') || 'grid';
 function applyViewMode(){
-  var icon = document.getElementById('view-toggle-icon');
-  var label = document.getElementById('view-toggle-label');
+  var btnGrid = document.getElementById('btn-grid');
+  var btnList = document.getElementById('btn-list');
   if(viewMode === 'list'){
     document.body.classList.add('view-list');
-    if(icon) icon.textContent = '⊞';
-    if(label) label.textContent = 'กริด';
+    if(btnGrid){ btnGrid.style.background='#fff'; btnGrid.style.color='#555'; btnGrid.style.borderColor='#E0D6C8'; }
+    if(btnList){ btnList.style.background='#FFC107'; btnList.style.color='#3E2000'; btnList.style.borderColor='#FFC107'; }
   } else {
     document.body.classList.remove('view-list');
-    if(icon) icon.textContent = '☰';
-    if(label) label.textContent = 'รายการ';
+    if(btnGrid){ btnGrid.style.background='#FFC107'; btnGrid.style.color='#3E2000'; btnGrid.style.borderColor='#FFC107'; }
+    if(btnList){ btnList.style.background='#fff'; btnList.style.color='#555'; btnList.style.borderColor='#E0D6C8'; }
   }
 }
-function toggleView(){
-  viewMode = (viewMode === 'grid') ? 'list' : 'grid';
+function setView(mode){
+  viewMode = mode;
   localStorage.setItem('imkum_view', viewMode);
   applyViewMode();
 }
+function toggleView(){ setView(viewMode === 'grid' ? 'list' : 'grid'); }
 applyViewMode();
 
 var cart=JSON.parse(localStorage.getItem('imkum_cart')||'{}');
@@ -532,7 +533,7 @@ if (u && u.role === 'customer' && !localStorage.getItem('imkum_push_asked')) {
   setTimeout(requestPushPermission, 2000);
 }
 
-buildTabs(); buildFeatured(); buildMenuList(); render();
+buildTabs(); buildFeatured(); buildMenuList(); render(); applyViewMode();
 
 window.openAdminLogin=function(){window.location.href='login.html';};
 window.closeAdminModal=function(){};
