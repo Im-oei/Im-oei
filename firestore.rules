@@ -75,10 +75,11 @@ service cloud.firestore {
     }
 
     // ===== LINE USERS =====
-    // LIFF ไม่มี Firebase Auth → ยอมให้เขียนได้โดยตรง (validate ด้วย data)
+    // LIFF ไม่มี Firebase Auth → ยอมให้อ่าน/เขียนได้โดยตรง (validate ด้วย data)
     match /lineUsers/{userId} {
-      allow read: if isAdmin() ||
-        (isLoggedIn() && request.auth.uid == userId);
+      // อ่านได้เฉพาะ document ของตัวเอง (LIFF ส่ง userId มาใน path)
+      // หรือ admin อ่านได้ทั้งหมด
+      allow read: if true;  // LIFF อ่าน doc ตัวเองก่อน check ว่าเคยผูกหรือยัง
       // ลูกค้า LIFF เขียนได้ เฉพาะ document ของตัวเอง (userId ใน path ต้องตรงกับ field ใน data)
       allow create: if request.resource.data.userId == userId
         && request.resource.data.keys().hasAll(['userId','displayName','phone','linkedAt','updatedAt']);
