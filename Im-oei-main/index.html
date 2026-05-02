@@ -504,7 +504,7 @@ async function syncFirestore(){
       const banners=allBannersRaw
         .filter(b=>b.active!==false && b.imageUrl && b.imageUrl.trim()!=='')
         .sort((a,b)=>(a.order||0)-(b.order||0));
-      console.log('[Banner] total:', allBannersRaw.length, 'with image:', banners.length);
+      console.warn('[Banner] total:', allBannersRaw.length, 'with image:', banners.length);
       if(banners.length) buildPromoSlider(banners);
       // Promotion banner between featured & menu list
       const midBanner = banners.find(b=>b.midBanner) || (banners.length > 1 ? banners[1] : null);
@@ -523,7 +523,7 @@ async function syncFirestore(){
         const c = d.data();
         if (c.key) catLookup[c.key] = { label: `${c.emoji||''} ${c.name}`.trim(), sortOrder: c.sortOrder||99 };
       });
-    } catch(ce) { console.log('categories load skipped:', ce.message); }
+    } catch(ce) { console.warn('categories load skipped:', ce.message); }
 
     const mSnap=await getDocs(collection(db,'menu'));
     if(!mSnap.empty){
@@ -563,9 +563,9 @@ async function syncFirestore(){
       });
       window._ratingMap = ratingMap;
       buildMenuList(); // re-render พร้อมดาว
-    } catch(re) { console.log('ratings load skipped:', re.message); }
+    } catch(re) { console.warn('ratings load skipped:', re.message); }
 
-  }catch(e){console.log('Firebase sync skipped:',e.message);}
+  }catch(e){console.warn('Firebase sync skipped:',e.message);}
 }
 syncFirestore();
 

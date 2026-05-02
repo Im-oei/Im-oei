@@ -118,7 +118,10 @@ function _execLoadPickup(db, getDocs, collection) {
       }
     }
     if (document.getElementById('cart-body')) renderCart();
-  }).catch(() => {});
+  }).catch(e => {
+    // ตั้งใจ silent — ถ้าโหลด pickupLocations ไม่ได้ ใช้ค่า default PICKUP_LOCATIONS แทน
+    console.warn('loadPickupLocations: ใช้จุดรับอาหาร default:', e.code || e.message);
+  });
 }
 function selectLocation(id) {
   selectedLocation = id;
@@ -147,6 +150,7 @@ var MENU = [
 var ALL_ITEMS = [].concat.apply([], MENU.map(function(c){ return c.items; }));
 var STORE_SETTINGS = { pickupStart:'07:00', pickupEnd:'08:00' };
 var STAMP_GOAL = 10;
+var POINTS_PER_BAHT = 20; // 20 บาท = 1 แต้ม (โหลดจาก Firestore)
 
 var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
 // Cache ราคา กรณี ALL_ITEMS ยังไม่ sync จาก Firestore
@@ -215,14 +219,32 @@ function renderCart(){
   var timeHTML = slots.map(function(s){ return '<option value="'+s.val+'">'+s.label+' น.</option>'; }).join('');
   var savedName = (function(){ try { var u=JSON.parse(sessionStorage.getItem('imkum_user')||'null'); return (u&&u.name)||localStorage.getItem('imkum_name')||''; } catch(e){ return localStorage.getItem('imkum_name')||''; } })();
 
-  // Stamp earn notice
+  // Points earn notice (20 บาท = 1 แต้ม)
   var stampInfo = getStampInfo();
   var stampHTML = '';
+  var currentTotal = getTotal();
+  var earnThisOrder = Math.floor(currentTotal / POINTS_PER_BAHT);
   if (stampInfo !== null) {
-    var displayCount = stampInfo.total || 0;
-    var need = STAMP_GOAL - displayCount;
+    var currentPoints = stampInfo.points !== undefined ? stampInfo.points : (stampInfo.total || 0);
+    var afterPoints = currentPoints + earnThisOrder;
+    // ดึง cached rewards เพื่อหาว่าเกือบแลกได้อะไร
+    var nearReward = '';
+    try {
+      var cachedRewards = JSON.parse(localStorage.getItem('imkum_rewards_cache') || '[]');
+      var reachable = cachedRewards.filter(function(r){ return r.active !== false && afterPoints >= r.pointCost; });
+      var almost   = cachedRewards.filter(function(r){ return r.active !== false && afterPoints < r.pointCost && r.pointCost <= afterPoints + 200; });
+      if (reachable.length) {
+        nearReward = '<div style="margin-top:6px;font-size:12px;color:#2E7D32;font-weight:700">🎁 แลกได้แล้ว: ' + reachable.map(function(r){return (r.emoji||'🎁')+' '+r.name;}).join(', ') + '</div>';
+      } else if (almost.length) {
+        var r = almost[0];
+        nearReward = '<div style="margin-top:6px;font-size:12px;color:#F57F17;font-weight:700">✨ อีก '+(r.pointCost - afterPoints)+' แต้มแลก '+(r.emoji||'🎁')+' '+r.name+'!</div>';
+      }
+    } catch(e) { console.warn('rewards cache parse failed:', e.message); /* ใช้ค่า default nearReward = '' */ }
     stampHTML = '<div class="stamp-earn-box"><span class="icon">⭐</span><div class="text">'+
-      (displayCount >= STAMP_GOAL ? '🎉 ครบ '+STAMP_GOAL+' แล้ว! แจ้งร้านรับรางวัล' : 'สั่งนี้รับแต้ม! เหลืออีก '+need+' ครั้งรับของฟรี ('+displayCount+'/'+STAMP_GOAL+')')+
+      'แต้มของคุณ: <b>'+currentPoints+'</b> แต้ม' +
+      (earnThisOrder > 0 ? ' &nbsp;+&nbsp; <b>'+earnThisOrder+'</b> แต้มจากออเดอร์นี้' : '') +
+      (earnThisOrder > 0 ? ' <span style="color:rgba(255,255,255,0.7)">(รวม '+afterPoints+')</span>' : '') +
+      nearReward +
     '</div></div>';
   }
 
@@ -256,7 +278,7 @@ function renderCart(){
       '<select class="pickup-select" id="pickup-select">'+timeHTML+'</select>'+
     '</div>'+
     buildLocationSection()+
-    '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
+    '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" maxlength="200" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
     '<div class="total-row"><span class="total-label">รวมทั้งหมด</span><span><span class="total-amount" id="cart-total">'+getTotal()+'</span><span class="total-unit">บาท</span></span></div>'+
     '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="checkout()">ยืนยันการสั่งซื้อ</button></div>';
 
@@ -338,8 +360,11 @@ async function syncMenu() {
     // โหลด stamp goal จาก settings
     try {
       const stSnap = await getDoc(doc(db, 'settings', 'stamps'));
-      if (stSnap.exists()) { STAMP_GOAL = stSnap.data().goal || 10; }
-    } catch(e) {}
+      if (stSnap.exists()) { 
+        STAMP_GOAL = stSnap.data().goal || 10;
+        if (stSnap.data().pointsPerBaht) POINTS_PER_BAHT = stSnap.data().pointsPerBaht;
+      }
+    } catch(e) { console.warn('stamp settings load failed (ใช้ค่า default):', e.code || e.message); }
 
     const mSnap = await getDocs(collection(db, 'menu'));
     if (!mSnap.empty) {
@@ -357,7 +382,7 @@ async function syncMenu() {
       localStorage.setItem('imkum_cart_prices', JSON.stringify(cartPriceCache));
       renderCart();
     }
-  } catch(e) { console.log('Cart sync skipped:', e.message); }
+  } catch(e) { console.warn('Cart sync skipped:', e.message); }
 
   // Sync stamp จาก Firestore เมื่อ login
   try {
@@ -374,11 +399,14 @@ async function syncMenu() {
         renderCart();
       }
     }
-  } catch(e) { console.log('Stamp sync skipped:', e.message); }
+  } catch(e) { console.warn('Stamp sync skipped:', e.message); }
 }
 
 // ====== CHECKOUT via Firestore ตรงๆ (ไม่ใช้ Cloud Function) ======
+let _isCheckingOut = false; // guard กัน double-submit
 window.checkout = async function() {
+  if (_isCheckingOut) { showToast('กำลังดำเนินการ กรุณารอสักครู่...'); return; }
+  if (!navigator.onLine) { showToast('❌ ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ'); return; }
   var total = getTotal();
   if (!total) { showToast('ไม่มีสินค้าในตะกร้า'); return; }
 
@@ -392,7 +420,7 @@ window.checkout = async function() {
   if (!selectedLocation) { showToast('กรุณาเลือกจุดรับอาหาร'); return; }
   localStorage.setItem('imkum_name', customerName);
 
-  var note = document.getElementById('note-input') ? document.getElementById('note-input').value : '';
+  var note = (document.getElementById('note-input') ? document.getElementById('note-input').value : '').trim().slice(0, 200);
   var pickupRaw = document.getElementById('pickup-select') ? document.getElementById('pickup-select').value : '07:30';
   var isNextDay = pickupRaw.startsWith('next:');
   var pickupTime = pickupRaw.replace('next:', '');
@@ -405,6 +433,7 @@ window.checkout = async function() {
     if (item) orderItems.push({ id, name: item.name, qty, price: item.price, subtotal: item.price * qty });
   });
 
+  _isCheckingOut = true;
   showLoading(true);
   try {
     // เขียน order ลง Firestore โดยตรง
@@ -423,16 +452,26 @@ window.checkout = async function() {
       createdAt: serverTimestamp(),
     });
 
-    // อัพเดท stamp
+    // อัพเดทแต้ม (20 บาท = 1 แต้ม, คำนวณจากยอดออเดอร์)
     let stampMsg = null;
     try {
       const stampRef = doc(db, 'stamps', phone);
       const stampSnap = await getDoc(stampRef);
-      const totalStamps = stampSnap.exists() ? stampSnap.data().total || 0 : 0;
-      const newTotal = totalStamps + 1;
-      await setDoc(stampRef, { total: newTotal, phone, updatedAt: serverTimestamp() }, { merge: true });
-      localStorage.setItem('imkum_stamps_' + phone, JSON.stringify({ total: newTotal }));
-      stampMsg = newTotal >= STAMP_GOAL ? `🎉 ครบ ${STAMP_GOAL} แต้ม! แจ้งร้านรับรางวัลได้เลย!` : `⭐ แต้มสะสม: ${newTotal}/${STAMP_GOAL}`;
+      const existingData = stampSnap.exists() ? stampSnap.data() : {};
+      const oldPoints = existingData.points || existingData.total || 0;
+      const earnedPoints = Math.floor(total / POINTS_PER_BAHT); // 20 บาท = 1 แต้ม
+      const newPoints = oldPoints + earnedPoints;
+      const lifetimePoints = (existingData.lifetimePoints || 0) + earnedPoints;
+      await setDoc(stampRef, {
+        points: newPoints,
+        lifetimePoints,
+        phone,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      localStorage.setItem('imkum_stamps_' + phone, JSON.stringify({ points: newPoints, lifetimePoints }));
+      stampMsg = earnedPoints > 0
+        ? `⭐ ได้รับ ${earnedPoints} แต้ม! (รวมทั้งหมด ${newPoints} แต้ม)`
+        : `⭐ แต้มสะสม: ${newPoints} แต้ม`;
     } catch(e) { console.warn('stamp failed:', e.message); }
 
     localStorage.setItem('imkum_last_order', JSON.stringify({
@@ -451,6 +490,7 @@ window.checkout = async function() {
     console.error(e);
     showToast('เกิดข้อผิดพลาด: ' + (e.message || 'กรุณาลองใหม่'));
   } finally {
+    _isCheckingOut = false;
     showLoading(false);
   }
 };
