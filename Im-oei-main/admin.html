@@ -1288,6 +1288,11 @@ let allMenuItems = [];
 let allBanners = [];
 let allCategories = [];
 let currentFilter = 'all';
+// Expose filter function to global scope for onclick handlers
+window._filterOrdersByStatus = function(status) {
+  currentFilter = status;
+  renderOrders();
+};
 let storeIsOpen = true;
 let unsubOrders = null;
 
@@ -1298,6 +1303,10 @@ loadSettings();
 loadMenu();
 loadBanners();
 loadCategories();
+loadStampConfig();
+loadPreorderSetting();
+loadCustomers();
+loadRewards();
 // รอ Firebase Auth state ก่อน listenOrders เพื่อป้องกัน permission-denied
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -2303,6 +2312,448 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
 });
 
+// ====== MENU ITEM CRUD ======
+window._openAddItem = function() {
+  document.getElementById('modal-edit-title').textContent = 'เพิ่มเมนูใหม่';
+  document.getElementById('edit-item-id').value = '';
+  document.getElementById('edit-name').value = '';
+  document.getElementById('edit-desc').value = '';
+  document.getElementById('edit-price').value = '';
+  document.getElementById('edit-emoji').value = '';
+  document.getElementById('edit-image-url').value = '';
+  const prev = document.getElementById('edit-img-preview');
+  if (prev) prev.style.display = 'none';
+  document.getElementById('modal-edit').classList.add('show');
+};
+
+window._openEditItem = function(id) {
+  const item = allMenuItems.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('modal-edit-title').textContent = 'แก้ไขเมนู';
+  document.getElementById('edit-item-id').value = item.id;
+  document.getElementById('edit-name').value = item.name || '';
+  document.getElementById('edit-desc').value = item.desc || '';
+  document.getElementById('edit-price').value = item.price || '';
+  document.getElementById('edit-emoji').value = item.emoji || '';
+  document.getElementById('edit-image-url').value = item.imageUrl || '';
+  const catSel = document.getElementById('edit-catkey');
+  if (catSel) catSel.value = item.catKey || 'other';
+  const prev = document.getElementById('edit-img-preview');
+  if (prev) { prev.src = item.imageUrl || ''; prev.style.display = item.imageUrl ? 'block' : 'none'; }
+  document.getElementById('modal-edit').classList.add('show');
+};
+
+window._saveMenuItem = async function() {
+  const id = document.getElementById('edit-item-id').value.trim();
+  const name = document.getElementById('edit-name').value.trim();
+  const price = parseFloat(document.getElementById('edit-price').value) || 0;
+  const catKey = document.getElementById('edit-catkey')?.value || 'other';
+  if (!name) { showToast('❌ กรุณาใส่ชื่อเมนู'); return; }
+  const catMap = { sandwich:'🥪 แซนวิช', rice:'🍚 ข้าว', noodle:'🍜 หมี่', drink:'🥤 เครื่องดื่ม', other:'🍽️ อื่นๆ' };
+  const allCats = allCategories.length ? allCategories : [];
+  const catObj = allCats.find(c => c.key === catKey);
+  const data = {
+    name, price,
+    desc: document.getElementById('edit-desc').value.trim(),
+    emoji: document.getElementById('edit-emoji').value.trim() || '🍽️',
+    imageUrl: document.getElementById('edit-image-url').value.trim() || '',
+    catKey,
+    category: catObj ? (catObj.emoji||'') + ' ' + catObj.name : (catMap[catKey] || catKey),
+    sortOrder: catObj?.sortOrder || 0,
+  };
+  showLoading(true);
+  try {
+    const docId = id || name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'') + '_' + Date.now();
+    await setDoc(doc(db, 'menu', docId), data, { merge: true });
+    showToast(id ? '✅ แก้ไขเมนูแล้ว' : '✅ เพิ่มเมนูแล้ว');
+    document.getElementById('modal-edit').classList.remove('show');
+    await loadMenu();
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.previewEditImg = function() {
+  const url = document.getElementById('edit-image-url').value.trim();
+  const prev = document.getElementById('edit-img-preview');
+  if (prev) { prev.src = url; prev.style.display = url ? 'block' : 'none'; }
+};
+
+window.uploadItemPhoto = async function(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('edit-image-url').value = e.target.result;
+    window.previewEditImg();
+  };
+  reader.readAsDataURL(file);
+};
+
+window.openImageModal = function(id) {
+  const item = allMenuItems.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('img-item-id').value = id;
+  const prev = document.getElementById('img-modal-preview');
+  if (prev) { prev.src = item.imageUrl || ''; prev.style.display = item.imageUrl ? 'block' : 'none'; }
+  document.getElementById('modal-image').classList.add('show');
+};
+
+window.saveItemImage = async function() {
+  const id = document.getElementById('img-item-id')?.value;
+  const url = document.getElementById('img-url-input')?.value?.trim();
+  if (!id) return;
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'menu', id), { imageUrl: url || '' }, { merge: true });
+    showToast('✅ บันทึกรูปแล้ว');
+    document.getElementById('modal-image').classList.remove('show');
+    await loadMenu();
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.toggleHide = async function(id, hidden) {
+  const hide = hidden === 'true' || hidden === true;
+  try {
+    await setDoc(doc(db, 'menu', id), { hidden: hide }, { merge: true });
+    const item = allMenuItems.find(i => i.id === id);
+    if (item) item.hidden = hide;
+    renderMenuAdmin();
+    showToast(hide ? '🙈 ซ่อนเมนูแล้ว' : '👁️ แสดงเมนูแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+};
+
+window.toggleSoldOut = async function(id, soldOut) {
+  try {
+    await setDoc(doc(db, 'menu', id), { soldOut: !!soldOut }, { merge: true });
+    const item = allMenuItems.find(i => i.id === id);
+    if (item) item.soldOut = !!soldOut;
+    renderMenuAdmin();
+    showToast(soldOut ? '⛔ ทำเครื่องหมายว่าหมด' : '✅ มีสินค้าแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+};
+
+// ====== CUSTOMER CRUD ======
+let _allCustomers = [];
+
+async function loadCustomers() {
+  try {
+    const snap = await getDocs(collection(db, 'customers'));
+    _allCustomers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCustomers();
+  } catch(e) { console.warn('loadCustomers:', e.message); }
+}
+
+function renderCustomers() {
+  const container = document.getElementById('customers-list');
+  if (!container) return;
+  const tab = (typeof _custTab !== 'undefined') ? _custTab : 'line';
+  const searchVal = (document.getElementById('cust-search')?.value||'').toLowerCase();
+  let list = tab === 'line'
+    ? _allCustomers.filter(c => c.source === 'line' || c.userId)
+    : _allCustomers.filter(c => c.source !== 'line' && !c.userId);
+  if (searchVal) list = list.filter(c => (c.name||'').toLowerCase().includes(searchVal) || (c.phone||'').includes(searchVal) || (c.userId||'').toLowerCase().includes(searchVal));
+  if (!list.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>${tab==='line'?'ยังไม่มีลูกค้า LINE':'ยังไม่มีลูกค้าที่เพิ่มเอง'}</p></div>`;
+    return;
+  }
+  container.innerHTML = list.map(c => `
+    <div class="customer-card">
+      <div class="customer-avatar">${c.photoUrl ? `<img src="${esc(c.photoUrl)}" alt="">` : (c.name||'?')[0].toUpperCase()}</div>
+      <div class="customer-info">
+        <div class="customer-name">${esc(c.name||'-')}</div>
+        <div class="customer-meta">📞 ${esc(c.phone||'-')}</div>
+        ${c.address ? `<div class="customer-address">📍 ${esc(c.address)}</div>` : ''}
+      </div>
+      <div class="customer-points"><span class="pts-val">${c.points||0}</span><span class="pts-label">แต้ม</span></div>
+      <div class="customer-actions">
+        <button class="icon-btn btn-edit" onclick="editCustomer('${esc(c.id)}')">✏️</button>
+        <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCustomer('${esc(c.id)}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+window._openAddCustomer = function() {
+  document.getElementById('modal-customer-title').textContent = 'เพิ่มลูกค้า';
+  document.getElementById('cust-edit-id').value = '';
+  document.getElementById('cust-name').value = '';
+  document.getElementById('cust-userid').value = '';
+  document.getElementById('cust-phone').value = '';
+  document.getElementById('cust-address').value = '';
+  document.getElementById('cust-points').value = '0';
+  document.getElementById('cust-note').value = '';
+  document.getElementById('modal-customer').classList.add('show');
+};
+
+window.editCustomer = function(id) {
+  const c = _allCustomers.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-customer-title').textContent = 'แก้ไขลูกค้า';
+  document.getElementById('cust-edit-id').value = c.id;
+  document.getElementById('cust-name').value = c.name || '';
+  document.getElementById('cust-userid').value = c.userId || '';
+  document.getElementById('cust-phone').value = c.phone || '';
+  document.getElementById('cust-address').value = c.address || '';
+  document.getElementById('cust-points').value = c.points || 0;
+  document.getElementById('cust-note').value = c.note || '';
+  document.getElementById('modal-customer').classList.add('show');
+};
+
+window.deleteCustomer = async function(id) {
+  const ok = await showConfirmDialog({ icon:'🗑️', iconBg:'#FFEBEE', iconBorder:'#FFCDD2', title:'ลบลูกค้านี้?', desc:'ข้อมูลลูกค้าจะถูกลบถาวร', confirmText:'ลบ', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
+  try {
+    await deleteDoc(doc(db, 'customers', id));
+    _allCustomers = _allCustomers.filter(c => c.id !== id);
+    renderCustomers();
+    showToast('🗑️ ลบลูกค้าแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+};
+
+window._saveCustomer = async function() {
+  const id = document.getElementById('cust-edit-id').value.trim();
+  const name = document.getElementById('cust-name').value.trim();
+  if (!name) { showToast('❌ กรุณาใส่ชื่อลูกค้า'); return; }
+  const data = {
+    name,
+    userId: document.getElementById('cust-userid').value.trim(),
+    phone: document.getElementById('cust-phone').value.trim(),
+    address: document.getElementById('cust-address').value.trim(),
+    points: parseInt(document.getElementById('cust-points').value)||0,
+    note: document.getElementById('cust-note').value.trim(),
+    source: id ? (_allCustomers.find(c=>c.id===id)?.source || 'manual') : 'manual',
+    updatedAt: serverTimestamp(),
+  };
+  showLoading(true);
+  try {
+    const docId = id || 'cust_' + Date.now();
+    await setDoc(doc(db, 'customers', docId), data, { merge: true });
+    showToast(id ? '✅ แก้ไขข้อมูลลูกค้าแล้ว' : '✅ เพิ่มลูกค้าแล้ว');
+    document.getElementById('modal-customer').classList.remove('show');
+    await loadCustomers();
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+// ====== SETTINGS SAVES ======
+window.saveSettings = async function() {
+  showLoading(true);
+  try {
+    const data = {};
+    const cutoff = document.getElementById('set-cutoff')?.value;
+    const pickupStart = document.getElementById('set-pickup-start')?.value;
+    const pickupEnd = document.getElementById('set-pickup-end')?.value;
+    if (cutoff) data.orderCutoff = cutoff;
+    if (pickupStart) data.pickupStart = pickupStart;
+    if (pickupEnd) data.pickupEnd = pickupEnd;
+    await setDoc(doc(db, 'settings', 'store'), data, { merge: true });
+    showToast('✅ บันทึกการตั้งค่าแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.saveStoreName = async function() {
+  const name = document.getElementById('set-store-name')?.value?.trim();
+  const tagline = document.getElementById('set-store-tagline')?.value?.trim();
+  const siteTitle = document.getElementById('set-site-title')?.value?.trim();
+  showLoading(true);
+  try {
+    const data = {};
+    if (name) data.storeName = name;
+    if (tagline !== undefined) data.storeTagline = tagline;
+    if (siteTitle) { data.siteTitle = siteTitle; document.title = siteTitle; }
+    await setDoc(doc(db, 'settings', 'store'), data, { merge: true });
+    const nameEl = document.getElementById('admin-brand-name');
+    if (nameEl && name) nameEl.textContent = name;
+    showToast('✅ บันทึกชื่อร้านแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.saveHeroLogo = async function() {
+  const url = document.getElementById('set-hero-logo-url')?.value?.trim();
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { heroLogoUrl: url }, { merge: true });
+    window._storeLogo = url;
+    const logoImg = document.getElementById('hero-logo-preview-img');
+    if (logoImg) { logoImg.src = url; logoImg.style.display = url ? 'block' : 'none'; }
+    showToast('✅ บันทึกโลโก้แล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.saveBanner = async function() {
+  const url = document.getElementById('set-banner-url')?.value?.trim();
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { bannerUrl: url }, { merge: true });
+    const img = document.getElementById('banner-preview-img');
+    if (img) { img.src = url; img.style.display = url ? 'block' : 'none'; }
+    showToast('✅ บันทึกรูป Hero แล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.savePasswords = async function() {
+  const adminPass = document.getElementById('set-admin-password')?.value?.trim();
+  const ownerPass = document.getElementById('set-owner-password')?.value?.trim();
+  if (!adminPass && !ownerPass) { showToast('❌ กรุณาใส่รหัสผ่าน'); return; }
+  showLoading(true);
+  try {
+    const data = {};
+    if (adminPass) data.adminPassword = adminPass;
+    if (ownerPass) data.ownerPassword = ownerPass;
+    await setDoc(doc(db, 'settings', 'store'), data, { merge: true });
+    showToast('✅ บันทึกรหัสผ่านแล้ว');
+    if(document.getElementById('set-admin-password')) document.getElementById('set-admin-password').value='';
+    if(document.getElementById('set-owner-password')) document.getElementById('set-owner-password').value='';
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+// Preview helpers for settings inputs
+window.previewHeroLogo = function() {
+  const url = document.getElementById('set-hero-logo-url')?.value?.trim();
+  const img = document.getElementById('hero-logo-preview-img');
+  if (img) { img.src = url||''; img.style.display = url ? 'block' : 'none'; }
+};
+
+window.previewBanner = function() {
+  const url = document.getElementById('set-banner-url')?.value?.trim();
+  const img = document.getElementById('banner-preview-img');
+  if (img) { img.src = url||''; img.style.display = url ? 'block' : 'none'; }
+};
+
+// ====== STAMP / LOYALTY ======
+window.saveStampConfig = async function() {
+  const goal = parseInt(document.getElementById('stamp-goal')?.value)||10;
+  const pointsPerBaht = parseInt(document.getElementById('points-per-baht')?.value)||20;
+  const expiryDays = parseInt(document.getElementById('points-expiry-days')?.value)||0;
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'stamps'), { goal, pointsPerBaht, expiryDays }, { merge: true });
+    showToast('✅ บันทึกการตั้งค่าแต้มแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.lookupStamp = async function() {
+  const phone = document.getElementById('stamp-phone-input')?.value?.trim();
+  if (!phone) { showToast('❌ กรุณาใส่เบอร์โทร'); return; }
+  showLoading(true);
+  try {
+    const d = await getDoc(doc(db, 'stamps', phone));
+    const el = document.getElementById('stamp-result');
+    if (el) el.textContent = d.exists() ? `แต้ม: ${d.data().points||0} | สะสม: ${d.data().totalSpent||0} บาท` : 'ไม่พบข้อมูล';
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+let _allRewards = [];
+async function loadRewards() {
+  try {
+    const snap = await getDocs(collection(db, 'rewards'));
+    _allRewards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderRewardsAdmin();
+  } catch(e) { console.warn('loadRewards:', e.message); }
+}
+
+function renderRewardsAdmin() {
+  const el = document.getElementById('rewards-list');
+  if (!el) return;
+  if (!_allRewards.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:#999;font-size:13px">ยังไม่มีรางวัล</div>'; return; }
+  el.innerHTML = _allRewards.map(r => `
+    <div class="customer-card" style="margin-bottom:10px">
+      <div style="font-size:28px;flex-shrink:0">${esc(r.emoji||'🎁')}</div>
+      <div class="customer-info">
+        <div class="customer-name">${esc(r.name||'-')}</div>
+        <div class="customer-meta">🏅 ${r.points||r.cost||0} แต้ม ${r.active===false?'❌ ปิด':'✅ เปิด'}</div>
+      </div>
+      <div class="customer-actions">
+        <button class="icon-btn btn-edit" onclick="openEditReward('${esc(r.id)}')">✏️</button>
+        <button class="icon-btn" style="background:#FFEBEE" onclick="deleteReward('${esc(r.id)}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+window.openAddReward = function() {
+  document.getElementById('modal-reward-title').textContent = 'เพิ่มรางวัล';
+  document.getElementById('reward-edit-id').value = '';
+  ['reward-name','reward-emoji','reward-desc','reward-cost'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = id==='reward-cost'?'100':'';
+  });
+  const actEl = document.getElementById('reward-active'); if(actEl) actEl.checked = true;
+  document.getElementById('modal-reward').classList.add('show');
+};
+
+window.openEditReward = function(id) {
+  const r = _allRewards.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modal-reward-title').textContent = 'แก้ไขรางวัล';
+  document.getElementById('reward-edit-id').value = r.id;
+  const set = (eid, val) => { const el = document.getElementById(eid); if(el) el.value = val||''; };
+  set('reward-name', r.name); set('reward-emoji', r.emoji); set('reward-desc', r.desc); set('reward-cost', r.points||r.cost||100);
+  const actEl = document.getElementById('reward-active'); if(actEl) actEl.checked = r.active !== false;
+  document.getElementById('modal-reward').classList.add('show');
+};
+
+window.saveReward = async function() {
+  const id = document.getElementById('reward-edit-id').value.trim();
+  const name = document.getElementById('reward-name')?.value?.trim();
+  if (!name) { showToast('❌ กรุณาใส่ชื่อรางวัล'); return; }
+  const data = {
+    name,
+    emoji: document.getElementById('reward-emoji')?.value?.trim() || '🎁',
+    desc: document.getElementById('reward-desc')?.value?.trim() || '',
+    points: parseInt(document.getElementById('reward-cost')?.value)||100,
+    cost: parseInt(document.getElementById('reward-cost')?.value)||100,
+    active: document.getElementById('reward-active')?.checked !== false,
+  };
+  showLoading(true);
+  try {
+    const docId = id || 'reward_' + Date.now();
+    await setDoc(doc(db, 'rewards', docId), data, { merge: true });
+    showToast(id ? '✅ แก้ไขรางวัลแล้ว' : '✅ เพิ่มรางวัลแล้ว');
+    document.getElementById('modal-reward').classList.remove('show');
+    await loadRewards();
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+window.deleteReward = async function(id) {
+  const ok = await showConfirmDialog({ icon:'🗑️', iconBg:'#FFEBEE', iconBorder:'#FFCDD2', title:'ลบรางวัลนี้?', desc:'รางวัลจะถูกลบถาวร', confirmText:'ลบ', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
+  if (!ok) return;
+  try {
+    await deleteDoc(doc(db, 'rewards', id));
+    _allRewards = _allRewards.filter(r => r.id !== id);
+    renderRewardsAdmin();
+    showToast('🗑️ ลบรางวัลแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+};
+
+window.saveTierConfig = async function() {
+  const els = document.querySelectorAll('[id^="tier-"][id$="-min"]');
+  const tiers = [];
+  els.forEach(el => {
+    const key = el.id.replace('-min','').replace('tier-','');
+    const nameEl = document.getElementById(`tier-${key}-name`);
+    const minEl = document.getElementById(`tier-${key}-min`);
+    const maxEl = document.getElementById(`tier-${key}-max`);
+    if (nameEl && minEl) tiers.push({ key, name: nameEl.value, min: parseInt(minEl.value)||0, max: parseInt(maxEl?.value)||9999999 });
+  });
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'tiers'), { tiers }, { merge: true });
+    showToast('✅ บันทึก Tier Config แล้ว');
+  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  finally { showLoading(false); }
+};
+
+// ====== LOAD CUSTOMERS ON PANEL SWITCH ======
+// loadCustomers/loadRewards are called in the init sequence above
+// (no extra loadAll needed)
+
 function showLoading(v) {
   const el = document.getElementById('loading');
   el.classList.toggle('show', v);
@@ -2321,6 +2772,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 window.showToast = showToast;
+window.renderCustomers = renderCustomers;
 
 // ====== DANGER ZONE FUNCTIONS ======
 // ====== GENERAL CONFIRM DIALOG ======
@@ -2490,6 +2942,96 @@ window.resetAllData = async function() {
     showToast('❌ เกิดข้อผิดพลาด: '+e.message);
   } finally { showLoading(false); }
 };
+</script>
+
+<!-- ====== GLOBAL UI FUNCTIONS (non-module, global scope) ====== -->
+<script>
+// ====== TAB SWITCHING ======
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ====== LOGOUT ======
+function doLogout() {
+  if (!confirm('ออกจากระบบใช่ไหม?')) return;
+  sessionStorage.clear();
+  window.location.href = 'index.html';
+}
+
+// ====== CUSTOMER TABS ======
+let _custTab = 'line';
+function switchCustTab(tab) {
+  _custTab = tab;
+  const lineBtn = document.getElementById('tab-line-btn');
+  const manualBtn = document.getElementById('tab-manual-btn');
+  if (lineBtn) lineBtn.classList.toggle('active', tab === 'line');
+  if (manualBtn) manualBtn.classList.toggle('active', tab === 'manual');
+  if (typeof renderCustomers === 'function') renderCustomers();
+}
+
+function filterCustomers() {
+  if (typeof renderCustomers === 'function') renderCustomers();
+}
+
+function previewImgModal() {
+  const url = document.getElementById('img-url-input')?.value?.trim();
+  const prev = document.getElementById('img-modal-preview');
+  if (prev) { prev.src = url||''; prev.style.display = url ? 'block' : 'none'; }
+}
+
+// ====== LOYALTY TABS ======
+function switchLoyaltyTab(tab) {
+  ['config','rewards','tiers','history'].forEach(t => {
+    const el = document.getElementById('lpanel-' + t);
+    const btn = document.getElementById('ltab-' + t);
+    const isActive = t === tab;
+    if (el) el.style.display = isActive ? '' : 'none';
+    if (btn) {
+      btn.style.background = isActive ? 'var(--yellow)' : '#fff';
+      btn.style.color = isActive ? '#3E2000' : '#999';
+    }
+  });
+}
+
+// ====== ORDERS FILTER (UI chip version) ======
+function filterOrders(status, btn) {
+  if (typeof window._filterOrdersByStatus === 'function') {
+    window._filterOrdersByStatus(status);
+  }
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// ====== MENU ITEM MODAL ======
+function openAddItem() {
+  if (typeof window._openAddItem === 'function') { window._openAddItem(); return; }
+  const modal = document.getElementById('modal-menu-item');
+  if (modal) {
+    modal.querySelector && (modal.querySelector('#modal-item-title') || {}).textContent && (modal.querySelector('#modal-item-title').textContent = 'เพิ่มเมนูใหม่');
+    document.getElementById('edit-item-id') && (document.getElementById('edit-item-id').value = '');
+    modal.style.display = 'flex';
+  }
+}
+function openEditItem(id) {
+  if (typeof window._openEditItem === 'function') { window._openEditItem(id); }
+}
+function saveMenuItem() {
+  if (typeof window._saveMenuItem === 'function') { window._saveMenuItem(); }
+}
+
+// ====== CUSTOMER MODAL ======
+function openAddCustomer() {
+  if (typeof window._openAddCustomer === 'function') { window._openAddCustomer(); return; }
+  const modal = document.getElementById('modal-customer');
+  if (modal) modal.style.display = 'flex';
+}
+function saveCustomer() {
+  if (typeof window._saveCustomer === 'function') { window._saveCustomer(); }
+}
 </script>
 
 <!-- ====== NOTIFICATION FUNCTIONS (non-module, global scope) ====== -->
