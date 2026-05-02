@@ -12,9 +12,15 @@ service cloud.firestore {
     }
 
     // ===== ORDERS =====
+    // cart.html ไม่มี Firebase Auth → validate จาก data fields แทน
     match /orders/{orderId} {
-      allow create: if isLoggedIn();   // ลูกค้าสั่งได้
-      allow read: if isLoggedIn();
+      // ลูกค้าสร้าง order ได้ ถ้ามี fields ที่จำเป็นครบ
+      allow create: if request.resource.data.keys().hasAll(['items','total','customerPhone','status','createdAt'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.total is number
+        && request.resource.data.total > 0;
+      // อ่าน: admin หรือ login แล้ว (สำหรับ success.html / orders.html)
+      allow read: if isAdmin() || isLoggedIn() || true; // TODO: จำกัดในอนาคตเมื่อมี Firebase Auth
 
       // ❗ แก้ / ลบ → admin เท่านั้น
       allow update, delete: if isAdmin();
@@ -118,13 +124,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ===== STAMPS (ลูกค้าเขียนได้เฉพาะของตัวเอง) =====
+    // ===== STAMPS =====
+    // cart.html เขียนแต้มหลังสั่งซื้อ ไม่มี Firebase Auth
     match /stamps/{phone} {
-      allow read: if isLoggedIn();
-      // ❗ ป้องกัน: ลูกค้าแก้แต้มคนอื่นไม่ได้
-      // phone ใน path ต้องตรงกับ phone_number claim ใน Firebase Auth token
+      allow read: if isLoggedIn() || true; // อ่านได้ (sync แต้มในหน้า cart)
       allow write: if isAdmin() ||
-        (isLoggedIn() && request.auth.token.phone_number == phone);
+        (isLoggedIn() && request.auth.token.phone_number == phone) ||
+        // LIFF/cart ไม่มี Auth → validate phone field ใน data
+        (request.resource.data.phone == phone && request.resource.data.keys().hasAll(['phone','updatedAt']));
     }
 
     // ===== PUSH SUBSCRIPTIONS =====
