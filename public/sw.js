@@ -1,12 +1,18 @@
-// Service Worker v20 - อิ่มเอ้ย PWA + Push Notifications
-const CACHE_NAME = 'im-oei-v20';
+// Service Worker v21 - อิ่มเอ้ย PWA + Push Notifications
+const CACHE_NAME = 'im-oei-v21';
+
+// ไฟล์ HTML และ JS สำคัญ — ไม่ cache เลย ดึงจาก network เสมอ
+const NO_CACHE = ['.html', 'admin', 'index', 'config.js', 'sw.js'];
 
 self.addEventListener('install', e => { self.skipWaiting(); });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => {
+        console.log('[SW] Deleting old cache:', k);
+        return caches.delete(k);
+      }))
     )
   );
   self.clients.claim();
@@ -15,9 +21,22 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('firestore') || e.request.url.includes('firebase')) return;
+
+  // HTML และไฟล์สำคัญ — network เสมอ ไม่ fallback cache
+  const url = e.request.url;
+  const skipCache = NO_CACHE.some(p => url.includes(p));
+  if (skipCache) {
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' }).catch(() =>
+        new Response('Offline', { status: 503 })
+      )
+    );
+    return;
+  }
+
+  // รูปภาพและ assets อื่น — network-first, fallback cache
   e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
-
 // ====== PUSH: รับ push จาก server ======
 self.addEventListener('push', e => {
   let data = {
