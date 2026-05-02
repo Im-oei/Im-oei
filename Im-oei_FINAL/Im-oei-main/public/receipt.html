@@ -1,0 +1,8 @@
+
+<div id="r"></div>
+<button onclick="window.print()">พิมพ์</button>
+<script>
+const o=JSON.parse(localStorage.getItem("lastOrder"));
+document.getElementById("r").innerHTML=
+"<h3>ใบเสร็จ</h3>"+o.items.map(i=>i.name+" "+i.price).join("<br>")+"<hr>"+o.total;
+</script>
