@@ -38,11 +38,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ===== STAMPS =====
-    match /stamps/{phone} {
-      allow read, write: if isAdmin();
-    }
-
     // ===== SETTINGS =====
     match /settings/{docId} {
       allow read: if true;
@@ -80,23 +75,63 @@ service cloud.firestore {
     }
 
     // ===== LINE USERS =====
+    // LIFF ไม่มี Firebase Auth → ยอมให้เขียนได้โดยตรง (validate ด้วย data)
     match /lineUsers/{userId} {
-      allow read: if isLoggedIn();
-      allow create: if isLoggedIn();
-      allow update: if request.auth.uid == userId;
+      allow read: if isAdmin() ||
+        (isLoggedIn() && request.auth.uid == userId);
+      // ลูกค้า LIFF เขียนได้ เฉพาะ document ของตัวเอง (userId ใน path ต้องตรงกับ field ใน data)
+      allow create: if request.resource.data.userId == userId
+        && request.resource.data.keys().hasAll(['userId','displayName','phone','linkedAt','updatedAt']);
+      allow update: if (isLoggedIn() && request.auth.uid == userId)
+        || request.resource.data.userId == userId;
       allow delete: if false;
     }
 
     // ===== LINE PHONE MAP =====
+    // Cloud Function และ LIFF เขียนได้ (ไม่มี sensitive data, อ่านเฉพาะ admin)
     match /linePhoneMap/{phone} {
       allow read: if isAdmin();
-      allow write: if isAdmin();
+      // ลูกค้า LIFF สร้าง/อัปเดต mapping ของตัวเองได้
+      allow create, update: if request.resource.data.userId is string
+        && request.resource.data.userId.size() > 0;
+      allow delete: if isAdmin();
     }
 
     // ===== ADMINS =====
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
+    }
+
+    // ===== REWARDS CATALOG =====
+    match /rewards/{rewardId} {
+      allow read: if true;                    // ลูกค้าดูได้
+      allow write: if isAdmin();
+    }
+
+    // ===== REWARD REDEMPTIONS =====
+    match /rewardRedemptions/{docId} {
+      allow read: if isAdmin();
+      allow create: if isLoggedIn();          // ลูกค้าแลกได้
+      allow update: if isAdmin();             // admin อนุมัติ/ปฏิเสธ
+      allow delete: if false;
+    }
+
+    // ===== STAMPS (ลูกค้าเขียนได้เฉพาะของตัวเอง) =====
+    match /stamps/{phone} {
+      allow read: if isLoggedIn();
+      // ❗ ป้องกัน: ลูกค้าแก้แต้มคนอื่นไม่ได้
+      // phone ใน path ต้องตรงกับ phone_number claim ใน Firebase Auth token
+      allow write: if isAdmin() ||
+        (isLoggedIn() && request.auth.token.phone_number == phone);
+    }
+
+    // ===== PUSH SUBSCRIPTIONS =====
+    match /pushSubscriptions/{phone} {
+      // ลูกค้าเขียน subscription ของตัวเองได้, admin อ่านได้ทั้งหมด
+      allow read: if isAdmin();
+      allow write: if isAdmin() ||
+        (isLoggedIn() && request.auth.token.phone_number == phone);
     }
 
     // 🚫 ปิดทุกอย่างที่ไม่ได้กำหนด
