@@ -1,0 +1,418 @@
+/* index.html styles */
+
+.app-topbar{position:sticky;top:0;z-index:50;background:#fff;padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.app-topbar .brand{display:flex;align-items:center;gap:8px;}
+.app-topbar .brand img{width:44px;height:44px;border-radius:50%;object-fit:cover;}
+.brand-name{font-size:16px;font-weight:800;color:#3E2000;}
+.brand-sub{font-size:11px;color:#999;}
+.user-btn{width:36px;height:36px;border-radius:50%;background:#FFF8E1;border:2px solid #FFC107;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+.hero-wrap{width:100%;overflow:hidden;background:#1a0a00;}
+.hero-wrap img{width:100%;height:auto;display:block;object-fit:cover;}
+.search-wrap{margin:12px 16px 0;position:relative;}
+.search-wrap input{width:100%;padding:11px 16px 11px 42px;border-radius:14px;border:1.5px solid #F0E8D8;background:#fff;font-family:'Sarabun',sans-serif;font-size:14px;color:#2C2C2C;outline:none;box-shadow:0 2px 10px rgba(0,0,0,0.06);transition:border-color .2s;}
+.search-wrap input:focus{border-color:#FFC107;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;}
+.order-time-banner{background:#fff;margin:12px 16px;padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(255,193,7,0.15);border-left:3px solid #FFC107;}
+.order-time-banner .clock-icon{font-size:20px;}
+.order-time-banner .time-text strong{font-size:13px;font-weight:700;color:#2C2C2C;display:block;}
+.order-time-banner .time-text span{font-size:11px;color:#999;}
+/* PREORDER CHIP inside topbar */
+.preorder-chip{display:flex;align-items:center;background:#F5EFE6;border-radius:20px;padding:5px 10px 5px 8px;gap:2px;}
+.preorder-chip span{font-size:11px;font-weight:800;color:#5D3A00;white-space:nowrap;}
+.app-topbar.active-preorder{background:#E8F5E9;}
+.app-topbar.active-preorder .brand-name{color:#2E7D32;}
+.app-topbar.active-preorder .preorder-chip{background:#C8E6C9;}
+.app-topbar.active-preorder .preorder-chip span{color:#1B5E20;}
+/* Admin store toggle in index */
+#admin-store-bar {display:none;align-items:center;gap:8px;background:#FFF8E1;border-bottom:1.5px solid #FFE082;padding:7px 16px;}
+#admin-store-bar .store-label {font-size:12px;font-weight:700;color:#3E2000;}
+#admin-store-bar .store-status {font-size:12px;font-weight:800;color:#4CAF50;}
+#admin-store-bar .store-status.closed {color:#E53935;}
+/* Toggle switch */
+.toggle-sw{position:relative;width:46px;height:26px;flex-shrink:0;}
+.toggle-sw input{opacity:0;width:0;height:0;}
+.toggle-sw .sl{position:absolute;inset:0;background:#ccc;border-radius:26px;cursor:pointer;transition:.3s;}
+.toggle-sw .sl::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle-sw input:checked+.sl{background:#4CAF50;}
+.toggle-sw input:checked+.sl::before{transform:translateX(20px);}
+
+.cat-tabs-wrap{padding:0 16px 4px;overflow-x:auto;scrollbar-width:none;display:flex;gap:8px;}
+.cat-tabs-wrap::-webkit-scrollbar{display:none;}
+.cat-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid #E8E8E8;background:#fff;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#666;cursor:pointer;white-space:nowrap;transition:all .18s;}
+.cat-tab.active{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 3px 10px rgba(255,193,7,0.4);}
+.section-title{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;}
+.section-title .left{display:flex;align-items:center;gap:6px;}
+.section-title .icon{font-size:18px;}
+.section-title span{font-size:17px;font-weight:800;color:#2C2C2C;}
+.featured-row{display:flex;gap:12px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none;}
+.featured-row::-webkit-scrollbar{display:none;}
+.featured-card{flex-shrink:0;width:140px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,0.09);cursor:pointer;position:relative;transition:transform .18s;}
+.featured-card:active{transform:scale(0.97);}
+.featured-card .badge{position:absolute;top:7px;left:7px;background:#FF8C00;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.featured-card .fc-img{width:100%;height:100px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;}
+.featured-card .fc-img img{width:100%;height:100%;object-fit:cover;}
+.featured-card .fc-info{padding:8px 10px 38px;}
+.featured-card .fc-name{font-size:13px;font-weight:700;}
+.featured-card .fc-price{font-size:13px;font-weight:800;color:#FF8C00;margin-top:3px;}
+.featured-card .fc-add{position:absolute;bottom:8px;right:8px;width:30px;height:30px;border-radius:50%;background:#FFC107;border:none;cursor:pointer;font-size:22px;font-weight:700;color:#3E2000;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,193,7,0.5);transition:transform .15s;}
+.featured-card .fc-add:active{transform:scale(0.85);}
+.cat-section{margin-bottom:6px;}
+.cat-header{padding:10px 16px 8px;display:flex;align-items:center;gap:8px;}
+.cat-header .cat-name{font-size:16px;font-weight:800;color:#2C2C2C;}
+.cat-header .cat-line{flex:1;height:1.5px;background:linear-gradient(to right,#FFC107,transparent);border-radius:2px;}
+/* === MENU GRID === */
+.menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:0 14px 8px;}
+
+/* === CARD (grid mode) === */
+.card{
+  background:#fff;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,0.08);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  cursor:pointer;
+  transition:transform .18s,box-shadow .18s;
+  border:1.5px solid rgba(0,0,0,0.04);
+}
+.card:active{transform:scale(0.96);box-shadow:0 1px 6px rgba(0,0,0,0.08);}
+
+/* รูปอาหาร — สัดส่วน 4:3 สวยกว่า 3:4 บนมือถือ */
+.card .food-img{
+  width:100%;
+  aspect-ratio:4/3;
+  background:linear-gradient(135deg,#FFF8EE,#FFE8C0);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;
+  overflow:hidden;
+  flex-shrink:0;
+  position:relative;
+}
+.card .food-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.card:active .food-img img{transform:scale(1.04);}
+
+/* Gradient overlay จาง กว่าเดิม เห็นรูปชัดขึ้น */
+.card .food-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(30,10,0,0.65) 0%,rgba(0,0,0,0.06) 55%,transparent 100%);
+  pointer-events:none;
+}
+
+/* ข้อความซ้อนบนรูป */
+.card .left{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:32px 10px 10px;z-index:2;
+}
+.card .name{font-size:13px;font-weight:800;color:#fff;line-height:1.3;text-shadow:0 1px 5px rgba(0,0,0,0.6);}
+.card .desc{font-size:10px;color:rgba(255,255,255,0.72);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ราคา — แยกแถวล่างสุด ชัดเจน */
+.card .card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px 8px;
+  background:#fff;
+  position:relative;z-index:2;
+}
+.card .price-tag{font-size:14px;font-weight:800;color:#E65100;letter-spacing:.2px;}
+
+/* ปุ่ม qty — bottom-right บน overlay */
+.card .qty{
+  position:absolute;top:8px;right:8px;z-index:3;
+  display:flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,0.22);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-radius:30px;padding:4px 7px 4px 4px;
+  border:1px solid rgba(255,255,255,0.3);
+}
+.card .qty .qty-num{font-size:13px;font-weight:800;color:#fff;min-width:16px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+
+.card .sold-badge{position:absolute;top:8px;left:8px;z-index:3;background:rgba(183,28,28,0.85);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px);}
+.card .rating-badge{position:absolute;top:8px;left:8px;z-index:3;background:rgba(255,255,255,0.9);color:#F5A623;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+/* === LIST MODE === */
+body.view-list .menu-grid{display:flex;flex-direction:column;gap:0;padding:0;}
+body.view-list .card{flex-direction:row;align-items:stretch;border-radius:16px;margin:0 14px 10px;cursor:default;border:1.5px solid #F5EDE0;}
+body.view-list .card:active{transform:none;}
+body.view-list .card .food-img{width:88px;height:88px;flex-shrink:0;border-radius:0;aspect-ratio:unset;}
+body.view-list .card .food-img::after{border-radius:0;}
+body.view-list .card .left{position:static;padding:12px 8px 10px 12px;flex:1;background:transparent;}
+body.view-list .card .name{font-size:14px;color:#2C2C2C;text-shadow:none;font-weight:800;}
+body.view-list .card .desc{font-size:11px;color:#aaa;white-space:normal;}
+body.view-list .card .card-footer{display:none;}
+body.view-list .card .price-tag{font-size:13px;color:#E65100;text-shadow:none;font-weight:800;margin-top:4px;display:block;}
+body.view-list .card .qty{position:static;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0 12px 0 0;gap:6px;border:none;align-self:center;}
+body.view-list .card .qty .qty-num{color:#2C2C2C;text-shadow:none;font-size:14px;}
+.btn{width:30px;height:30px;border-radius:50%;border:1.5px solid #E0E0E0;background:#fff;font-size:18px;font-weight:700;color:#2C2C2C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.btn.plus{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 2px 8px rgba(255,193,7,0.45);}
+.btn:active{transform:scale(0.88);}
+.qty-num{font-size:15px;font-weight:700;min-width:18px;text-align:center;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;align-items:stretch;box-shadow:0 -3px 20px rgba(0,0,0,0.09);z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 4px 10px;font-size:10px;font-weight:700;color:#bbb;cursor:pointer;gap:2px;}
+.nav-item.active{color:#FFC107;}
+.nav-item .nav-icon{font-size:18px;}
+.nav-cart{flex:1.6;background:linear-gradient(135deg,#FFC107,#F5A623);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 4px 10px;gap:1px;cursor:pointer;position:relative;}
+.nav-cart .nav-icon{font-size:18px;}
+.nav-cart .nav-label{font-size:10px;font-weight:800;color:#3E2000;}
+.nav-cart .cart-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#E53935;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.nav-total{font-size:11px;font-weight:800;color:#3E2000;}
+.pb-footer{padding-bottom:72px;}
+.promo-slider{margin:10px 16px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);position:relative;}
+.promo-slides{display:flex;transition:transform .4s ease;will-change:transform;}
+.promo-slide{flex-shrink:0;width:100%;position:relative;}
+.promo-slide img{width:100%;height:130px;object-fit:cover;display:block;}
+.promo-slide .promo-text-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.45) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:center;padding:16px;}
+.promo-slide .promo-title{font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
+.promo-slide .promo-sub{font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;}
+.promo-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px;}
+.promo-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.5);transition:all .25s;}
+.promo-dot.active{background:#fff;width:18px;border-radius:4px;}
+.banner-img-wrap{margin:0 16px 10px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);}
+.banner-img-wrap img{width:100%;height:120px;object-fit:cover;display:block;}
+.closed-overlay{background:#f44336;color:#fff;text-align:center;padding:12px 16px;margin:8px 16px;border-radius:12px;font-weight:700;font-size:14px;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .28s;z-index:200;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.no-results{text-align:center;padding:40px 20px;color:#bbb;font-size:15px;}
+/* PROMO MID BANNER */
+.promo-mid{margin:4px 16px 12px;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);position:relative;cursor:pointer;}
+.promo-mid img{width:100%;height:110px;object-fit:cover;display:block;}
+.promo-mid-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.45) 0%,transparent 65%);display:flex;flex-direction:column;justify-content:center;padding:16px;}
+.promo-mid-title{font-size:17px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.4);}
+.promo-mid-sub{font-size:12px;color:rgba(255,255,255,0.88);margin-top:3px;font-weight:600;}
+.promo-mid-badge{position:absolute;top:10px;right:10px;background:#FFC107;color:#3E2000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;}
+
+/* === GRID FIX (2 columns default, list still works) === */
+.menu-grid{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+}
+
+
+/* === APP CARD STYLE === */
+.card{
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  display:flex;
+  flex-direction:column;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.card:active{
+  transform:scale(0.97);
+}
+.card .food-img{
+  width:100%;
+  height:130px;
+  background:#f5f5f5;
+  overflow:hidden;
+}
+.card .food-img img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.card .name{font-weight:700;}
+.card .price-tag{color:#ff6b00;font-weight:800;}
+
+
+
+
+@keyframes imModalFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes imModalSlideUp{from{transform:translateY(40px) scale(0.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+#login-modal{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;padding:20px;}
+#login-modal.open{display:flex;}
+#login-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);animation:imModalFadeIn .2s ease;}
+#login-modal-box{position:relative;z-index:1;background:#fff;border-radius:28px;width:100%;max-width:340px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:imModalSlideUp .35s cubic-bezier(.34,1.56,.64,1);}
+.im-modal-header{background:linear-gradient(135deg,#FFC107 0%,#FF8C00 100%);padding:28px 24px 22px;text-align:center;position:relative;}
+.im-modal-icon{width:64px;height:64px;background:rgba(255,255,255,0.25);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.45);}
+.im-modal-title{font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.25);}
+.im-modal-sub{font-size:13px;color:rgba(255,255,255,0.88);margin-top:5px;font-weight:600;}
+.im-modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.22);border:none;cursor:pointer;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.im-modal-body{padding:20px 20px 24px;}
+.im-modal-desc{font-size:13px;color:#888;text-align:center;margin-bottom:18px;line-height:1.7;}
+.im-field-label{font-size:12px;font-weight:700;color:#999;margin-bottom:5px;display:block;}
+.im-field{width:100%;border:2px solid #EBEBEB;border-radius:12px;padding:12px 14px;font-family:'Sarabun',sans-serif;font-size:15px;color:#2C2C2C;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:12px;}
+.im-field:focus{border-color:#FFC107;}
+.im-modal-error{display:none;background:#FFF0F0;color:#C62828;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;margin-bottom:12px;text-align:center;}
+.im-submit-btn{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.45);transition:transform .15s;margin-bottom:10px;}
+.im-submit-btn:active{transform:scale(0.97);}
+.im-full-link{text-align:center;font-size:13px;color:#FF8C00;font-weight:700;text-decoration:none;display:block;}
+
+
+
+
+@keyframes lbFadeIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+
+/* ─── Responsive Font Fix ──────────────────────────────────────────────────
+   ปัญหาเดิม: ใช้ px ตายตัว → มือถือเล็กอ่านยาก
+   แก้: clamp(min, preferred, max) = ปรับตามหน้าจออัตโนมัติ ทุก platform
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ชื่อเมนู */
+.card .name {
+  font-size: clamp(14px, 3.8vw, 17px) !important;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+/* คำอธิบายเมนู */
+.card .desc {
+  font-size: clamp(12px, 3vw, 14px) !important;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ราคา */
+.card .price-tag {
+  font-size: clamp(14px, 3.8vw, 17px) !important;
+  font-weight: 800;
+}
+
+/* featured card */
+.featured-card .fc-name {
+  font-size: clamp(13px, 3.5vw, 16px) !important;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.featured-card .fc-price {
+  font-size: clamp(13px, 3.5vw, 16px) !important;
+  font-weight: 800;
+}
+
+/* list view */
+body.view-list .card .name {
+  font-size: clamp(15px, 4vw, 18px) !important;
+}
+body.view-list .card .desc {
+  font-size: clamp(12px, 3vw, 14px) !important;
+  white-space: normal;
+}
+body.view-list .card .price-tag {
+  font-size: clamp(14px, 3.5vw, 16px) !important;
+}
+
+/* หมวดหมู่ */
+.cat-tab {
+  font-size: clamp(13px, 3.2vw, 15px) !important;
+}
+.cat-header .cat-name {
+  font-size: clamp(16px, 4.2vw, 20px) !important;
+}
+
+/* จำนวน qty */
+.card .qty .qty-num {
+  font-size: clamp(14px, 3.5vw, 16px) !important;
+}
+
+/* tablet / desktop — หน้าจอใหญ่ */
+@media (min-width: 600px) {
+  .menu-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .card .name { font-size: 16px !important; }
+  .card .desc { font-size: 13px !important; }
+  .card .price-tag { font-size: 16px !important; }
+}
+
+@media (min-width: 900px) {
+  .menu-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .card .name { font-size: 17px !important; }
+}
+
+/* ─── Responsive Card Size Fix ─────────────────────────────────────────────
+   ปัญหาเดิม: grid 2col ตายตัว + aspect-ratio 4/3 → มือถือเล็กการ์ดแคบ
+   แก้: ปรับ gap, padding, aspect-ratio และ featured card ตามหน้าจอ
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* มือถือเล็กมาก (< 360px) — ลด gap/padding ให้การ์ดใหญ่ขึ้น */
+@media (max-width: 359px) {
+  .menu-grid {
+    gap: 8px !important;
+    padding: 0 8px 8px !important;
+  }
+  .card .food-img {
+    aspect-ratio: 1/1 !important; /* สี่เหลี่ยมจัตุรัส — ดูใหญ่ขึ้น */
+  }
+  .featured-card {
+    width: 120px !important;
+  }
+  .featured-card .fc-img {
+    height: 80px !important;
+  }
+}
+
+/* มือถือปกติ (360–599px) */
+@media (min-width: 360px) and (max-width: 599px) {
+  .menu-grid {
+    gap: 12px !important;
+    padding: 0 12px 8px !important;
+  }
+  .card .food-img {
+    aspect-ratio: 3/2 !important; /* กว้างขึ้นนิดนึง */
+  }
+  .featured-card {
+    width: clamp(130px, 38vw, 160px) !important;
+  }
+  .featured-card .fc-img {
+    height: clamp(90px, 24vw, 110px) !important;
+  }
+}
+
+/* Tablet (600–899px) — 3 คอลัมน์ (override จาก responsive font fix) */
+@media (min-width: 600px) and (max-width: 899px) {
+  .menu-grid {
+    gap: 16px !important;
+    padding: 0 16px 8px !important;
+  }
+  .card .food-img {
+    aspect-ratio: 4/3 !important;
+  }
+  .featured-card {
+    width: 160px !important;
+  }
+  .featured-card .fc-img {
+    height: 110px !important;
+  }
+}
+
+/* Desktop (900px+) — 4 คอลัมน์ */
+@media (min-width: 900px) {
+  .menu-grid {
+    gap: 20px !important;
+    padding: 0 20px 12px !important;
+  }
+  .card .food-img {
+    aspect-ratio: 4/3 !important;
+  }
+  .featured-card {
+    width: 180px !important;
+  }
+  .featured-card .fc-img {
+    height: 120px !important;
+  }
+}
+
+/* list view — ปรับรูปภาพตามหน้าจอด้วย */
+@media (max-width: 359px) {
+  body.view-list .card .food-img {
+    width: 72px !important;
+    height: 72px !important;
+  }
+}
+@media (min-width: 600px) {
+  body.view-list .card .food-img {
+    width: 110px !important;
+    height: 110px !important;
+  }
+  body.view-list .card {
+    margin: 0 20px 12px !important;
+  }
+}
