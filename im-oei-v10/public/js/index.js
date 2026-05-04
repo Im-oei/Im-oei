@@ -416,7 +416,7 @@ async function submitLoginModal() {
 // LINE LIFF Login — inline (ไม่ต้องวิ่งไป liff.html อีกต่อไป)
 // ============================================================
 (function() {
-  const LIFF_ID_LOCAL = (typeof LIFF_ID !== 'undefined') ? LIFF_ID : null;
+  const LIFF_ID_LOCAL = "2009910221-ySbGklzJ";
 
   // ถ้า page โหลดมาพร้อม LIFF callback (หลัง liff.login() redirect กลับ)
   // → init LIFF แล้วดำเนินการต่อได้เลย
