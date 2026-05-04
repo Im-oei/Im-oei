@@ -497,16 +497,11 @@ async function submitLoginModal() {
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
       return;
     }
-    if (!LIFF_ID_LOCAL) {
-      console.warn('LIFF_ID not configured');
-      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-      return;
-    }
-
+    
     try {
       // ✅ init ครั้งเดียว
       if (!window._liffInited) {
-        await liff.init({ liffId: LIFF_ID_LOCAL, withLoginOnExternalBrowser: true });
+        await liff.init({ liffId: "2009910221-ySbGklzJ", withLoginOnExternalBrowser: true });
         window._liffInited = true;
       }
 
