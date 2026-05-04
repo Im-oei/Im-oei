@@ -26,6 +26,8 @@ jobs:
           export const LIFF_ID = "2009910221-ySbGklzJ";
           export const VAPID_PUBLIC_KEY = "BGZbGcsIuEzA5enjkAmik_kuZwvAsNGpsuEUj_p3TpJVaRSq0KnkxUlcthSnCT_rpZC4tg7eTQPq1v1FrArd3j0";
           export const RECAPTCHA_SITE_KEY = "6LfBotcsAAAAACxl8p6XtLXisjPH-XacxIXX-ZiC";
+          export const RECAPTCHA_SITE_KEY = "6LfBotcsAAAAACxl8p6XtLXisjPH-XacxIXX-ZiC";
+          window.LIFF_ID = "2009910221-ySbGklzJ";
           ENDCONFIG
 
       - name: Deploy to Firebase
