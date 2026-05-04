@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>อิ่มเอ๋ย — เข้าสู่ระบบด้วย LINE</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="https://static.line-scdn.net/liff/edge/2/sdk.js" as="script">
+
+<!-- ✅ defer = ไม่ block render, preload = โหลดไว้ล่วงหน้า -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
+  <link rel="stylesheet" href="css/liff.css">
+</head>
+<body>
+
+<div class="hero">
+  <img class="hero-img" src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.background='linear-gradient(135deg,#F5A623,#FFC107)';this.src=''">
+  <div class="hero-overlay">
+    <div class="hero-title">อิ่มเอ๋ย Im Oei</div>
+    <div class="hero-sub">เชื่อมต่อบัญชี LINE ของคุณ</div>
+  </div>
+</div>
+
+<div class="card-wrap">
+  <div class="main-card">
+    <div id="state-loading">
+      <div class="status-icon loading">🍜</div>
+      <div class="status-title">กำลังเชื่อมต่อ LINE...</div>
+      <div class="status-desc">รอสักครู่ ระบบกำลังตรวจสอบข้อมูล</div>
+    </div>
+
+    <div id="state-not-line" style="display:none">
+      <div class="status-icon error">📱</div>
+      <div class="status-title">กรุณาเปิดผ่าน LINE</div>
+      <div class="status-desc">หน้านี้ต้องเปิดผ่านแอป LINE เท่านั้น</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text">เปิดแอป <strong>LINE</strong> บนมือถือของคุณ</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text">สแกน QR Code หรือกดลิงก์จากร้านอิ่มเอ๋ย</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text">หน้าสั่งอาหารจะเปิดขึ้นพร้อมเชื่อม LINE อัตโนมัติ</div></div>
+      </div>
+    </div>
+
+    <div id="state-phone" style="display:none">
+      <div class="badge">✅ LINE เชื่อมต่อสำเร็จ</div>
+      <div id="profile-card" class="profile-card" style="display:none">
+        <img id="profile-avatar" class="profile-avatar" src="" alt="">
+        <div>
+          <div id="profile-name" class="profile-name"></div>
+          <div id="profile-id" class="profile-id"></div>
+        </div>
+      </div>
+      <div class="status-title">ยืนยันเบอร์มือถือ</div>
+      <div class="status-desc">กรอกเบอร์มือถือเพื่อผูกบัญชี LINE<br>ระบบจะแจ้งเตือนออเดอร์ผ่าน LINE ของคุณ</div>
+      <div class="form-group">
+        <label class="form-label">เบอร์มือถือ</label>
+        <input type="tel" class="form-input" id="phone-input"
+          placeholder="เช่น 0812345678" maxlength="10"
+          pattern="[0-9]*" inputmode="numeric"
+          oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"
+          onkeydown="if(event.key==='Enter')submitPhone()">
+        <div class="phone-hint">* เบอร์ที่ใช้สั่งอาหารที่ร้านอิ่มเอ๋ย</div>
+      </div>
+      <div class="notice">📣 เมื่อผูกเบอร์แล้ว ร้านจะส่งแจ้งเตือนสถานะออเดอร์ให้ทางไลน์โดยอัตโนมัติ</div>
+      <button class="btn btn-yellow" id="submit-btn" onclick="submitPhone()"><span>🔗</span> ผูกบัญชี LINE</button>
+      <button class="btn btn-outline" onclick="skipLink()">ข้ามขั้นตอนนี้</button>
+    </div>
+
+    <div id="state-linked" style="display:none">
+      <div class="status-icon success">🎉</div>
+      <div class="profile-card">
+        <img id="linked-avatar" class="profile-avatar" src="" alt="" style="display:none">
+        <div id="linked-avatar-placeholder" class="profile-avatar-placeholder">😊</div>
+        <div>
+          <div id="linked-name" class="profile-name">คุณลูกค้า</div>
+          <div id="linked-phone" class="profile-id"></div>
+        </div>
+      </div>
+      <div class="status-title">LINE เชื่อมต่อแล้ว!</div>
+      <div class="status-desc">บัญชี LINE ของคุณผูกกับเบอร์นี้เรียบร้อยแล้ว<br>ร้านจะแจ้งเตือนสถานะออเดอร์ผ่าน LINE</div>
+      <button class="btn btn-yellow" onclick="goOrder()"><span>🍜</span> สั่งอาหาร</button>
+      <button class="btn btn-outline" onclick="changePhone()">เปลี่ยนเบอร์มือถือ</button>
+    </div>
+
+    <div id="state-success" style="display:none">
+      <div class="status-icon success">✅</div>
+      <div class="status-title">ผูกบัญชีสำเร็จ!</div>
+      <div class="status-desc">เชื่อม LINE กับเบอร์ <strong id="success-phone"></strong> เรียบร้อย<br>คุณจะได้รับแจ้งเตือนออเดอร์ทาง LINE</div>
+      <button class="btn btn-yellow" onclick="goOrder()"><span>🍜</span> สั่งอาหารเลย!</button>
+    </div>
+
+    <div id="state-error" style="display:none">
+      <div class="status-icon error">⚠️</div>
+      <div class="status-title" id="error-title">เกิดข้อผิดพลาด</div>
+      <div class="status-desc" id="error-desc">กรุณาลองใหม่อีกครั้ง</div>
+      <button class="btn btn-yellow" onclick="location.reload()">ลองใหม่</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading-overlay"><div class="spinner-big"></div></div>
+<div class="toast" id="toast"></div>
+
+
+  <script type="module" src="js/liff.module.js"></script>
+</body>
+</html>
