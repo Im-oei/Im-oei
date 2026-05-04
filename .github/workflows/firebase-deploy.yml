@@ -1,9 +1,9 @@
-name: Deploy to Firebase
+name: Deploy Im-Oei
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -11,23 +11,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Create config.js
+        run: |
+          cat > im-oei-v10/public/config.js <<'EOF'
+          export const FIREBASE_CONFIG = {
+            apiKey:            "${{ secrets.FIREBASE_API_KEY }}",
+            authDomain:        "im-oei.firebaseapp.com",
+            projectId:         "im-oei",
+            storageBucket:     "im-oei.firebasestorage.app",
+            messagingSenderId: "392812205535",
+            appId:             "${{ secrets.FIREBASE_APP_ID }}",
+            measurementId:     "G-0LGSELSP0D"
+          };
+          export const LIFF_ID = "2009910221-ySbGklzJ";
+          export const VAPID_PUBLIC_KEY = "${{ secrets.VAPID_PUBLIC_KEY }}";
+          export const RECAPTCHA_SITE_KEY = "6LfBotcsAAAAACxl8p6XtLXisjPH-XacxIXX-ZiC";
+          EOF
 
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-
-      - name: Install Functions dependencies
-        run: npm install
-        working-directory: im-oei-v10/functions
-
-      - name: Deploy to Firebase Hosting + Firestore Rules
+      - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: im-oei
           channelId: live
+          projectId: im-oei
           entryPoint: im-oei-v10
