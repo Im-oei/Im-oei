@@ -439,7 +439,7 @@ async function submitLoginModal() {
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
       const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
       const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
-      const { FIREBASE_CONFIG, LIFF_ID: LID } = await import('./config.js');
+      const { FIREBASE_CONFIG, LIFF_ID: LID } = await import('../config.js');
 
       const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
       const db = getFirestore(app);
