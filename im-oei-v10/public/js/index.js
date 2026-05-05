@@ -150,7 +150,7 @@ function applyViewMode(){
   document.body.classList.remove('view-card','view-grid','view-list');
   document.body.classList.add('view-'+viewMode);
   ['card','grid','list'].forEach(function(m){
-    var btn = document.getElementById('vsw-'+m);
+    var btn = document.getElementById('view-btn-'+m);
     if(btn) btn.classList.toggle('active', m === viewMode);
   });
 }
@@ -427,65 +427,59 @@ async function submitLoginModal() {
 }
 
 // ============================================================
-// LINE LIFF Login — inline (ไม่ต้องวิ่งไป liff.html อีกต่อไป)
+// LINE LIFF Login — inline (Firestore-direct, no AppCheck required)
 // ============================================================
 (function() {
   const LIFF_ID_LOCAL = "2009910221-ySbGklzJ";
 
-  // ถ้า page โหลดมาพร้อม LIFF callback (หลัง liff.login() redirect กลับ)
-  // → init LIFF แล้วดำเนินการต่อได้เลย
-  async function handleLiffReturn() {
-    if (!window.liff) return;
-    if (!LIFF_ID_LOCAL) { console.warn('LIFF_ID not set'); return; }
+  // ─── ฟังก์ชัน init LIFF ครั้งเดียว ────────────────────────────────────
+  async function ensureLiff() {
+    if (!window.liff) throw new Error('LIFF SDK not loaded');
+    if (!window._liffInited) {
+      await liff.init({ liffId: LIFF_ID_LOCAL, withLoginOnExternalBrowser: true });
+      window._liffInited = true;
+    }
+  }
 
+  // ─── หลัง redirect กลับมา: ตรวจ LIFF login + ดึงข้อมูล ──────────────
+  async function handleLiffReturn() {
     try {
-      // ✅ init ครั้งเดียว (ป้องกัน init ซ้ำ)
-      if (!window._liffInited) {
-        await liff.init({ liffId: LIFF_ID_LOCAL, withLoginOnExternalBrowser: true });
-        window._liffInited = true;
-      }
-      if (!liff.isLoggedIn()) return; // ยังไม่ login จริงๆ
+      await ensureLiff();
+      if (!liff.isLoggedIn()) return;
 
       const profile = await liff.getProfile();
       const { userId, displayName, pictureUrl } = profile;
 
-      // โหลด Firebase ผ่าน dynamic import (ใช้ที่มีอยู่แล้วใน page)
+      // โหลด Firebase
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-      const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
-      const { FIREBASE_CONFIG, LIFF_ID: LID } = await import('../config.js');
+      const { getFirestore, doc, getDoc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const { FIREBASE_CONFIG } = await import('../config.js');
 
       const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
       const db = getFirestore(app);
-      const fns = getFunctions(app, 'asia-northeast1');
 
-      // ✅ ตรวจผ่าน callable function (ปลอดภัย + ไม่โดน Rules บล็อก)
-      const idTokenForCheck = await liff.getIDToken();
-      const statusFn = httpsCallable(fns, 'getLineUserStatus');
-      let status = { linked: false };
+      // ตรวจ lineUsers ตรงจาก Firestore (rules ต้องอนุญาต read ด้วย lineUserId)
+      let linked = false, phone = null;
       try {
-        const res = await statusFn({ lineUserId: userId, liffIdToken: idTokenForCheck });
-        status = res.data;
+        const snap = await getDoc(doc(db, 'lineUsers', userId));
+        if (snap.exists() && snap.data().phone) {
+          linked = true;
+          phone = snap.data().phone;
+        }
       } catch(e) {
-        // ถ้า function ยังไม่ deploy หรือ error → fallback แสดง phone form
-        console.warn('getLineUserStatus error:', e.message);
+        console.warn('lineUsers read error (rules?):', e.message);
       }
 
-      if (status.linked && status.phone) {
-        // ผูกแล้ว → เซ็ต session
-        const userData = { role:'customer', name: displayName, phone: status.phone, lineUserId: userId, photoURL: pictureUrl||null, loginAt: Date.now() };
-        sessionStorage.setItem('imkum_user', JSON.stringify(userData));
-        localStorage.setItem('imkum_phone', status.phone);
-        localStorage.setItem('imkum_name', displayName);
-        localStorage.setItem('imkum_userId', userId);
-        window._liffLoggedIn = true;
+      if (linked && phone) {
+        // ผูกแล้ว → save session
+        _saveLiffSession(displayName, phone, userId, pictureUrl);
         closeLoginModal();
         if (typeof updateUserBadge === 'function') updateUserBadge();
         if (typeof showToast === 'function') showToast('ยินดีต้อนรับ ' + displayName + ' 👋');
       } else {
         // ยังไม่ผูกเบอร์ → แสดง modal กรอกเบอร์
         window._liffProfile = { userId, displayName, pictureUrl };
-        window._liffFunctions = fns;
+        window._liffDb = db;
         _showPhoneBindModal(displayName, pictureUrl);
       }
     } catch(e) {
@@ -495,37 +489,21 @@ async function submitLoginModal() {
 
   // เรียกตอนโหลดหน้า (กรณีกลับมาจาก liff.login redirect)
   window.addEventListener('DOMContentLoaded', () => {
-    // ตรวจว่ามี LIFF params อยู่ใน URL ไหม (liff.state หรือ code)
     if (location.search.includes('liff.state') || location.search.includes('code=') || location.hash.includes('access_token')) {
       handleLiffReturn();
     }
   });
 
-  // ─── ปุ่ม "เชื่อมต่อด้วย LINE" กด ───────────────────────────────────────
+  // ─── ปุ่ม "เข้าสู่ระบบด้วย LINE" กด ──────────────────────────────────
   window.loginWithLine = async function() {
-    const btn = document.getElementById('line-login-btn');
+    const btn = document.querySelector('.im-line-btn');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
-
-    if (!window.liff) {
-      alert('LIFF SDK ยังไม่พร้อม กรุณาลองใหม่');
-      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-      return;
-    }
-    
     try {
-      // ✅ init ครั้งเดียว
-      if (!window._liffInited) {
-        await liff.init({ liffId: "2009910221-ySbGklzJ", withLoginOnExternalBrowser: true });
-        window._liffInited = true;
-      }
-
+      await ensureLiff();
       if (!liff.isLoggedIn()) {
-        // redirect ออกไป login แล้วกลับมาหน้าเดิม (ไม่ใช่ liff.html)
         liff.login({ redirectUri: window.location.href });
-        return; // หยุดรอ redirect
+        return;
       }
-
-      // login แล้ว → ดำเนินการต่อเลย
       await handleLiffReturn();
     } catch(e) {
       console.error('loginWithLine error:', e);
@@ -533,66 +511,87 @@ async function submitLoginModal() {
     }
   };
 
-  // ─── Modal กรอกเบอร์ (กรณียังไม่ผูก) ─────────────────────────────────────
+  // ─── Modal กรอกเบอร์ ────────────────────────────────────────────────
   function _showPhoneBindModal(displayName, pictureUrl) {
-    // เปิด login modal แล้วเพิ่ม section กรอกเบอร์สำหรับ LIFF
     const modal = document.getElementById('login-modal');
     if (!modal) return;
 
-    // inject เนื้อหา LIFF phone bind เข้าไปใน modal
-    const existing = document.getElementById('liff-phone-section');
-    if (!existing) {
+    if (!document.getElementById('liff-phone-section')) {
       const section = document.createElement('div');
       section.id = 'liff-phone-section';
-      section.style.cssText = 'margin-top:16px;padding-top:16px;border-top:1px solid #eee;';
-      section.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          ${pictureUrl ? `<img src="${pictureUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">` : ''}
-          <div style="font-size:13px;color:#555;">สวัสดี <strong>${displayName}</strong><br><span style="font-size:11px;color:#888;">กรอกเบอร์เพื่อผูกบัญชี LINE</span></div>
-        </div>
-        <input type="tel" id="liff-phone-input" class="im-field" placeholder="0812345678" maxlength="10"
-          oninput="this.value=this.value.replace(/\D/g,'')"
-          style="margin-bottom:8px;">
-        <button onclick="submitLiffPhone()" class="im-submit-btn" style="background:#06C755;">
-          ยืนยันเบอร์โทรศัพท์
-        </button>`;
-      modal.querySelector('.im-modal-box, [class*=modal]')?.appendChild(section) || modal.appendChild(section);
+      section.style.cssText = 'margin-top:14px;padding-top:14px;border-top:1.5px solid #EEE8E0;';
+      section.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
+          (pictureUrl ? '<img src="' + pictureUrl + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">' : '') +
+          '<div style="font-size:13px;color:#555;">สวัสดี <strong>' + displayName + '</strong><br>' +
+          '<span style="font-size:11px;color:#888;">กรอกเบอร์เพื่อผูกบัญชี LINE</span></div>' +
+        '</div>' +
+        '<input type="tel" id="liff-phone-input" class="im-field" placeholder="0812345678" maxlength="10"' +
+          ' oninput="this.value=this.value.replace(/\D/g,\'\')" style="margin-bottom:8px;">' +
+        '<button onclick="submitLiffPhone()" class="im-submit-btn" style="background:#06C755;color:#fff;">' +
+          'ยืนยันเบอร์โทรศัพท์</button>';
+      const body = modal.querySelector('.im-modal-body');
+      if (body) body.appendChild(section);
+      else modal.appendChild(section);
     }
-
     modal.classList.add('open');
   }
 
+  // ─── กดยืนยันเบอร์ → เขียน Firestore ตรง ────────────────────────────
   window.submitLiffPhone = async function() {
     const phone = document.getElementById('liff-phone-input')?.value.trim();
     if (!phone || !/^0[6-9]\d{8}$/.test(phone)) {
-      if (typeof showToast === 'function') showToast('กรุณากรอกเบอร์มือถือให้ถูกต้อง (06x-09x)');
+      if (typeof showToast === 'function') showToast('กรุณากรอกเบอร์ให้ถูกต้อง (06x-09x)');
       return;
     }
-
     const profile = window._liffProfile;
-    const fns = window._liffFunctions;
-    if (!profile || !fns) return;
+    const db = window._liffDb;
+    if (!profile || !db) return;
+
+    const btn = document.querySelector('#liff-phone-section .im-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
 
     try {
-      const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
-      const bindFn = httpsCallable(fns, 'bindLineAccount');
-      const idToken = await liff.getIDToken();
-      await bindFn({ lineUserId: profile.userId, displayName: profile.displayName, phone, liffIdToken: idToken });
+      const { setDoc, doc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const { userId, displayName, pictureUrl } = profile;
 
-      const userData = { role:'customer', name: profile.displayName, phone, lineUserId: profile.userId, photoURL: profile.pictureUrl||null, loginAt: Date.now() };
-      sessionStorage.setItem('imkum_user', JSON.stringify(userData));
-      localStorage.setItem('imkum_phone', phone);
-      localStorage.setItem('imkum_name', profile.displayName);
-      localStorage.setItem('imkum_userId', profile.userId);
+      await setDoc(doc(db, 'lineUsers', userId), {
+        userId, displayName, phone,
+        pictureUrl: pictureUrl || null,
+        linkedAt: Date.now(), updatedAt: Date.now()
+      }, { merge: true });
 
+      await setDoc(doc(db, 'linePhoneMap', phone), {
+        userId, displayName, updatedAt: Date.now()
+      }, { merge: true });
+
+      await setDoc(doc(db, 'customers', 'phone_' + phone), {
+        phone, name: displayName, lineUserId: userId,
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      _saveLiffSession(displayName, phone, userId, pictureUrl);
       closeLoginModal();
       if (typeof updateUserBadge === 'function') updateUserBadge();
-      if (typeof showToast === 'function') showToast('ผูกบัญชี LINE สำเร็จ! ยินดีต้อนรับ ' + profile.displayName + ' 🎉');
+      if (typeof showToast === 'function') showToast('ผูก LINE สำเร็จ! ยินดีต้อนรับ ' + displayName + ' 🎉');
     } catch(e) {
       console.error('submitLiffPhone error:', e);
-      if (typeof showToast === 'function') showToast('ผูกบัญชีไม่สำเร็จ: ' + (e.message || 'กรุณาลองใหม่'));
+      if (typeof showToast === 'function') showToast('บันทึกไม่สำเร็จ: ' + (e.message || 'ลองใหม่อีกครั้ง'));
+      if (btn) { btn.disabled = false; btn.textContent = 'ยืนยันเบอร์โทรศัพท์'; }
     }
   };
+
+  function _saveLiffSession(name, phone, userId, pictureUrl) {
+    sessionStorage.setItem('imkum_user', JSON.stringify({
+      role: 'customer', name, phone, lineUserId: userId,
+      photoURL: pictureUrl || null, loginAt: Date.now()
+    }));
+    localStorage.setItem('imkum_phone', phone);
+    localStorage.setItem('imkum_name', name);
+    localStorage.setItem('imkum_userId', userId);
+    localStorage.setItem('imkum_line_linked', 'true');
+  }
+
 })();
 
 

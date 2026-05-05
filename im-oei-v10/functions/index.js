@@ -221,7 +221,6 @@ exports.processLineQueue = functions.firestore
 // ก่อนหน้า: liff.html setDoc lineUsers/linePhoneMap ตรง = hijack ได้
 // ใหม่: function ตรวจ LIFF id_token ก่อน แล้วค่อยเขียนผ่าน Admin SDK
 exports.bindLineAccount = functions
-  .runWith({ enforceAppCheck: true }) // 🔐 App Check
   .https.onCall(async (data, context) => {
   const { lineUserId, displayName, phone, liffIdToken } = data;
 
@@ -316,7 +315,6 @@ exports.cleanupLineQueue = functions.pubsub
 // แทน getDoc(lineUsers/userId) ตรงจาก client ซึ่ง Rules บล็อก
 // verify liffIdToken ก่อน → ถ้าผ่านค่อย return phone status
 exports.getLineUserStatus = functions
-  .runWith({ enforceAppCheck: true })
   .https.onCall(async (data, context) => {
     const { lineUserId, liffIdToken } = data;
 

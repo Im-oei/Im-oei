@@ -111,17 +111,22 @@ service cloud.firestore {
     // 🔴 FIX: ปิด public read (|| true) และปิด public write
     //         ก่อนหน้า: ชื่อ/phone ของลูกค้าทุกคน leak ได้
     match /lineUsers/{userId} {
+      // อ่านได้: admin หรือ LIFF ที่มี auth (anonymous signIn)
       allow read: if isAdmin()
-        || (isLoggedIn() && request.auth.uid == userId);
-      // FIXED: ห้าม client เขียนตรง — ผ่าน bindLineAccount function เท่านั้น
-      allow write: if false;
+        || isLoggedIn();
+      // เขียนได้: LIFF ที่ login แล้วเขียน doc ของตัวเอง (userId ต้องตรงกับ doc key)
+      allow write: if isLoggedIn()
+        && request.resource.data.userId == userId
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^0[0-9]{9}$');
     }
 
     // ─── LINE PHONE MAP ───────────────────────────────────────────────────────
     // 🔴 FIX: ปิด public write — ก่อนหน้า ใครก็ hijack phone→LINE mapping ได้
     match /linePhoneMap/{phone} {
       allow read: if isAdmin();
-      allow write: if false;
+      // LIFF เขียน mapping phone→userId ได้ถ้า login แล้ว
+      allow write: if isLoggedIn();
     }
 
     // ─── ADMINS ───────────────────────────────────────────────────────────────

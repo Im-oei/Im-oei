@@ -24,26 +24,9 @@ body {
 }
 
 /* Hero */
-.hero-top {
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(160deg, #FFB300 0%, #FF8C00 100%);
-  padding: 40px 24px 64px;
-  display: flex;
-  justify-content: center;
-}
-.hero-mascot {
-  font-size: 80px;
-  line-height: 1;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.hero-wave { position: absolute; bottom: -1px; left: 0; width: 100%; }
+.hero-top { width:100%; position:relative; overflow:hidden; background:#1a0a00; line-height:0; min-height:160px; }
+.hero-top img { width:100%; height:auto; display:block; object-fit:cover; max-height:220px; }
+.hero-top-overlay { position:absolute; inset:0; background:linear-gradient(to bottom, transparent 40%, rgba(255,248,240,0.95) 100%); }
 
 /* Card */
 .card-wrap {
