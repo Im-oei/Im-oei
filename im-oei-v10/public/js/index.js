@@ -202,9 +202,11 @@ function render(){
   ALL_ITEMS.forEach(function(item){
     var el=document.getElementById('qty-'+item.id);
     var el2=document.getElementById('qty-fl-'+item.id);
+    var el3=document.getElementById('qty-list-'+item.id);
     var v=cart[item.id]||0;
     if(el) el.textContent=v;
     if(el2) el2.textContent=v;
+    if(el3) el3.textContent=v;
   });
   var t=getTotal(),c=getCount();
   var te=document.getElementById('home-total');
@@ -277,30 +279,25 @@ function buildMenuList(){
       } else if (item.avgRating && item.ratingCount > 0) {
         topBadge = '<span class="rating-badge">⭐ '+item.avgRating.toFixed(1)+'</span>';
       }
-      html+=
-        '<div class="card">'+
-          '<div class="food-img">'+foodImg(item)+topBadge+
-            (!isSoldOut ? '<div class="qty">'+
-              '<button class="btn" style="width:26px;height:26px;font-size:17px;border:none;" onclick="remove(\''+item.id+'\')">−</button>'+
-              '<span class="qty-num" id="qty-'+item.id+'">0</span>'+
-              '<button class="btn plus" style="width:26px;height:26px;font-size:17px;border:none;" onclick="add(\''+item.id+'\')">+</button>'+
-            '</div>' : '')+
-          '</div>'+
-          '<div class="left">'+
-            '<div class="name">'+item.name+'</div>'+
-            '<div class="desc">'+(item.desc||'')+'</div>'+
-          '</div>'+
-          '<div class="card-footer">'+
-            '<span class="price-tag">'+item.price+' ฿</span>'+
-            (isSoldOut
-              ? '<span style="font-size:11px;font-weight:800;color:#E53935;background:#FFEBEE;padding:4px 10px;border-radius:10px;">หมด</span>'
-              : '<div style="display:flex;align-items:center;gap:5px;">'+
-                  '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>'+
-                  '<span class="qty-num" id="qty-fl-'+item.id+'">0</span>'+
-                  '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>'+
-                '</div>'
-            )+
-          '</div>'+
+      var qtyHtml = isSoldOut
+        ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>'
+        : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>' +
+          '<span class="qty-num" id="qty-'+item.id+'">0</span>' +
+          '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>';
+
+      html +=
+        '<div class="card">' +
+          '<div class="food-img">' + foodImg(item) + topBadge + '</div>' +
+          '<div class="left">' +
+            '<div class="name">' + item.name + '</div>' +
+            '<div class="desc">' + (item.desc || '') + '</div>' +
+            '<div class="price-tag list-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+            '<div class="qty list-qty">' + (isSoldOut ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>' : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button><span class="qty-num" id="qty-list-'+item.id+'">0</span><button class="btn plus" onclick="add(\''+item.id+'\')">+</button>') + '</div>' +
+          '</div>' +
+          '<div class="card-footer">' +
+            '<div class="price-tag">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+            '<div class="qty">' + qtyHtml + '</div>' +
+          '</div>' +
         '</div>';
     });
     html+='</div></div>';
