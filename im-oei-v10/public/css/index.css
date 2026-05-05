@@ -242,7 +242,67 @@ body.view-list .card .rating-badge{
 body.view-list .card .list-price{display:block;}
 body.view-list .card .list-qty{display:flex;align-items:center;gap:6px;margin-top:6px;}
 body.view-list .card .card-footer{display:none;}
-.btn{width:30px;height:30px;border-radius:50%;border:1.5px solid #E0E0E0;background:#fff;font-size:18px;font-weight:700;color:#2C2C2C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+
+/* === VIEW SWITCHER BUTTONS === */
+.view-switcher{display:flex;align-items:center;gap:2px;background:#F5EFE6;border-radius:22px;padding:3px;}
+.view-sw-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border:none;background:transparent;border-radius:18px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#9E8060;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.view-sw-btn svg{flex-shrink:0;}
+.view-sw-btn.active{background:#fff;color:#E65100;box-shadow:0 1px 6px rgba(0,0,0,0.10);}
+.view-sw-btn:active{transform:scale(0.92);}
+
+/* === CARD MODE (1 คอลัม ใหญ่) === */
+body.view-card .menu-grid{
+  display:flex;flex-direction:column;gap:14px;padding:0 12px 8px;
+}
+body.view-card .card{
+  flex-direction:row;align-items:stretch;
+  border-radius:18px;
+  border:1.5px solid #F0E8DC;
+  box-shadow:0 3px 14px rgba(0,0,0,0.09);
+  cursor:pointer;
+  min-height:110px;
+  overflow:hidden;
+}
+body.view-card .card:active{transform:scale(0.98);}
+/* รูปสี่เหลี่ยม 120x ทางซ้าย */
+body.view-card .card .food-img{
+  width:120px;height:auto;min-height:110px;
+  flex-shrink:0;aspect-ratio:unset;
+  border-radius:0;
+  font-size:52px;
+}
+body.view-card .card .food-img::after{display:none;}
+/* ข้อความทางขวา */
+body.view-card .card .left{
+  position:static;
+  flex:1;padding:13px 12px 10px;
+  background:transparent;
+  display:flex;flex-direction:column;justify-content:center;
+}
+body.view-card .card .name{
+  font-size:15px;color:#1A1A1A;
+  text-shadow:none;font-weight:800;
+  display:block;-webkit-line-clamp:unset;overflow:visible;
+}
+body.view-card .card .desc{
+  display:block;
+  font-size:12px;color:#999;
+  margin-top:3px;line-height:1.4;
+}
+body.view-card .card .list-price{display:block;font-size:15px;font-weight:900;color:#E65100;margin-top:6px;}
+body.view-card .card .list-qty{display:flex;align-items:center;gap:6px;margin-top:8px;}
+body.view-card .card .card-footer{display:none;}
+body.view-card .card .sold-badge{position:static;display:inline-block;margin-top:6px;}
+body.view-card .card .rating-badge{position:static;display:inline-flex;margin-top:6px;background:#FFF3E0;}
+
+/* === GRID mode (default 2 col) stays same, just ensure class === */
+body.view-grid .menu-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 12px 8px;
+}
+body.view-grid .card{flex-direction:column;}
+
+/* === LIST MODE — อ่านง่าย มีครบ === */
+body.view-list .menu-grid{display:flex;flex-direction:column;gap:0;padding:0;}width:30px;height:30px;border-radius:50%;border:1.5px solid #E0E0E0;background:#fff;font-size:18px;font-weight:700;color:#2C2C2C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
 .btn.plus{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 2px 8px rgba(255,193,7,0.45);}
 .btn:active{transform:scale(0.88);}
 .qty-num{font-size:15px;font-weight:700;min-width:18px;text-align:center;}
@@ -516,3 +576,66 @@ body.view-list .card .price-tag {
     margin: 0 20px 12px !important;
   }
 }
+
+/* ======================================================
+   VIEW SWITCHER BUTTONS (3-way: การ์ด / กริด / รายการ)
+   ====================================================== */
+.view-switcher{display:flex;align-items:center;gap:2px;background:#F0E8DC;border-radius:22px;padding:3px;}
+.vsw{display:flex;align-items:center;gap:5px;padding:6px 11px;border:none;border-radius:18px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#9E8060;background:transparent;cursor:pointer;transition:all .2s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.vsw svg{flex-shrink:0;}
+.vsw.active{background:#fff;color:#E65100;box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+.vsw:active{transform:scale(0.9);}
+
+/* ======================================================
+   HIDE / SHOW SECTIONS PER MODE
+   ====================================================== */
+
+/* ค่า default: ซ่อน card-left, list-left, grid-footer */
+.card .card-left  { display:none; }
+.card .list-left  { display:none; }
+.card .grid-footer{ display:none; }
+
+/* --- GRID MODE (default / view-grid) ---
+   แสดง grid-footer (ชื่อ+ราคา+qty ใต้รูป)
+   ซ่อน card-left, list-left, card-footer เดิม, left เดิม */
+body:not(.view-card):not(.view-list) .card .grid-footer,
+body.view-grid .card .grid-footer { display:flex; flex-direction:column; gap:6px; padding:9px 10px 10px; background:#fff; }
+body:not(.view-card):not(.view-list) .card .card-footer,
+body.view-grid .card .card-footer  { display:none; }
+body:not(.view-card):not(.view-list) .card .left,
+body.view-grid .card .left         { display:none; }
+body:not(.view-card):not(.view-list) .card .food-img::after,
+body.view-grid .card .food-img::after { display:none; }
+
+.card .grid-name {
+  font-size:14px; font-weight:800; color:#1A1A1A; line-height:1.35;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.card .grid-footer-row {
+  display:flex; align-items:center; justify-content:space-between;
+}
+
+/* --- CARD MODE (1 col, รูปซ้าย ข้อความขวา) --- */
+body.view-card .menu-grid  { display:flex; flex-direction:column; gap:14px; padding:0 12px 8px; }
+body.view-card .cat-section .cat-header { padding:14px 0 6px; }
+body.view-card .card       { flex-direction:row; align-items:stretch; border-radius:18px; border:1.5px solid #F0E8DC; box-shadow:0 3px 16px rgba(0,0,0,0.08); min-height:110px; }
+body.view-card .card .food-img { width:120px; height:auto; min-height:110px; flex-shrink:0; aspect-ratio:unset; border-radius:0; font-size:52px; }
+body.view-card .card .food-img::after { display:none; }
+body.view-card .card .card-left  { display:flex; flex-direction:column; justify-content:center; flex:1; padding:13px 14px 12px; }
+body.view-card .card .card-left .name  { font-size:15px; font-weight:800; color:#1A1A1A; text-shadow:none; display:block; -webkit-line-clamp:unset; overflow:visible; }
+body.view-card .card .card-left .desc  { display:block; font-size:12px; color:#aaa; margin-top:3px; line-height:1.4; }
+body.view-card .card .card-left .card-price { display:block; font-size:15px; font-weight:900; color:#E65100; margin-top:6px; }
+body.view-card .card .card-left .card-qty   { display:flex; align-items:center; gap:6px; margin-top:8px; }
+body.view-card .card .grid-footer { display:none; }
+body.view-card .card .card-footer { display:none; }
+body.view-card .card .list-left   { display:none; }
+
+/* --- LIST MODE (compact row) --- */
+body.view-list .card .list-left  { display:flex; flex-direction:column; justify-content:center; flex:1; padding:12px 4px 12px 12px; }
+body.view-list .card .list-left .name       { font-size:14px; font-weight:800; color:#1A1A1A; text-shadow:none; display:block; -webkit-line-clamp:unset; overflow:visible; }
+body.view-list .card .list-left .desc       { display:block; font-size:11px; color:#aaa; margin-top:3px; line-height:1.4; }
+body.view-list .card .list-left .list-price { display:block; font-size:14px; font-weight:900; color:#E65100; margin-top:5px; }
+body.view-list .card .list-left .list-qty   { display:flex; align-items:center; gap:6px; margin-top:6px; }
+body.view-list .card .grid-footer { display:none; }
+body.view-list .card .card-footer { display:none; }
+body.view-list .card .card-left   { display:none; }

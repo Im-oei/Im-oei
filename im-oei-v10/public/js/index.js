@@ -144,26 +144,22 @@ var ALL_ITEMS=[].concat.apply([],MENU.map(function(c){return c.items;}));
 var FEATURED_IDS=["tuna","chicken_noodle","egg_sausage"];
 var currentCat='all'; var currentSearch='';
 
-// ====== VIEW TOGGLE ======
-var viewMode = 'grid'; // always default grid (2-col)
-localStorage.removeItem('imkum_view');
+// ====== VIEW SWITCHER (card / grid / list) ======
+var viewMode = localStorage.getItem('imkum_view') || 'grid';
 function applyViewMode(){
-  var icon = document.getElementById('view-toggle-icon');
-  var label = document.getElementById('view-toggle-label');
-  if(viewMode === 'list'){
-    document.body.classList.add('view-list');
-    if(icon) icon.textContent = '⊞';
-    if(label) label.textContent = 'กริด';
-  } else {
-    document.body.classList.remove('view-list');
-    if(icon) icon.textContent = '☰';
-    if(label) label.textContent = 'รายการ';
-  }
+  document.body.classList.remove('view-card','view-grid','view-list');
+  document.body.classList.add('view-'+viewMode);
+  ['card','grid','list'].forEach(function(m){
+    var btn = document.getElementById('vsw-'+m);
+    if(btn) btn.classList.toggle('active', m === viewMode);
+  });
 }
-function toggleView(){
-  viewMode = (viewMode === 'grid') ? 'list' : 'grid';
+function setView(mode){
+  viewMode = mode;
   localStorage.setItem('imkum_view', viewMode);
   applyViewMode();
+  buildMenuList();
+  render();
 }
 applyViewMode();
 
@@ -279,24 +275,45 @@ function buildMenuList(){
       } else if (item.avgRating && item.ratingCount > 0) {
         topBadge = '<span class="rating-badge">⭐ '+item.avgRating.toFixed(1)+'</span>';
       }
-      var qtyHtml = isSoldOut
+      var qtyBtns = isSoldOut
         ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>'
         : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>' +
           '<span class="qty-num" id="qty-'+item.id+'">0</span>' +
           '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>';
+      var qtyListBtns = isSoldOut
+        ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>'
+        : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>' +
+          '<span class="qty-num" id="qty-list-'+item.id+'">0</span>' +
+          '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>';
 
       html +=
         '<div class="card">' +
+          // รูปอาหาร
           '<div class="food-img">' + foodImg(item) + topBadge + '</div>' +
-          '<div class="left">' +
+
+          // === CARD MODE: ชื่อ+desc+ราคา+qty ทางขวา ===
+          '<div class="left card-left">' +
+            '<div class="name">' + item.name + '</div>' +
+            '<div class="desc card-desc">' + (item.desc || '') + '</div>' +
+            '<div class="price-tag card-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+            '<div class="qty card-qty">' + qtyListBtns + '</div>' +
+          '</div>' +
+
+          // === GRID MODE: ชื่อ+ราคา+qty ใต้รูป ===
+          '<div class="grid-footer">' +
+            '<div class="grid-name">' + item.name + '</div>' +
+            '<div class="grid-footer-row">' +
+              '<div class="price-tag">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+              '<div class="qty">' + qtyBtns + '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // === LIST MODE: desc+ราคา ทางซ้าย qty ทางขวา ===
+          '<div class="left list-left">' +
             '<div class="name">' + item.name + '</div>' +
             '<div class="desc">' + (item.desc || '') + '</div>' +
             '<div class="price-tag list-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
-            '<div class="qty list-qty">' + (isSoldOut ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>' : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button><span class="qty-num" id="qty-list-'+item.id+'">0</span><button class="btn plus" onclick="add(\''+item.id+'\')">+</button>') + '</div>' +
-          '</div>' +
-          '<div class="card-footer">' +
-            '<div class="price-tag">' + item.price + ' <span class="price-unit">บาท</span></div>' +
-            '<div class="qty">' + qtyHtml + '</div>' +
+            '<div class="qty list-qty">' + qtyListBtns + '</div>' +
           '</div>' +
         '</div>';
     });

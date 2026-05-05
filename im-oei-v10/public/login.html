@@ -5,202 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>เข้าสู่ระบบ - อิ่มเอ๋ย</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Prompt:wght@700;800;900&display=swap" rel="stylesheet">
-<style>
-:root {
-  --yellow: #FFC107;
-  --yellow-dark: #F5A623;
-  --yellow-shadow: rgba(255,193,7,0.35);
-  --orange: #FF8C00;
-  --bg: #FFF8F0;
-  --white: #fff;
-  --text: #2D1B00;
-  --text-sub: #999;
-  --line-green: #06C755;
-  --line-shadow: rgba(6,199,85,0.35);
-  --shadow: 0 8px 40px rgba(0,0,0,0.12);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body {
-  font-family: 'Sarabun', sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Hero - emoji only */
-.hero-top {
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(160deg, #FFB300 0%, #FF8C00 100%);
-  padding: 40px 24px 64px;
-  display: flex;
-  justify-content: center;
-}
-.hero-mascot {
-  font-size: 80px;
-  line-height: 1;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.hero-wave { position: absolute; bottom: -1px; left: 0; width: 100%; }
-
-/* Card */
-.card-wrap {
-  width: 100%; max-width: 480px;
-  padding: 0 18px 48px;
-  margin-top: -24px;
-  position: relative; z-index: 1;
-}
-.login-card {
-  background: var(--white);
-  border-radius: 28px;
-  padding: 28px 24px 24px;
-  box-shadow: var(--shadow);
-  border: 1.5px solid rgba(255,193,7,0.15);
-}
-.section-label {
-  font-size: 11px; font-weight: 800;
-  letter-spacing: 1.2px; color: var(--text-sub);
-  text-transform: uppercase; margin-bottom: 14px;
-}
-
-/* LINE button */
-.line-btn {
-  width: 100%; padding: 18px 20px; border-radius: 18px; border: none;
-  background: var(--line-green);
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  cursor: pointer;
-  box-shadow: 0 6px 24px var(--line-shadow);
-  transition: transform 0.15s, box-shadow 0.15s;
-  position: relative; overflow: hidden;
-}
-.line-btn::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-  pointer-events: none;
-}
-.line-btn:active { transform: scale(0.97); box-shadow: 0 2px 12px var(--line-shadow); }
-.line-btn-text { display: flex; flex-direction: column; align-items: flex-start; }
-.line-btn-main { font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 800; color: #fff; line-height: 1; }
-.line-btn-sub { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8); margin-top: 3px; }
-
-/* Chips */
-.line-benefits { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.benefit-chip {
-  background: #F0FDF4; border: 1.5px solid #BBF7D0;
-  border-radius: 20px; padding: 5px 12px;
-  font-size: 11.5px; font-weight: 700; color: #166534;
-}
-
-/* Divider */
-.or-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 18px; }
-.or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1.5px; background: #EEE8E0; }
-.or-divider span { font-size: 11.5px; font-weight: 700; color: #CCC; white-space: nowrap; }
-
-/* Fallback toggle */
-.fallback-toggle {
-  width: 100%; background: none; border: 2px solid #EEE8E0;
-  border-radius: 16px; padding: 14px 18px;
-  display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; transition: all 0.2s; font-family: 'Sarabun', sans-serif;
-}
-.fallback-toggle-left { display: flex; align-items: center; gap: 10px; }
-.fallback-toggle-icon {
-  width: 34px; height: 34px; border-radius: 10px;
-  background: #F5EFE6; display: flex; align-items: center; justify-content: center; font-size: 16px;
-}
-.fallback-toggle-text-main { font-size: 14px; font-weight: 700; color: var(--text); display: block; }
-.fallback-toggle-text-sub { font-size: 11px; color: var(--text-sub); display: block; margin-top: 1px; }
-.chevron { transition: transform 0.25s ease; color: #CCC; flex-shrink: 0; }
-.chevron.open { transform: rotate(180deg); }
-
-/* Collapsible */
-.collapse-form { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, opacity 0.25s ease; opacity: 0; }
-.collapse-form.open { max-height: 500px; opacity: 1; }
-.collapse-inner { padding-top: 16px; }
-
-.form-group { margin-bottom: 16px; }
-.form-label { font-size: 12px; font-weight: 700; color: #999; margin-bottom: 7px; display: block; }
-.form-input {
-  width: 100%; border: 2px solid #EEE8E0; border-radius: 16px;
-  padding: 15px 18px; font-family: 'Sarabun', sans-serif; font-size: 16px;
-  color: var(--text); outline: none; transition: all 0.2s; background: #FAFAF8;
-}
-.form-input:focus { border-color: var(--yellow); background: #fff; box-shadow: 0 0 0 4px rgba(255,193,7,0.12); }
-.form-input::placeholder { color: #CCC; }
-.phone-hint { font-size: 11px; color: #CCC; margin-top: 5px; padding-left: 4px; }
-
-.guest-btn {
-  width: 100%; padding: 16px; border-radius: 16px;
-  border: 2px solid var(--yellow-dark); background: transparent;
-  font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 800; color: var(--text);
-  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: all 0.15s;
-}
-.guest-btn:active { transform: scale(0.97); background: #FFF8E1; }
-
-/* Admin link at bottom */
-.admin-link-wrap {
-  margin-top: 20px; padding-top: 18px;
-  border-top: 1.5px solid #F0EBE3; text-align: center;
-}
-.admin-link {
-  background: none; border: none;
-  font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700;
-  color: #CCC; cursor: pointer; transition: color 0.2s;
-}
-.admin-link:hover { color: var(--text-sub); }
-
-.admin-input {
-  width: 100%; border: 2px solid #EEE8E0; border-radius: 16px;
-  padding: 15px 18px; font-family: 'Sarabun', sans-serif; font-size: 16px;
-  color: var(--text); outline: none; transition: all 0.2s; background: #FAFAF8;
-  margin-bottom: 12px; display: block;
-}
-.admin-input:focus { border-color: var(--yellow); background: #fff; box-shadow: 0 0 0 4px rgba(255,193,7,0.12); }
-.admin-input::placeholder { color: #CCC; }
-
-.admin-btn {
-  width: 100%; padding: 16px; border-radius: 18px; border: none;
-  background: linear-gradient(135deg, var(--yellow) 0%, var(--yellow-dark) 100%);
-  font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 800; color: #3E2000;
-  cursor: pointer; box-shadow: 0 6px 20px var(--yellow-shadow);
-  transition: transform 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-}
-.admin-btn:active { transform: scale(0.97); }
-
-/* Back */
-.back-btn {
-  width: 100%; margin-top: 12px; padding: 14px;
-  border: 2px solid #EEE8E0; background: #FAFAFA; border-radius: 16px;
-  font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 700;
-  color: var(--text-sub); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  transition: all 0.2s;
-}
-.back-btn:hover { border-color: var(--orange); color: var(--orange); }
-
-/* Toast */
-.toast {
-  position: fixed; bottom: 30px; left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: rgba(44,44,44,0.92); color: #fff;
-  padding: 11px 24px; border-radius: 30px;
-  font-size: 13px; font-weight: 700; opacity: 0;
-  transition: all 0.28s; z-index: 600; white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.demo-note { text-align: center; margin-top: 18px; font-size: 11.5px; color: #CCC; font-weight: 600; }
-.demo-note strong { color: #FF8C00; }
-</style>
+<link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
@@ -213,6 +18,11 @@ body {
 
 <div class="card-wrap">
   <div class="login-card">
+
+    <!-- Error box -->
+    <div class="error-box" id="error-box">
+      <span id="error-msg">เกิดข้อผิดพลาด</span>
+    </div>
 
     <div class="section-label">เข้าสู่ระบบ</div>
 
@@ -242,7 +52,7 @@ body {
         <div class="fallback-toggle-icon">📝</div>
         <div>
           <span class="fallback-toggle-text-main">กรอกชื่อ + เบอร์โทร</span>
-          <span class="fallback-toggle-text-sub">สำหรับสั่งแบบไม่ต้อง login</span>
+          <span class="fallback-toggle-text-sub">สำหรับสั่งแบบไม่ต้อง login LINE</span>
         </div>
       </div>
       <svg class="chevron" id="guest-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -254,15 +64,16 @@ body {
       <div class="collapse-inner">
         <div class="form-group">
           <label class="form-label">👤 ชื่อของคุณ</label>
-          <input type="text" class="form-input" placeholder="เช่น สมชาย, นิสา" maxlength="30">
+          <input type="text" class="form-input" id="cust-name-1" placeholder="เช่น สมชาย, นิสา" maxlength="30">
         </div>
         <div class="form-group">
           <label class="form-label">📱 เบอร์โทรศัพท์</label>
-          <input type="tel" class="form-input" placeholder="0812345678" maxlength="10"
-            oninput="this.value=this.value.replace(/\D/g,'')">
+          <input type="tel" class="form-input" id="cust-phone-1" placeholder="0812345678" maxlength="10"
+            oninput="this.value=this.value.replace(/\D/g,'')"
+            onkeydown="if(event.key==='Enter')customerLogin()">
           <div class="phone-hint">ใช้ติดตามออเดอร์ • ไม่มีการส่ง SMS</div>
         </div>
-        <button class="guest-btn" onclick="showToast('✅ เข้าสู่ระบบสำเร็จ! (DEMO)')">
+        <button class="guest-btn" id="guest-btn" onclick="customerLogin()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           เริ่มสั่งอาหาร
         </button>
@@ -276,9 +87,20 @@ body {
 
     <div class="collapse-form" id="admin-form">
       <div class="collapse-inner">
-        <input type="email" class="admin-input" placeholder="admin@example.com">
-        <input type="password" class="admin-input" placeholder="••••••••">
-        <button class="admin-btn" onclick="showToast('🔑 เข้าสู่ระบบแอดมิน (DEMO)')">
+        <div class="form-group">
+          <label class="form-label">📧 อีเมลผู้ดูแล</label>
+          <input type="email" class="admin-input" id="admin-email" placeholder="admin@example.com"
+            onkeydown="if(event.key==='Enter')document.getElementById('admin-password').focus()">
+        </div>
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">🔒 รหัสผ่าน</label>
+          <input type="password" class="admin-input" id="admin-password" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter')adminLogin()">
+          <button class="pwd-toggle" id="admin-eye" onclick="toggleAdminPwd()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BBB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button class="admin-btn" id="admin-btn" onclick="adminLogin()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           เข้าสู่ระบบแอดมิน
         </button>
@@ -287,16 +109,16 @@ body {
 
   </div>
 
-  <button class="back-btn" onclick="showToast('กลับหน้าหลัก...')">
+  <button class="back-btn" onclick="window.location.href='index.html'">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     กลับหน้าหลัก
   </button>
-
-  <div class="demo-note">⚡ <strong>DEMO</strong> — ปุ่มจริงจะ redirect ไป LINE OAuth</div>
 </div>
 
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
+<script type="module" src="js/login.module.js"></script>
 <script>
   function toggleGuest() {
     const form = document.getElementById('guest-form');
@@ -308,16 +130,12 @@ body {
     document.getElementById('admin-form').classList.toggle('open');
   }
   function lineLogin() {
-    showToast('🟢 กำลังเชื่อมต่อ LINE...');
-    setTimeout(() => showToast('✅ เข้าสู่ระบบสำเร็จ! (DEMO)'), 1500);
-  }
-  let toastTimer;
-  function showToast(msg) {
+    // TODO: redirect ไป LINE LIFF / OAuth URL จริง
+    // window.location.href = 'https://access.line.me/oauth2/v2.1/authorize?...';
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    t.textContent = '🟢 กำลังเชื่อมต่อ LINE...';
     t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+    setTimeout(() => t.classList.remove('show'), 2000);
   }
 </script>
 </body>
