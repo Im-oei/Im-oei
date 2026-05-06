@@ -1,3 +1,13 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
+  authDomain: "im-oei.firebaseapp.com",
+  projectId: "im-oei",
+  storageBucket: "im-oei.firebasestorage.app",
+  messagingSenderId: "392812205535",
+  appId: "1:392812205535:web:65f6ce114feb3ce035a06a",
+  measurementId: "G-0LGSELSP0D"
+};
+
 // admin.html — ES module (Firebase)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -7,7 +17,7 @@ import {
   serverTimestamp, getDocs, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { FIREBASE_CONFIG } from "../config.js";
-import { getAuth, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 const app = initializeApp(FIREBASE_CONFIG);
@@ -75,87 +85,29 @@ let storeIsOpen = true;
 let unsubOrders = null;
 
 // ====== INIT ======
-// แสดง loading overlay ระหว่างรอ auth
-function showAdminLoading(msg) {
-  let el = document.getElementById('admin-auth-loading');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'admin-auth-loading';
-    el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:Sarabun,sans-serif;';
-    el.innerHTML = '<div style="font-size:36px">🍳</div><div id="admin-auth-msg" style="font-size:15px;color:#888;font-weight:600"></div>';
-    document.body.appendChild(el);
+if (checkAuth()) {
+applyRoleUI();
+loadSettings();
+loadMenu();
+loadBanners();
+loadCategories();
+loadStampConfig();
+loadPreorderSetting();
+// โหลดข้อมูลทันที ไม่รอ Firebase Auth
+// (LINE admin ไม่มี Firebase Auth token แต่ตรวจ role ผ่าน session แล้ว)
+listenOrders();
+listenLineQueue();
+loadCustomers();
+loadRewards();
+
+// Firebase Auth เปิดไว้สำหรับ email admin (ไม่บล็อก LINE admin)
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log('Firebase Auth admin:', user.email);
   }
-  document.getElementById('admin-auth-msg').textContent = msg || 'กำลังตรวจสอบสิทธิ์...';
+});
+// initAdminNotifications - handled by second script tag
 }
-function hideAdminLoading() {
-  const el = document.getElementById('admin-auth-loading');
-  if (el) el.remove();
-}
-
-async function initAdmin() {
-  if (!checkAuth()) return;
-
-  const user = getUser();
-  showAdminLoading('กำลังตรวจสอบสิทธิ์...');
-
-  try {
-    // ─── LINE admin: แลก LIFF token → Firebase Custom Token ──────────────
-    if (user.lineUserId && (user.liffIdToken || user.idToken)) {
-      showAdminLoading('กำลังเข้าสู่ระบบด้วย LINE...');
-      const liffIdToken = user.liffIdToken || user.idToken;
-      try {
-        const issueToken = httpsCallable(functions, 'issueAdminToken');
-        const result = await issueToken({
-          lineUserId: user.lineUserId,
-          liffIdToken,
-        });
-        await signInWithCustomToken(auth, result.data.customToken);
-        console.log('LINE admin signed in via custom token, role:', result.data.role);
-      } catch (err) {
-        console.error('issueAdminToken failed:', err.code, err.message);
-        // ถ้า token หมดอายุหรือไม่มีสิทธิ์ → kick ออก
-        if (err.code === 'functions/permission-denied' || err.code === 'functions/unauthenticated') {
-          sessionStorage.clear();
-          alert('หมดเวลาเข้าสู่ระบบ หรือไม่มีสิทธิ์แอดมิน กรุณาเข้าใหม่');
-          window.location.href = 'login.html';
-          return;
-        }
-        // network/timeout error → ยังให้ต่อได้ แต่บางฟีเจอร์อาจพัง
-        console.warn('Custom token failed (network?), continuing with limited access');
-      }
-    } else {
-      // ─── Email admin: รอ Firebase Auth state ─────────────────────────────
-      await new Promise((resolve) => {
-        const unsub = onAuthStateChanged(auth, (fbUser) => {
-          unsub();
-          if (fbUser) {
-            console.log('Email admin signed in:', fbUser.email);
-          } else {
-            console.warn('No Firebase Auth session — email admin may not have full access');
-          }
-          resolve();
-        });
-      });
-    }
-  } finally {
-    hideAdminLoading();
-  }
-
-  // ─── โหลดข้อมูลทั้งหมด (มี auth token แล้ว) ───────────────────────────
-  applyRoleUI();
-  loadSettings();
-  loadMenu();
-  loadBanners();
-  loadCategories();
-  loadStampConfig();
-  loadPreorderSetting();
-  listenOrders();
-  listenLineQueue();
-  loadCustomers();
-  loadRewards();
-}
-
-initAdmin();
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
@@ -411,10 +363,10 @@ function renderMenuAdmin() {
     g.items.forEach(item => {
       html += `
         <div class="menu-item-admin" style="${item.hidden?'opacity:0.5':''}">
-          <div class="food-emoji">${item.imageUrl ? `<img src="${esc(item.imageUrl)}" alt="">` : (esc(item.emoji)||'🍽️')}</div>
+          <div class="food-emoji">${item.imageUrl ? `<img src="${item.imageUrl}" alt="">` : (item.emoji||'🍽️')}</div>
           <div class="info">
-            <div class="name">${esc(item.name)} ${item.hidden?'<span class="hidden-badge">ซ่อน</span>':''}</div>
-            <div class="price">${Number(item.price)||0} บาท</div>
+            <div class="name">${item.name} ${item.hidden?'<span class="hidden-badge">ซ่อน</span>':''}</div>
+            <div class="price">${item.price} บาท</div>
           </div>
           <div class="actions">
             <button class="icon-btn btn-edit" onclick="openEditItem('${item.id}')" title="แก้ไข">✏️</button>
@@ -447,13 +399,13 @@ function renderCategoryAdmin() {
   }
   container.innerHTML = allCategories.map(c => `
     <div class="cat-admin-card">
-      <div class="cat-emoji">${esc(c.emoji)||'🍽️'}</div>
+      <div class="cat-emoji">${c.emoji||'🍽️'}</div>
       <div class="info">
-        <div class="c-name">${esc(c.name)}</div>
-        <div class="c-key">key: ${esc(c.key)} | ลำดับ: ${Number(c.sortOrder)||0}</div>
+        <div class="c-name">${c.name}</div>
+        <div class="c-key">key: ${c.key} | ลำดับ: ${c.sortOrder||0}</div>
       </div>
-      <button class="icon-btn btn-edit" onclick="openEditCategory('${esc(c.key)}')" title="แก้ไข">✏️</button>
-      <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCategoryItem('${esc(c.key)}')" title="ลบ">🗑️</button>
+      <button class="icon-btn btn-edit" onclick="openEditCategory('${c.key}')" title="แก้ไข">✏️</button>
+      <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCategoryItem('${c.key}')" title="ลบ">🗑️</button>
     </div>`).join('');
 }
 
@@ -497,19 +449,19 @@ function renderBannersAdmin() {
     const ttc = typeTextColor[t]||'#333';
     const ph = typePlaceholderBg[t]||'linear-gradient(135deg,#EEE,#DDD)';
     return `
-    <div class="banner-card" style="border-left:4px solid ${esc(ttc)}">
-      ${b.imageUrl ? `<img class="banner-card-img" src="${esc(b.imageUrl)}" alt="${esc(b.title||'')}">` : `<div class="banner-card-img-placeholder" style="background:${esc(ph)};color:#fff;font-size:36px">🖼️</div>`}
+    <div class="banner-card" style="border-left:4px solid ${ttc}">
+      ${b.imageUrl ? `<img class="banner-card-img" src="${b.imageUrl}" alt="${b.title||''}">` : `<div class="banner-card-img-placeholder" style="background:${ph};color:#fff;font-size:36px">🖼️</div>`}
       <div class="banner-card-body">
         <div class="info">
-          <div class="b-title">${esc(b.title)||'(ไม่มีชื่อ)'}</div>
+          <div class="b-title">${b.title||'(ไม่มีชื่อ)'}</div>
           <div class="b-order" style="margin-top:4px">
-            <span class="banner-type-tag" style="background:${esc(tc)};color:${esc(ttc)}">${esc(typeLabel[t]||t)}</span>
-            ลำดับ: ${Number(b.order)||1} &nbsp;|&nbsp; ${b.active!==false?'✅ เปิดใช้':'❌ ปิด'}
-            ${b.subtitle ? `<div style="margin-top:2px;font-size:11px;color:#888">${esc(b.subtitle)}</div>` : ''}
+            <span class="banner-type-tag" style="background:${tc};color:${ttc}">${typeLabel[t]||t}</span>
+            ลำดับ: ${b.order||1} &nbsp;|&nbsp; ${b.active!==false?'✅ เปิดใช้':'❌ ปิด'}
+            ${b.subtitle ? `<div style="margin-top:2px;font-size:11px;color:#888">${b.subtitle}</div>` : ''}
           </div>
         </div>
-        <button class="icon-btn btn-edit" onclick="openEditBanner('${esc(b.id)}')" title="แก้ไข">✏️</button>
-        <button class="icon-btn" style="background:#FFEBEE" onclick="deleteBannerItem('${esc(b.id)}')" title="ลบ">🗑️</button>
+        <button class="icon-btn btn-edit" onclick="openEditBanner('${b.id}')" title="แก้ไข">✏️</button>
+        <button class="icon-btn" style="background:#FFEBEE" onclick="deleteBannerItem('${b.id}')" title="ลบ">🗑️</button>
       </div>
     </div>`;
   }).join('');
@@ -677,7 +629,7 @@ async function loadCategories() {
 function updateCatSelect() {
   const sel = document.getElementById('edit-catkey');
   if (!sel || !allCategories.length) return;
-  sel.innerHTML = allCategories.map(c => `<option value="${esc(c.key)}">${esc(c.emoji||'')} ${esc(c.name)}</option>`).join('');
+  sel.innerHTML = allCategories.map(c => `<option value="${c.key}">${c.emoji||''} ${c.name}</option>`).join('');
 }
 
 window.openAddCategory = function() {
@@ -1159,10 +1111,10 @@ function renderFeaturedCheckboxes() {
   if (!wrap || !allMenuItems.length) return;
   wrap.innerHTML = allMenuItems.filter(i => !i.hidden).map(item => `
     <label style="display:flex;align-items:center;gap:10px;padding:8px;background:#fff;border-radius:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <input type="checkbox" value="${esc(item.id)}" style="width:18px;height:18px;accent-color:var(--yellow)"
+      <input type="checkbox" value="${item.id}" style="width:18px;height:18px;accent-color:var(--yellow)"
         ${currentFeaturedIds.includes(item.id) ? 'checked' : ''}>
-      <span style="font-size:14px">${esc(item.emoji)||'🍽️'} ${esc(item.name)}</span>
-      <span style="margin-left:auto;font-size:12px;color:var(--text-sub)">${Number(item.price)||0} บาท</span>
+      <span style="font-size:14px">${item.emoji||'🍽️'} ${item.name}</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--text-sub)">${item.price} บาท</span>
     </label>`).join('');
 }
 
@@ -1724,7 +1676,7 @@ function showConfirmDialog(opts) {
     iconWrap.style.border = '2px solid ' + (opts.iconBorder || '#FFE0B2');
     document.getElementById('cd-icon').textContent = opts.icon || '❓';
     document.getElementById('cd-title').textContent = opts.title || 'ยืนยัน';
-    document.getElementById('cd-desc').innerHTML = esc(opts.desc || '').replace(/\n/g,'<br>');
+    document.getElementById('cd-desc').innerHTML = (opts.desc || '').replace(/\n/g,'<br>');
     var btn = document.getElementById('cd-confirm-btn');
     btn.style.background = opts.confirmColor || 'linear-gradient(135deg,#E53935,#B71C1C)';
     btn.style.color = opts.confirmTextColor || '#fff';
@@ -1791,7 +1743,7 @@ window.openDangerDialog = function(type) {
   iconWrap.style.border = '2px solid ' + cfg.iconBorder;
   document.getElementById('dd-icon').textContent = cfg.icon;
   document.getElementById('dd-title').textContent = cfg.title;
-  document.getElementById('dd-desc').innerHTML = esc(cfg.desc || '').replace(/\n/g,'<br>');
+  document.getElementById('dd-desc').innerHTML = cfg.desc.replace(/\n/g,'<br>');
 
   var confirmBtn = document.getElementById('dd-confirm-btn');
   confirmBtn.style.background = cfg.confirmColor;
@@ -1975,43 +1927,3 @@ window.exportCSV = function(){
   a.download = "orders.csv";
   a.click();
 };
-
-// ====== AUTO TOKEN REFRESH (LINE admin) ======
-// LIFF idToken มีอายุ ~1 ชั่วโมง — Firebase Custom Token ที่ได้จะมีอายุ 1 ชั่วโมงเช่นกัน
-// Firebase Auth จะ refresh Access Token อัตโนมัติ (มีอายุ 1 ชั่วโมง)
-// แต่ถ้า auth.currentUser หมดอายุ ให้ขอ token ใหม่จาก LIFF แล้ว reissue
-async function refreshLineAdminToken() {
-  const user = getUser();
-  if (!user || !user.lineUserId) return;
-
-  try {
-    // ถ้า LIFF ยังอยู่ใน context ให้ดึง idToken ใหม่
-    if (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn()) {
-      const freshToken = liff.getIDToken();
-      if (freshToken) {
-        // อัพเดท session
-        user.idToken = freshToken;
-        sessionStorage.setItem('imkum_user', JSON.stringify(user));
-
-        const issueToken = httpsCallable(functions, 'issueAdminToken');
-        const result = await issueToken({ lineUserId: user.lineUserId, liffIdToken: freshToken });
-        await signInWithCustomToken(auth, result.data.customToken);
-        console.log('LINE admin token refreshed');
-      }
-    }
-  } catch (err) {
-    console.warn('Token refresh failed:', err.message);
-    // ถ้า refresh ไม่ได้ → kick ออกให้ login ใหม่
-    if (err.code === 'functions/permission-denied') {
-      sessionStorage.clear();
-      alert('หมดเวลาเข้าสู่ระบบ กรุณาเข้าใหม่');
-      window.location.href = 'login.html';
-    }
-  }
-}
-
-// refresh ทุก 50 นาที (ก่อน token หมดอายุ 1 ชั่วโมง)
-const _lineAdminUser = getUser();
-if (_lineAdminUser && _lineAdminUser.lineUserId) {
-  setInterval(refreshLineAdminToken, 50 * 60 * 1000);
-}

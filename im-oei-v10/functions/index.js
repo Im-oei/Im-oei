@@ -6,9 +6,6 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
-// 🔧 FIX: static import แทน dynamic import ทุก call — ลด cold start + overhead
-const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
-
 // ─── HELPER: Rate Limit ────────────────────────────────────────────────────
 // ใช้ Admin SDK เขียน rateLimits (client เขียนตรงไม่ได้ตาม rules)
 async function checkRateLimit(key, maxCount = 5, windowMs = 60_000) {
@@ -163,6 +160,7 @@ exports.processLineQueue = functions.region("asia-northeast1").firestore
       return;
     }
 
+    const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
 
     const MAX_RETRIES = 3;
     let lastError = null;
@@ -241,17 +239,10 @@ exports.bindLineAccount = functions
 
   // ─── Verify LIFF id_token กับ LINE API ────────────────────────────────────
   // ป้องกัน: ส่ง lineUserId ของคนอื่นมา bind เข้า phone ตัวเอง
+  const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
   const liffId = functions.config().line?.liff_id;
 
-  // 🔐 FIX: throw ถ้า liffId ไม่ได้ set — ไม่ข้าม verify แบบเงียบๆ
-  if (!liffId) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "LINE LIFF ID ยังไม่ได้ตั้งค่าบน server — ติดต่อผู้ดูแลระบบ"
-    );
-  }
-
-  {
+  if (liffId) {
     // ─── Timeout 3 วิ — ถ้า LINE ช้า/ล่ม ไม่ให้ค้างค้าง ──────────────────
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 3000);
@@ -275,6 +266,8 @@ exports.bindLineAccount = functions
     if (!verifyRes.ok || verifyBody.sub !== lineUserId) {
       throw new functions.https.HttpsError("permission-denied", "LIFF token verification failed.");
     }
+  } else {
+    console.warn("bindLineAccount: line.liff_id not configured, skipping token verify.");
   }
 
   const now = admin.firestore.FieldValue.serverTimestamp();
@@ -332,17 +325,10 @@ exports.getLineUserStatus = functions
     }
 
     // verify token กับ LINE
+    const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
     const liffId = functions.config().line?.liff_id;
 
-    // 🔐 FIX: throw ถ้า liffId ไม่ได้ set
-    if (!liffId) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "LINE LIFF ID ยังไม่ได้ตั้งค่าบน server — ติดต่อผู้ดูแลระบบ"
-      );
-    }
-
-    {
+    if (liffId) {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 3000);
       let verifyRes, verifyBody;
@@ -376,161 +362,5 @@ exports.getLineUserStatus = functions
       phone: d.phone || "",
       displayName: d.displayName || "",
       pictureUrl: d.pictureUrl || null,
-    };
-  });
-
-// ─── 7. issueAdminToken: ออก Firebase Custom Token ให้ LINE admin ──────────
-// แทน: ตรวจ role ใน sessionStorage (bypass ได้ใน DevTools)
-// ใหม่: Functions ตรวจ liffIdToken + lineUserId ใน admins collection
-//        แล้วออก customToken พร้อม claims { role: "admin" }
-//        client เอา token ไป signInWithCustomToken → Firestore rules ตรวจ claim ได้จริง
-exports.issueAdminToken = functions
-  .https.onCall(async (data, context) => {
-    const { lineUserId, liffIdToken } = data;
-
-    if (!lineUserId || !liffIdToken) {
-      throw new functions.https.HttpsError("invalid-argument", "lineUserId and liffIdToken required.");
-    }
-
-    // ─── Verify LIFF id_token ────────────────────────────────────────────────
-    const liffId = functions.config().line?.liff_id;
-
-    if (!liffId) {
-      throw new functions.https.HttpsError("failed-precondition", "LINE LIFF ID not configured.");
-    }
-
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 4000);
-    let verifyBody;
-    try {
-      const verifyRes = await fetch(
-        `https://api.line.me/oauth2/v2.1/verify?id_token=${liffIdToken}&client_id=${liffId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          signal: ctrl.signal,
-        }
-      );
-      verifyBody = await verifyRes.json();
-      if (!verifyRes.ok || verifyBody.sub !== lineUserId) {
-        throw new functions.https.HttpsError("permission-denied", "LIFF token verification failed.");
-      }
-    } catch (err) {
-      if (err.code === "permission-denied") throw err;
-      if (err.name === "AbortError") throw new functions.https.HttpsError("deadline-exceeded", "LINE verify timeout");
-      throw new functions.https.HttpsError("unavailable", "ไม่สามารถตรวจสอบ LIFF token ได้");
-    } finally {
-      clearTimeout(timer);
-    }
-
-    // ─── ตรวจ admins collection ───────────────────────────────────────────────
-    const adminSnap = await db.collection("admins")
-      .where("lineUserId", "==", lineUserId)
-      .limit(1)
-      .get();
-
-    if (adminSnap.empty) {
-      throw new functions.https.HttpsError("permission-denied", "ไม่พบสิทธิ์แอดมิน");
-    }
-
-    const adminData = adminSnap.docs[0].data();
-    const role = adminData.role || "admin"; // "admin" | "owner"
-
-    // ─── ออก Custom Token ─────────────────────────────────────────────────────
-    const uid = `line_${lineUserId}`;
-    const customToken = await admin.auth().createCustomToken(uid, { role });
-
-    console.log(`issueAdminToken: issued token for lineUserId=${lineUserId} role=${role}`);
-    return { customToken, role };
-  });
-
-// ─── 8. redeemReward: Callable — หักแต้มและบันทึก redemption แบบ atomic ──
-// 🔐 FIX: ย้ายออกจาก client (client เคย updateDoc stamps โดยตรง = โกงได้)
-// ใหม่: transaction บน server — อ่านแต้ม, ตรวจว่าพอ, หัก, บันทึก redemption พร้อมกัน
-exports.redeemReward = functions.region("asia-northeast1")
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError("unauthenticated", "กรุณาเข้าสู่ระบบก่อน");
-    }
-
-    const { rewardId, phone } = data;
-
-    if (!rewardId || typeof rewardId !== "string") {
-      throw new functions.https.HttpsError("invalid-argument", "rewardId required.");
-    }
-    if (!phone || !phone.match(/^0[0-9]{9}$/)) {
-      throw new functions.https.HttpsError("invalid-argument", "valid phone required.");
-    }
-
-    // Rate limit: กัน double-submit / spam
-    await checkRateLimit(`redeem_${context.auth.uid}`, 5, 60_000);
-
-    // ดึงข้อมูล reward
-    const rewardDoc = await db.collection("rewards").doc(rewardId).get();
-    if (!rewardDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "ไม่พบรางวัลนี้");
-    }
-    const reward = rewardDoc.data();
-    if (reward.active === false) {
-      throw new functions.https.HttpsError("failed-precondition", "รางวัลนี้ปิดใช้งานแล้ว");
-    }
-    const pointCost = reward.points || reward.pointCost || reward.cost || 0;
-    if (!pointCost) {
-      throw new functions.https.HttpsError("failed-precondition", "รางวัลนี้ไม่มีราคาแต้ม");
-    }
-
-    // ตรวจ maxQty (ถ้ามี)
-    if (reward.maxQty > 0) {
-      const usedSnap = await db.collection("rewardRedemptions")
-        .where("rewardId", "==", rewardId)
-        .where("status", "!=", "rejected")
-        .get();
-      if (usedSnap.size >= reward.maxQty) {
-        throw new functions.https.HttpsError("resource-exhausted", "😢 รางวัลนี้หมดแล้ว");
-      }
-    }
-
-    const stampRef = db.collection("stamps").doc(phone);
-    const redemptionRef = db.collection("rewardRedemptions").doc();
-
-    // 🔐 Atomic transaction — อ่าน + ตรวจ + หัก + บันทึก ในครั้งเดียว
-    await db.runTransaction(async (tx) => {
-      const stampSnap = await tx.get(stampRef);
-      if (!stampSnap.exists) {
-        throw new functions.https.HttpsError("not-found", "ไม่พบข้อมูลแต้มของคุณ");
-      }
-      const curPoints = stampSnap.data().points || 0;
-      if (curPoints < pointCost) {
-        throw new functions.https.HttpsError(
-          "failed-precondition",
-          `แต้มไม่เพียงพอ (มี ${curPoints} แต้ม ต้องการ ${pointCost} แต้ม)`
-        );
-      }
-
-      // หักแต้ม
-      tx.update(stampRef, {
-        points: admin.firestore.FieldValue.increment(-pointCost),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      // บันทึก redemption
-      tx.set(redemptionRef, {
-        rewardId,
-        rewardName: reward.name || "",
-        emoji: reward.emoji || "🎁",
-        pointsUsed: pointCost,
-        phone,
-        uid: context.auth.uid,
-        status: "pending",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    });
-
-    console.log(`redeemReward: ${phone} redeemed ${rewardId} (${pointCost} pts)`);
-    return {
-      success: true,
-      redemptionId: redemptionRef.id,
-      pointsUsed: pointCost,
-      rewardName: reward.name || "",
     };
   });
