@@ -6,9 +6,9 @@
 <title>อิ่มเอ้ย - IM OEI Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
- <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -270,7 +270,7 @@
 </style>
 </head>
 <body>
-
+<div id="orders"></div>
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
@@ -667,18 +667,27 @@ new Chart(ctx2, {
   }
 });
 </script>
- <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-      authDomain: "im-oei.firebaseapp.com",
-      projectId: "im-oei",
-      storageBucket: "im-oei.firebasestorage.app",
-      messagingSenderId: "392812205535",
-      appId: "1:392812205535:web:65f6ce114feb3ce035a06a"
-    };
+<!-- ✅ Firebase MUST มาก่อน -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-    firebase.initializeApp(firebaseConfig);
-  </script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "im-oei.firebaseapp.com",
+  projectId: "im-oei",
+};
+
+// ✅ init ที่นี่เท่านั้น
+firebase.initializeApp(firebaseConfig);
+
+// ✅ ทำ global ให้ admin.js ใช้
+window._db = firebase.firestore();
+</script>
+
+<!-- ✅ โหลดหลังสุด -->
+<script src="js/admin.js"></script>
+
 <div id="orders-list"></div>
 <span id="notif-badge">0</span>
 <div id="toast"></div>
