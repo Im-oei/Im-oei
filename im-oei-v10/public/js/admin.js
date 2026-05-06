@@ -1,13 +1,34 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei",
-  storageBucket: "im-oei.firebasestorage.app",
-  messagingSenderId: "392812205535",
-  appId: "1:392812205535:web:65f6ce114feb3ce035a06a",
-  measurementId: "G-0LGSELSP0D"
-};
+const db = window._db;
 
+if (!db) {
+  console.error("❌ Firebase not ready");
+}
+
+// 🔥 ดึง orders จริงจาก Firestore
+async function loadOrders() {
+  try {
+    const snapshot = await db.collection("orders").get();
+
+    const container = document.getElementById("orders");
+    container.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const o = doc.data();
+
+      container.innerHTML += `
+        <div style="border:1px solid #ccc;margin:10px;padding:10px">
+          <b>${o.customerName || 'ลูกค้า'}</b><br>
+          ${o.status}<br>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+loadOrders();
 // admin.html — plain scripts (UI, tabs, forms)
 
 // ====== TAB SWITCHING ======
