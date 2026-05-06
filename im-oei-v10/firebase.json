@@ -12,36 +12,94 @@
       {
         "source": "/admin.html",
         "headers": [
-          { "key": "X-Frame-Options", "value": "DENY" },
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "Cache-Control", "value": "no-store" }
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
         ]
       },
       {
         "source": "/login.html",
         "headers": [
-          { "key": "X-Frame-Options", "value": "DENY" },
-          { "key": "Cache-Control", "value": "no-store" }
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
         ]
       },
       {
         "source": "**/*.@(png|webp|jpg|jpeg|gif|svg|ico)",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800, stale-while-revalidate=86400"
+          }
         ]
       },
       {
         "source": "**/*.@(css|js)",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=86400, stale-while-revalidate=3600"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://static.line-scdn.net https://cdnjs.cloudflare.com https://www.google.com https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com; frame-src 'none'; object-src 'none'; base-uri 'self';"
+          }
         ]
       }
     ],
     "rewrites": [
-      { "source": "/admin", "destination": "/admin.html" },
-      { "source": "/orders", "destination": "/orders.html" },
-      { "source": "/cart", "destination": "/cart.html" },
-      { "source": "/login", "destination": "/login.html" }
+      {
+        "source": "/admin",
+        "destination": "/admin.html"
+      },
+      {
+        "source": "/orders",
+        "destination": "/orders.html"
+      },
+      {
+        "source": "/cart",
+        "destination": "/cart.html"
+      },
+      {
+        "source": "/login",
+        "destination": "/login.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "firestore": {

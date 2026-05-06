@@ -1,7 +1,11 @@
 // orders.html — ES module
 
+// ─── XSS escape helper ────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { FIREBASE_CONFIG, VAPID_PUBLIC_KEY } from "../config.js";
 
 const sess = sessionStorage.getItem('imkum_user');
@@ -15,6 +19,7 @@ if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html';
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
+const fns = getFunctions(app, 'asia-northeast1'); // Cloud Functions region
 
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
@@ -173,20 +178,20 @@ function renderHistoryRows(list){
     const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
     const dateStr = dt.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
     const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-    const itemNames = (o.items||[]).map(i=>`${i.name}×${i.qty}`).join(', ');
+    const itemNames = (o.items||[]).map(i=>`${esc(i.name)}×${esc(String(i.qty))}`).join(', ');
     const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
     const dotCls = o.status==='done'?'done':'cancelled';
-    const detailRows = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+    const detailRows = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${esc(i.name)} × ${esc(String(i.qty))}</span><span class="order-item-price">${esc(String(i.subtotal))} ฿</span></div>`).join('');
     // Rating badges
     const ratedItems = (o.items||[]).filter(i => _ratingsCache[`${o.id}_${i.id}`]);
     const allRated = ratedItems.length === (o.items||[]).filter(i=>i.id).length && ratedItems.length > 0;
     const avgStar = ratedItems.length ? (ratedItems.reduce((s,i)=>s+(_ratingsCache[`${o.id}_${i.id}`]?.star||0),0)/ratedItems.length).toFixed(1) : null;
-    const starBadge = avgStar ? `<span class="star-badge">⭐ ${avgStar}</span>` : '';
+    const starBadge = avgStar ? `<span class="star-badge">⭐ ${esc(avgStar)}</span>` : '';
     const rateBtn = o.status==='done' && !allRated ? `<button class="reorder-btn" style="background:linear-gradient(135deg,#FFF8E1,#FFE082);color:#5D3A00;box-shadow:none;border:1.5px solid #FFE082;" onclick="event.stopPropagation();openRatingPopup(${JSON.stringify(o).replace(/"/g,'&quot;')})">⭐ รีวิว</button>` : '';
     return `<div class="history-row" id="hrow-${idx}" onclick="toggleHistoryDetail(${idx})">
       <div class="history-dot ${dotCls}"></div>
       <div class="history-main">
-        <div class="history-id">#${o.id.slice(0,8).toUpperCase()} · ${statusMap[o.status]||o.status}${starBadge}</div>
+        <div class="history-id">#${esc(o.id.slice(0,8).toUpperCase())} · ${esc(statusMap[o.status]||o.status)}${starBadge}</div>
         <div class="history-items">${itemNames}</div>
         <div class="history-detail" id="hdetail-${idx}">
           <div style="padding:8px 0 4px">${detailRows}</div>
@@ -197,8 +202,8 @@ function renderHistoryRows(list){
         </div>
       </div>
       <div class="history-right">
-        <div class="history-price">${o.total} ฿</div>
-        <div class="history-date">${dateStr} ${timeStr}</div>
+        <div class="history-price">${esc(String(o.total))} ฿</div>
+        <div class="history-date">${esc(dateStr)} ${esc(timeStr)}</div>
       </div>
     </div>`;
   }).join('');
@@ -224,24 +229,24 @@ function renderActiveCard(o){
   const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
   const dateStr = dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
   const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-  const items = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${i.name} × ${i.qty}</span><span class="order-item-price">${i.subtotal} ฿</span></div>`).join('');
+  const items = (o.items||[]).map(i=>`<div class="order-item-row"><span class="order-item-name">${esc(i.name)} × ${esc(String(i.qty))}</span><span class="order-item-price">${esc(String(i.subtotal))} ฿</span></div>`).join('');
   const itemsJson = JSON.stringify(o.items||[]).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
   const _isPreorder = o.isPreorder === true;
   const _preorderDate = o.preorderDate || '';
-  return `<div class="order-card active-order" data-order-id="${o.id}" style="${_isPreorder ? 'border-left:4px solid #764ba2;' : ''}">
+  return `<div class="order-card active-order" data-order-id="${esc(o.id)}" style="${_isPreorder ? 'border-left:4px solid #764ba2;' : ''}">
     <div class="order-card-head">
       <div>
-        <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
-        ${_isPreorder ? `<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;margin-bottom:4px;">📅 สั่งล่วงหน้า${_preorderDate ? ' · '+_preorderDate : ''}</div>` : ''}
-        <div class="order-date">🕐 ${dateStr} ${timeStr}</div>
-        <div class="order-pickup">⏰ รับ ${o.pickupTime||'07:30'} น.${o.pickupLocationName ? ` &nbsp;|&nbsp; 📍 ${o.pickupLocationName}` : ''}</div>
+        <div class="order-id">#${esc(o.id.slice(0,8).toUpperCase())}</div>
+        ${_isPreorder ? `<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;margin-bottom:4px;">📅 สั่งล่วงหน้า${_preorderDate ? ' · '+esc(_preorderDate) : ''}</div>` : ''}
+        <div class="order-date">🕐 ${esc(dateStr)} ${esc(timeStr)}</div>
+        <div class="order-pickup">⏰ รับ ${esc(o.pickupTime||'07:30')} น.${o.pickupLocationName ? ` &nbsp;|&nbsp; 📍 ${esc(o.pickupLocationName)}` : ''}</div>
       </div>
-      <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${statusMap[o.status]||o.status}</span>
+      <span class="status-badge ${statusCls[o.status]||''}">${statusIcon[o.status]||''} ${esc(statusMap[o.status]||o.status)}</span>
     </div>
     <div class="order-divider"></div>
     <div class="order-items">${items}</div>
     <div class="order-footer">
-      <div><div class="order-total-label">ยอดรวม</div><div class="order-total-val">${o.total} ฿</div></div>
+      <div><div class="order-total-label">ยอดรวม</div><div class="order-total-val">${esc(String(o.total))} ฿</div></div>
       <button class="reorder-btn" onclick='reorder(${itemsJson})'>🔁 สั่งซ้ำ</button>
     </div>
   </div>`;
@@ -819,9 +824,9 @@ async function renderRewardCatalog() {
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:36px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:${canRedeem?'#FFF8E1':'#F5F5F5'};border-radius:14px;flex-shrink:0">${r.emoji||'🎁'}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:800;color:${canRedeem?'#2C2C2C':'#AAA'}">${r.name}</div>
-            <div style="font-size:11px;color:#999;margin-top:2px">${typeLabel[r.type]||''}</div>
-            ${r.desc ? '<div style="font-size:12px;color:#888;margin-top:3px">'+r.desc+'</div>' : ''}
+            <div style="font-size:15px;font-weight:800;color:${canRedeem?'#2C2C2C':'#AAA'}">${esc(r.name)}</div>
+            <div style="font-size:11px;color:#999;margin-top:2px">${esc(typeLabel[r.type]||'')}</div>
+            ${r.desc ? '<div style="font-size:12px;color:#888;margin-top:3px">'+esc(r.desc)+'</div>' : ''}
             <div style="margin-top:6px;display:flex;align-items:center;gap:8px">
               <span style="font-size:14px;font-weight:800;color:${canRedeem?'#FF8C00':'#CCC'}">⭐ ${r.pointCost} แต้ม</span>
               ${!canRedeem ? '<span style="font-size:11px;color:#EF5350;font-weight:700">แต้มไม่พอ</span>' : ''}
@@ -845,58 +850,31 @@ window.redeemReward = async function(rewardId, rewardName, pointCost, emoji) {
   const userPoints = window._userPoints || 0;
   if (userPoints < pointCost) { showToast('แต้มไม่เพียงพอ'); return; }
 
-  // ตรวจสอบ maxQty ก่อนแลก
-  try {
-    const rewardDoc = await getDoc(doc(db, 'rewards', rewardId));
-    if (rewardDoc.exists()) {
-      const rData = rewardDoc.data();
-      if (rData.maxQty > 0) {
-        const usedSnap = await getDocs(query(collection(db,'rewardRedemptions'), where('rewardId','==',rewardId)));
-        const usedCount = usedSnap.docs.filter(d => d.data().status !== 'rejected').length;
-        if (usedCount >= rData.maxQty) { showToast('😢 รางวัลนี้หมดแล้ว'); return; }
-      }
-    }
-  } catch(e) { console.warn('maxQty check:', e.message); }
-
   if (!confirm('ยืนยันแลก "' + rewardName + '" ใช้ ' + pointCost + ' แต้ม?')) return;
   _isRedeeming = true;
   showLoading(true);
   try {
-    // หักแต้ม
-    const stampRef = doc(db, 'stamps', user.phone);
-    const stampSnap = await getDoc(stampRef);
-    const curPoints = stampSnap.exists() ? (stampSnap.data().points || stampSnap.data().total || 0) : 0;
-    const newPoints = Math.max(0, curPoints - pointCost);
-    await updateDoc(stampRef, { points: newPoints, updatedAt: serverTimestamp() });
+    // 🔐 FIX: เรียก Cloud Function แทน updateDoc โดยตรง
+    // server ตรวจแต้ม + หัก + บันทึก redemption แบบ atomic transaction
+    const redeemFn = httpsCallable(fns, 'redeemReward');
+    const result = await redeemFn({ rewardId, phone: user.phone });
 
-    // บันทึก redemption
-    await addDoc(collection(db, 'rewardRedemptions'), {
-      rewardId,
-      rewardName,
-      pointsUsed: pointCost,
-      emoji,
-      phone: user.phone,
-      customerName: user.name || '',
-      userId: user.userId || '',
-      status: 'pending',
-      createdAt: serverTimestamp(),
-    });
-
-    // Update local state
+    // Update local state จากผลลัพธ์ที่ server ยืนยัน
+    const newPoints = Math.max(0, userPoints - pointCost);
     window._userPoints = newPoints;
-    localStorage.setItem('imkum_stamps_' + user.phone, JSON.stringify({
-      points: newPoints,
-      lifetimePoints: stampSnap.exists() ? (stampSnap.data().lifetimePoints || 0) : 0
-    }));
+    localStorage.setItem('imkum_stamps_' + user.phone, JSON.stringify({ points: newPoints }));
 
     closeRewardCatalog();
     showToast('🎉 แลกรางวัลสำเร็จ! รอร้านยืนยัน');
     loadMyRedemptions();
-    // Update badge display
-    document.getElementById('stamp-count-badge').textContent = newPoints + ' แต้ม';
-    document.getElementById('sheet-points-display').textContent = newPoints;
+    const badge = document.getElementById('stamp-count-badge');
+    const disp = document.getElementById('sheet-points-display');
+    if (badge) badge.textContent = newPoints + ' แต้ม';
+    if (disp) disp.textContent = newPoints;
   } catch(e) {
-    showToast('❌ แลกไม่สำเร็จ: ' + (e.code||e.message));
+    // แสดง error message จาก Cloud Function (ภาษาไทย)
+    const msg = e.message || (e.code ? e.code.replace('functions/','') : 'กรุณาลองใหม่');
+    showToast('❌ ' + msg);
   } finally {
     _isRedeeming = false;
     showLoading(false);
@@ -938,7 +916,7 @@ async function loadMyRedemptions() {
       return `<div style="margin:0 12px 10px;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 2px 10px rgba(0,0,0,0.06);border:1.5px solid #F0E8D8;display:flex;align-items:center;gap:12px">
         <div style="font-size:32px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#FFF8E1;border-radius:14px;flex-shrink:0">${item.emoji || '🎁'}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:800;color:#2C2C2C">${item.rewardName || 'รางวัล'}</div>
+          <div style="font-size:14px;font-weight:800;color:#2C2C2C">${esc(item.rewardName || 'รางวัล')}</div>
           <div style="font-size:12px;color:#FF8C00;font-weight:700;margin-top:3px">⭐ ${item.pointsUsed || 0} แต้ม</div>
           <div style="font-size:11px;color:#BBB;margin-top:3px">${dateStr}</div>
         </div>

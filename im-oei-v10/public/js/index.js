@@ -1,3 +1,6 @@
+// ─── XSS escape ─────────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 // index.html — plain scripts (UI logic)
 
 // ====== PREORDER STATE ======
@@ -116,7 +119,7 @@ function updateUserBadge(){
     btn.style.background='linear-gradient(135deg,#FFF8E1,#FFE082)';
     var initials = u.name ? u.name.charAt(0) : '';
     if(initials){
-      av.innerHTML='<span style="font-size:16px;font-weight:800;color:#3E2000;font-family:Sarabun,sans-serif;">'+initials+'</span>';
+      av.innerHTML='<span style="font-size:16px;font-weight:800;color:#3E2000;font-family:Sarabun,sans-serif;">'+esc(initials)+'</span>';
     } else {
       av.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
     }
@@ -224,7 +227,7 @@ function buildTabs(){
   MENU.forEach(function(cat){
     var vis=cat.items.filter(function(i){return !i.hidden;});
     if(!vis.length) return;
-    wrap.innerHTML+='<div class="cat-tab" onclick="filterCat(\''+cat.catKey+'\',this)">'+cat.category+'</div>';
+    wrap.innerHTML+='<div class="cat-tab" onclick="filterCat(\''+esc(cat.catKey)+'\',this)">'+esc(cat.category)+'</div>';
   });
 }
 function filterCat(key,el){

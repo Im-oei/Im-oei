@@ -1,3 +1,6 @@
+// ─── XSS escape ────────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 // index.html — ES module (Firebase + Firestore sync)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -68,7 +71,7 @@ async function syncFirestore(){
       if (midBanner && midBanner.imageUrl) {
         const midWrap = document.getElementById('promo-mid-wrap');
         if (midWrap) {
-          midWrap.innerHTML = `<div class="promo-mid"><img src="${midBanner.imageUrl}" alt="${midBanner.title||'โปรโมชัน'}"><div class="promo-mid-overlay"><div class="promo-mid-title">${midBanner.title||'โปรโมชันพิเศษ'}</div>${midBanner.subtitle?`<div class="promo-mid-sub">${midBanner.subtitle}</div>`:''}</div><div class="promo-mid-badge">📢 โปรโมชัน</div></div>`;
+          midWrap.innerHTML = `<div class="promo-mid"><img src="${esc(midBanner.imageUrl)}" alt="${esc(midBanner.title||'โปรโมชัน')}"><div class="promo-mid-overlay"><div class="promo-mid-title">${esc(midBanner.title||'โปรโมชันพิเศษ')}</div>${midBanner.subtitle?`<div class="promo-mid-sub">${esc(midBanner.subtitle)}</div>`:''}</div><div class="promo-mid-badge">📢 โปรโมชัน</div></div>`;
         }
       }
     }

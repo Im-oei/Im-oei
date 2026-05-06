@@ -1,78 +1,60 @@
-# 🔐 Security Patch Notes — Im-oei v10 → v10-secure
+# Security Notes — อิ่มเอ๋ย Im-Oei
 
-## สรุปการแก้ไข (จาก audit)
+## การแก้ไขความปลอดภัย (Patch Log)
 
 ### 🔴 Critical Fixes
 
-| # | ไฟล์ | ปัญหาเดิม | การแก้ไข |
-|---|------|-----------|----------|
-| 1 | `firestore.rules` | `orders` อ่านได้ทุกคนถ้ามี phone format ถูก | ต้อง login + `phone_number` claim ตรง |
-| 2 | `firestore.rules` | `lineQueue` ใครก็ create ได้ = spam LINE | ปิด public write ทั้งหมด |
-| 3 | `firestore.rules` | `linePhoneMap` ใครก็ hijack binding ได้ | `allow write: if false` ทั้งหมด |
-| 4 | `firestore.rules` | `lineUsers` public read = ชื่อ/phone leak | ต้อง login + เป็นเจ้าของ |
-| 5 | `firestore.rules` | `stamps` public read + client เขียนได้ = ปั๊มแต้ม | read ต้อง auth, write = false |
-| 6 | `public/config.js` | `LINE_CHANNEL_TOKEN` อยู่ใน browser = token leak | ถอดออกจาก client ทั้งหมด |
-| 7 | `public/cart.html` | เขียน stamps ตรงจาก client | ย้ายไป `onOrderCreate` function |
-| 8 | `public/admin.html` | เขียน lineQueue ตรง = ใครก็ยิง LINE | เรียก `sendLineMessage` callable แทน |
-| 9 | `public/liff.html` | เขียน lineUsers/linePhoneMap ตรง = hijack | เรียก `bindLineAccount` callable แทน |
+#### 1. Firestore Rules — ปิด write ทุก collection
+**ก่อน:** เกือบทุก collection มี `allow write: if true` ใครก็ลบ/แก้เมนู แก้สถานะออเดอร์ หรือปั๊มแต้มตัวเองได้  
+**หลัง:** ต้องมี Firebase Auth token พร้อม role claim ถูกต้อง (`isAnyAdmin()`) จึงจะเขียนได้
+
+Collections ที่เปลี่ยน:
+- `menu`, `categories`, `banners`, `settings`, `rewards`, `pickupLocations` → require `isAnyAdmin()`
+- `orders/update` → require `isAnyAdmin()` (ป้องกัน client เปลี่ยนสถานะเอง)
+- `stamps` → require `isAnyAdmin()` (ป้องกันโกงแต้ม)
+- `ratings/update,delete` → require `isAnyAdmin()`
+- `pushQueue`, `lineQueue` → `allow write: if false` (Functions เขียนผ่าน Admin SDK)
+- `stats_daily`, `stats_menu` → `allow write: if false`
+- `lineUsers`, `linePhoneMap` → require admin หรือเจ้าของ record
+- `admins` → `allow read: if isFirebaseAdmin()` (ปิดไม่ให้ client อ่าน list admin)
+
+#### 2. Admin Auth — เพิ่ม Firebase Custom Token
+**ก่อน:** `admin.module.js` ตรวจ role จาก `sessionStorage` แก้ใน DevTools ได้  
+**หลัง:** เพิ่ม Cloud Function `issueAdminToken` ที่:
+1. Verify LIFF `id_token` กับ LINE API
+2. ตรวจ `lineUserId` ใน `admins` collection
+3. ออก Firebase Custom Token พร้อม custom claim `{ role }`
+4. Client เรียก `signInWithCustomToken()` → Firestore rules ตรวจ claim จริง
+
+วิธีใช้ใน `admin.module.js`:
+```js
+const { customToken } = await httpsCallable(functions, 'issueAdminToken')({ lineUserId, liffIdToken });
+await signInWithCustomToken(auth, customToken);
+```
+
+#### 3. Content-Security-Policy
+**ก่อน:** ไม่มี CSP header เลย  
+**หลัง:** เพิ่ม CSP ใน `firebase.json` จำกัด script/style/connect sources
+
+### 🟠 XSS Fixes
+
+#### 4. sanitize innerHTML ใน admin.module.js
+**ก่อน:** `innerHTML = cfg.desc.replace(/\n/g,'<br>')` — ถ้ามี `<script>` ใน Firestore จะ execute  
+**หลัง:** ผ่าน `esc()` function ก่อนทุกครั้ง: `innerHTML = esc(cfg.desc).replace(/\n/g,'<br>')`
+
+### 🟡 HTML Fixes
+
+#### 5. index.html — ลบ `<link rel="manifest">` ซ้ำ
+#### 6. index.html — ลบ stray `>` บรรทัด 177
+#### 7. cart.html — แก้ duplicate `onclick` attribute บน submit button
 
 ---
 
-### ✅ Cloud Functions ใหม่/แก้ไข
+## สิ่งที่ยังต้องทำเพิ่ม
 
-#### `onOrderCreate` (แก้ไข)
-- **เพิ่ม**: เขียน stamps อัตโนมัติผ่าน Admin SDK
-- อ่าน `settings/stamps.bahtPerPoint` เพื่อคำนวณแต้ม
-- ลูกค้า manipulate ค่าไม่ได้
+1. **อัพเดท `admin.module.js`** ให้เรียก `issueAdminToken` และ `signInWithCustomToken` แทน sessionStorage check
+2. **เพิ่ม `lineUserId` field** ใน `admins` collection สำหรับ LINE admin แต่ละคน
+3. **เพิ่ม `PERMISSIONS_POLICY` header** ถ้าใช้ geolocation/camera
+4. **ตั้ง Firebase App Check** ให้ production mode (ปัจจุบันอาจยัง debug)
+5. **Audit `orders.html`, `index.html` JS** — ตรวจ innerHTML ที่รับข้อมูลจาก Firestore เพิ่มเติม
 
-#### `sendLineMessage` (ใหม่ — Callable)
-- ตรวจ auth + admin ก่อนทุกครั้ง
-- validate message (length ≤ 500)
-- rate limit 30 ครั้ง/นาที/admin
-- เขียน lineQueue ผ่าน Admin SDK
-
-#### `bindLineAccount` (ใหม่ — Callable)
-- verify LIFF `id_token` กับ LINE API ก่อน
-- ป้องกัน bind userId ปลอม
-- เขียน lineUsers + linePhoneMap ผ่าน Admin SDK
-
-#### `checkRateLimit` (helper ใหม่)
-- ใช้ Firestore transaction
-- sliding window per-user per-action
-
----
-
-### 🔧 ขั้นตอนหลัง Deploy
-
-1. **ตั้ง Firebase Functions config:**
-```bash
-firebase functions:config:set \
-  line.token="YOUR_LINE_CHANNEL_TOKEN" \
-  line.liff_id="YOUR_LIFF_ID"
-```
-
-2. **Revoke LINE token เดิม** (เพราะ expose ใน config.js มาแล้ว):
-   - ไปที่ LINE Developers Console
-   - Issue token ใหม่
-   - อัปเดต `firebase functions:config:set line.token="NEW_TOKEN"`
-
-3. **Deploy:**
-```bash
-firebase deploy --only firestore:rules,functions,hosting
-```
-
-4. **Test security rules:**
-```bash
-firebase emulators:start
-# รัน test suite ตรวจ rules
-```
-
----
-
-### ⚠️ สิ่งที่ยังต้องทำต่อ (Roadmap)
-
-- [ ] เพิ่ม Firebase Authentication (phone auth) เพื่อให้ `orders` read ทำงานได้เต็มประสิทธิภาพ
-- [ ] validate order total ใน `createOrder` function (ป้องกัน price manipulation)
-- [ ] เพิ่ม dead-letter queue สำหรับ LINE send ที่ fail
-- [ ] เพิ่ม monitoring / alerting สำหรับ rate limit hit
-- [ ] audit log สำหรับ admin actions

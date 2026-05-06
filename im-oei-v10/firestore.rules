@@ -2,16 +2,21 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── COMMON FUNCTIONS ─────────────────────────────────────────────────────
-
-    // Firebase Auth (ใช้โดย admin email login)
-    function isLoggedIn() {
-      return request.auth != null;
+    // ─── FUNCTIONS ────────────────────────────────────────────────────────────
+    function isFirebaseAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
-    function isAdmin() {
-      return isLoggedIn() &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    function isLineAdmin() {
+      // LINE admin ผ่าน custom token ที่ออกโดย Firebase Functions
+      // role เก็บใน custom claims
+      return request.auth != null &&
+        request.auth.token.get('role', '') in ['admin', 'owner'];
+    }
+
+    function isAnyAdmin() {
+      return isFirebaseAdmin() || isLineAdmin();
     }
 
     function isValidPhone(phone) {
@@ -20,143 +25,157 @@ service cloud.firestore {
 
     // ─── ORDERS ───────────────────────────────────────────────────────────────
     match /orders/{orderId} {
-      // ลูกค้าสร้างออเดอร์ได้ (phone / LINE / guest)
-      allow create: if request.resource.data.keys().hasAny(['customerPhone','lineUserId','guestId'])
+      // 🔐 FIX: ต้อง auth ก่อน — ป้องกัน unauthenticated mass-read เบอร์/ชื่อลูกค้า
+      // admin อ่านได้ทั้งหมด, ลูกค้าอ่านได้เฉพาะออเดอร์ตัวเอง (match phone/lineUserId/guestId)
+      allow read: if isAnyAdmin()
+        || (request.auth != null && (
+              resource.data.get('guestId','')    == request.auth.uid
+           || resource.data.get('lineUserId','') == request.auth.token.get('lineUserId','__none__')
+        ));
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAny(['customerPhone','lineUserId','guestId'])
         && request.resource.data.keys().hasAll(['items','total','status','createdAt'])
         && request.resource.data.status == 'pending'
         && request.resource.data.total is number
         && request.resource.data.total > 0
         && request.resource.data.items is list
         && request.resource.data.items.size() > 0;
-
-      // อ่านได้ทุกคน (ลูกค้าดูออเดอร์ตัวเอง)
-      allow read: if true;
-
-      // แก้ไข/ลบ — admin เท่านั้น
-      allow update, delete: if isAdmin();
+      // อัพเดทสถานะ: ต้องเป็น admin เท่านั้น
+      allow update: if isAnyAdmin();
+      allow delete: if isFirebaseAdmin();
     }
 
     // ─── MENU ─────────────────────────────────────────────────────────────────
     match /menu/{itemId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAnyAdmin();
     }
 
     // ─── CATEGORIES ───────────────────────────────────────────────────────────
     match /categories/{catId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAnyAdmin();
     }
 
     // ─── BANNERS ──────────────────────────────────────────────────────────────
     match /banners/{bannerId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAnyAdmin();
     }
 
     // ─── SETTINGS ─────────────────────────────────────────────────────────────
     match /settings/{docId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAnyAdmin();
     }
 
     // ─── ADMINS ───────────────────────────────────────────────────────────────
-    // อ่านได้ทุกคน เพื่อให้ LIFF login ตรวจ role ได้
-    // Document ID คือ line_XXXXXXXX ซึ่งเดาไม่ได้จากภายนอก
-    // write ได้แค่ใน Firebase Console เท่านั้น
+    // อ่านได้แค่ admin เอง, เขียนได้แค่ Firebase Console
     match /admins/{uid} {
-      allow read: if true;
+      allow read: if isFirebaseAdmin();
       allow write: if false;
     }
 
     // ─── CUSTOMERS ────────────────────────────────────────────────────────────
     match /customers/{customerId} {
-      allow read: if isAdmin();
-      allow create: if true;
-      allow update: if isAdmin()
-        || (customerId == ('line_' + request.resource.data.lineUserId))
-        || customerId.matches('^guest_.*');
-      allow delete: if isAdmin();
+      // ลูกค้าสร้าง/อัพข้อมูลตัวเองได้, admin อ่าน/ลบได้
+      allow read: if isAnyAdmin() || (request.auth != null && request.auth.uid == customerId);
+      allow create: if true; // guest สร้างได้ (ยังไม่มี auth ตอน register)
+      allow update: if isAnyAdmin() || (request.auth != null && request.auth.uid == customerId);
+      allow delete: if isFirebaseAdmin();
     }
 
     // ─── STAMPS ───────────────────────────────────────────────────────────────
-    match /stamps/{customerId} {
-      // ลูกค้าอ่านแต้มตัวเองได้
-      allow read: if true;
-      // เขียนได้เฉพาะ server (Cloud Function) หรือ admin
-      allow create, update, delete: if isAdmin();
+    match /stamps/{phone} {
+      // 🔐 FIX: doc key = phone, ตรวจผ่าน custom claim แทน uid
+      // admin อ่านได้ทั้งหมด, ลูกค้าอ่านได้ถ้า phone claim ตรงกัน
+      allow read: if isAnyAdmin()
+        || (request.auth != null && request.auth.token.get('phone','') == phone);
+      // เพิ่ม/แก้แต้ม: เฉพาะ admin เท่านั้น (Cloud Function ใช้ Admin SDK bypass rules)
+      allow create, update: if isAnyAdmin();
+      allow delete: if isFirebaseAdmin();
     }
 
     // ─── RATINGS ──────────────────────────────────────────────────────────────
     match /ratings/{ratingId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['orderId','itemId','star','createdAt'])
+      // 🔐 FIX: ต้อง auth ก่อน + ตรวจ field types ให้ครบ
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['orderId','itemId','star','createdAt'])
         && request.resource.data.star is int
         && request.resource.data.star >= 1
-        && request.resource.data.star <= 5;
-      allow update, delete: if isAdmin();
+        && request.resource.data.star <= 5
+        && request.resource.data.orderId is string
+        && request.resource.data.itemId is string;
+      allow update: if isAnyAdmin();
+      allow delete: if isFirebaseAdmin();
     }
 
     // ─── REWARDS CATALOG ──────────────────────────────────────────────────────
     match /rewards/{rewardId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAnyAdmin();
     }
 
     // ─── REWARD REDEMPTIONS ───────────────────────────────────────────────────
     match /rewardRedemptions/{docId} {
-      allow read: if isAdmin();
+      allow read: if isAnyAdmin();
       allow create: if (request.resource.data.keys().hasAll(['phone','rewardId','createdAt'])
             && isValidPhone(request.resource.data.phone))
           || (request.resource.data.keys().hasAll(['lineUserId','rewardId','createdAt'])
             && request.resource.data.lineUserId is string);
-      allow update: if isAdmin();
+      allow update: if isAnyAdmin();
       allow delete: if false;
     }
 
     // ─── PICKUP LOCATIONS ─────────────────────────────────────────────────────
     match /pickupLocations/{locId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAnyAdmin();
     }
 
     // ─── LINE USERS ───────────────────────────────────────────────────────────
     match /lineUsers/{userId} {
-      allow read: if true;
-      allow write: if true;
+      // อ่านได้แค่เจ้าของ หรือ admin
+      allow read: if isAnyAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow write: if isAnyAdmin() || (request.auth != null && request.auth.uid == userId);
     }
 
     // ─── PUSH SUBSCRIPTIONS ───────────────────────────────────────────────────
     match /pushSubscriptions/{id} {
-      allow read: if isAdmin();
-      allow create, update: if true;
-      allow delete: if isAdmin();
+      allow read: if isAnyAdmin();
+      allow create, update: if true; // device สร้าง subscription ตัวเองได้
+      allow delete: if isFirebaseAdmin();
     }
 
     // ─── PUSH / LINE QUEUE ────────────────────────────────────────────────────
+    // เขียนได้แค่ Functions (Admin SDK bypass rules) — client ไม่ควรเขียนโดยตรง
     match /pushQueue/{docId} {
-      allow read, write: if isAdmin();
+      allow read: if isAnyAdmin();
+      allow write: if false;
     }
     match /lineQueue/{docId} {
-      allow read, write: if isAdmin();
+      allow read: if isAnyAdmin();
+      allow write: if false;
     }
 
-    // ─── INTERNAL (read-only สำหรับ admin) ───────────────────────────────────
+    // ─── INTERNAL ─────────────────────────────────────────────────────────────
     match /rateLimits/{docId} {
       allow read, write: if false;
     }
     match /stats_daily/{docId} {
-      allow read: if isAdmin();
-      allow write: if false;
+      allow read: if isAnyAdmin();
+      allow write: if false; // Functions เขียน via Admin SDK
     }
     match /stats_menu/{docId} {
-      allow read: if isAdmin();
+      allow read: if isAnyAdmin();
       allow write: if false;
     }
 
     // ─── LEGACY ───────────────────────────────────────────────────────────────
     match /linePhoneMap/{phone} {
-      allow read, write: if isAdmin();
+      allow read: if isAnyAdmin();
+      allow write: if isAnyAdmin();
     }
 
     // 🚫 ปิดทุกอย่างที่ไม่ได้กำหนด
