@@ -75,18 +75,27 @@ function setAvatarImg(url) {
   wrap.appendChild(img);
 }
 
-if (user.photoURL) {
-  setAvatarImg(user.photoURL);
-} else if (user.lineUserId) {
-  // session เก่าไม่มี photoURL → ดึงจาก Firestore
+// รองรับทุก field name ที่อาจบันทึกไว้
+const picUrl = user.photoURL || user.picture || user.avatar
+  || localStorage.getItem('imkum_line_picture') || '';
+
+if (picUrl) {
+  setAvatarImg(picUrl);
+} else if (user.lineUserId || user.lineId) {
+  // fallback: ดึงจาก Firestore customers collection
   (async () => {
     try {
-      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      const snap = await getDoc(doc(db, 'lineUsers', user.lineUserId));
-      if (snap.exists() && snap.data().pictureUrl) {
-        setAvatarImg(snap.data().pictureUrl);
+      const uid = 'line_' + (user.lineUserId || user.lineId);
+      const snap = await getDoc(doc(db, 'customers', uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        const url = d.picture || d.photoURL || d.pictureUrl || '';
+        if (url) {
+          setAvatarImg(url);
+          localStorage.setItem('imkum_line_picture', url);
+        }
       }
-    } catch(e) { console.warn('avatar fetch:', e); }
+    } catch(e) { console.warn('avatar fetch:', e.message); }
   })();
 }
 

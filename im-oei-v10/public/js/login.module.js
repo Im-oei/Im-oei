@@ -20,13 +20,16 @@ async function initLiff() {
   try {
     await liff.init({ liffId: LIFF_ID });
 
-    // ถ้า LIFF redirect กลับมาพร้อม login แล้ว
-    if (liff.isLoggedIn()) {
+    // Auto-login เฉพาะเมื่อ redirect กลับมาจาก LINE (มี liff.state ใน URL)
+    // ไม่ auto-login ถ้าแค่เปิดหน้า login ปกติ เพื่อไม่ขัด guest login
+    const params = new URLSearchParams(window.location.search);
+    const cameFromLiff = params.has('liff.state') || params.has('code') || params.has('state');
+
+    if (liff.isLoggedIn() && cameFromLiff) {
       await handleLiffLogin();
     }
   } catch (e) {
     console.warn('LIFF init error:', e.message);
-    // ถ้า LIFF init ล้มเหลว ปุ่มยังกดได้ แต่จะ fallback gracefully
   }
 }
 

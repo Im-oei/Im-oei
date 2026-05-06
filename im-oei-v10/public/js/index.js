@@ -104,12 +104,14 @@ function updateUserBadge(){
     return;
   }
   // Customer: show LINE photo or SVG
-  if(u.avatar){
+  // รองรับ field ชื่อต่างกัน: avatar / picture / photoURL + localStorage fallback
+  var picUrl = u.avatar || u.picture || u.photoURL || localStorage.getItem('imkum_line_picture') || '';
+  if(picUrl){
     btn.style.background='none';
     btn.style.border='2.5px solid #FFC107';
     btn.style.padding='0';
     btn.style.overflow='hidden';
-    av.innerHTML='<img src="'+u.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.innerHTML=\'<svg width=\\\"20\\\" height=\\\"20\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"#b8860b\\\" stroke-width=\\\"2.2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><circle cx=\\\"12\\\" cy=\\\"8\\\" r=\\\"4\\\"/><path d=\\\"M4 20c0-4 3.6-7 8-7s8 3 8 7\\\"/></svg>\';">';
+    av.innerHTML='<img src="'+picUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display=\'none\'">';
   } else {
     btn.style.background='linear-gradient(135deg,#FFF8E1,#FFE082)';
     var initials = u.name ? u.name.charAt(0) : '';
