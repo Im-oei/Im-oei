@@ -102,34 +102,24 @@
 }
 .card:active .food-img img{transform:scale(1.04);}
 
-/* gradient overlay แค่ 40% ล่าง — รูปชัดขึ้น */
+/* gradient overlay — ปิด default; แต่ละ mode เปิดเองถ้าต้องการ */
 .card .food-img::after{
   content:'';position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.0) 45%,transparent 100%);
+  background:transparent;
   pointer-events:none;
 }
 
-/* ชื่อซ้อนบนรูป — ด้านล่าง */
-.card .left{
-  position:absolute;bottom:40px;left:0;right:0;
-  padding:0 9px;z-index:2;
-}
+/* ชื่อ — default hidden (แต่ละ mode ใช้ card-left / list-left / grid-footer) */
 .card .name{
-  font-size:12.5px;font-weight:800;color:#fff;
+  font-size:12.5px;font-weight:800;color:#1A1A1A;
   line-height:1.35;
-  text-shadow:0 1px 6px rgba(0,0,0,0.8);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-.card .desc{display:none;} /* ซ่อนใน grid — พื้นที่น้อย */
+.card .desc{display:none;}
 
-/* footer ราคา + qty — แยกออกมาชัดเจน */
+/* card-footer เดิม — ซ่อนทุก mode (ใช้ grid-footer แทน) */
 .card .card-footer{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:6px 9px 8px;
-  background:#fff;
-  position:relative;z-index:2;
-  min-height:40px;
-  flex-shrink:0;
+  display:none;
 }
 .card .price-tag{
   font-size:15px;font-weight:900;
@@ -139,11 +129,11 @@
 }
 .card .price-unit{font-size:11px;font-weight:600;color:#aaa;margin-left:1px;}
 
-/* ปุ่ม qty ใน footer */
+/* ปุ่ม qty — base style */
 .card .qty{
   display:flex;align-items:center;gap:4px;
   position:static;
-  background:transparent;backdrop-filter:none;
+  background:transparent;
   border:none;padding:0;
 }
 .card .qty .qty-num{
@@ -167,81 +157,8 @@
   box-shadow:0 1px 4px rgba(0,0,0,0.15);
 }
 
-/* === LIST MODE — อ่านง่าย มีครบ === */
-body.view-list .menu-grid{
-  display:flex;flex-direction:column;gap:0;padding:0;
-}
-body.view-list .card{
-  flex-direction:row;align-items:stretch;
-  border-radius:14px;margin:0 12px 8px;
-  cursor:default;
-  border:1.5px solid #F0E8DC;
-  box-shadow:0 2px 8px rgba(0,0,0,0.07);
-}
-body.view-list .card:active{transform:none;}
+/* === LIST MODE — handled by HIDE/SHOW section below === */
 
-/* รูปสี่เหลี่ยม 90x90 */
-body.view-list .card .food-img{
-  width:90px;height:90px;
-  flex-shrink:0;
-  border-radius:12px;
-  margin:10px 0 10px 10px;
-  aspect-ratio:1/1;
-}
-body.view-list .card .food-img::after{display:none;}
-
-/* ข้อความ list — ชัดเจน */
-body.view-list .card .left{
-  position:static;
-  padding:12px 4px 10px 12px;
-  flex:1;background:transparent;
-  display:flex;flex-direction:column;justify-content:center;
-}
-body.view-list .card .name{
-  font-size:14px;color:#1A1A1A;
-  text-shadow:none;font-weight:800;
-  display:block;-webkit-line-clamp:unset;
-  overflow:visible;
-}
-body.view-list .card .desc{
-  display:block;
-  font-size:11px;color:#999;
-  margin-top:3px;
-  white-space:normal;
-  line-height:1.4;
-}
-body.view-list .card .price-tag{
-  font-size:14px;color:#E65100;
-  text-shadow:none;font-weight:900;
-  margin-top:5px;display:block;
-}
-
-/* footer ซ่อนใน list — qty อยู่ขวา */
-body.view-list .card .card-footer{display:none;}
-body.view-list .card .qty{
-  position:static;
-  background:transparent;backdrop-filter:none;
-  padding:0 12px 0 0;gap:6px;
-  border:none;align-self:center;flex-shrink:0;
-}
-body.view-list .card .qty .qty-num{
-  color:#2C2C2C;text-shadow:none;font-size:14px;font-weight:800;
-}
-body.view-list .card .sold-badge{
-  position:static;display:inline-block;margin-top:5px;
-}
-body.view-list .card .rating-badge{
-  position:static;display:inline-flex;margin-top:5px;background:#FFF3E0;
-}
-
-/* list-price และ list-qty ซ่อนใน grid mode */
-.card .list-price{display:none;}
-.card .list-qty{display:none;}
-
-/* list mode — แสดง list-price และ list-qty, ซ่อน card-footer */
-body.view-list .card .list-price{display:block;}
-body.view-list .card .list-qty{display:flex;align-items:center;gap:6px;margin-top:6px;}
-body.view-list .card .card-footer{display:none;}
 
 /* === VIEW SWITCHER BUTTONS === */
 .view-switcher{display:flex;align-items:center;gap:2px;background:#F5EFE6;border-radius:22px;padding:3px;}
@@ -250,59 +167,10 @@ body.view-list .card .card-footer{display:none;}
 .view-sw-btn.active{background:#fff;color:#E65100;box-shadow:0 1px 6px rgba(0,0,0,0.10);}
 .view-sw-btn:active{transform:scale(0.92);}
 
-/* === CARD MODE (1 คอลัม ใหญ่) === */
-body.view-card .menu-grid{
-  display:flex;flex-direction:column;gap:14px;padding:0 12px 8px;
-}
-body.view-card .card{
-  flex-direction:row;align-items:stretch;
-  border-radius:18px;
-  border:1.5px solid #F0E8DC;
-  box-shadow:0 3px 14px rgba(0,0,0,0.09);
-  cursor:pointer;
-  min-height:110px;
-  overflow:hidden;
-}
-body.view-card .card:active{transform:scale(0.98);}
-/* รูปสี่เหลี่ยม 120x ทางซ้าย */
-body.view-card .card .food-img{
-  width:120px;height:auto;min-height:110px;
-  flex-shrink:0;aspect-ratio:unset;
-  border-radius:0;
-  font-size:52px;
-}
-body.view-card .card .food-img::after{display:none;}
-/* ข้อความทางขวา */
-body.view-card .card .left{
-  position:static;
-  flex:1;padding:13px 12px 10px;
-  background:transparent;
-  display:flex;flex-direction:column;justify-content:center;
-}
-body.view-card .card .name{
-  font-size:15px;color:#1A1A1A;
-  text-shadow:none;font-weight:800;
-  display:block;-webkit-line-clamp:unset;overflow:visible;
-}
-body.view-card .card .desc{
-  display:block;
-  font-size:12px;color:#999;
-  margin-top:3px;line-height:1.4;
-}
-body.view-card .card .list-price{display:block;font-size:15px;font-weight:900;color:#E65100;margin-top:6px;}
-body.view-card .card .list-qty{display:flex;align-items:center;gap:6px;margin-top:8px;}
-body.view-card .card .card-footer{display:none;}
-body.view-card .card .sold-badge{position:static;display:inline-block;margin-top:6px;}
-body.view-card .card .rating-badge{position:static;display:inline-flex;margin-top:6px;background:#FFF3E0;}
+/* === CARD MODE — handled by HIDE/SHOW section below === */
 
-/* === GRID mode (default 2 col) stays same, just ensure class === */
-body.view-grid .menu-grid{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 12px 8px;
-}
-body.view-grid .card{flex-direction:column;}
 
-/* === LIST MODE — อ่านง่าย มีครบ === */
-body.view-list .menu-grid{display:flex;flex-direction:column;gap:0;padding:0;}width:30px;height:30px;border-radius:50%;border:1.5px solid #E0E0E0;background:#fff;font-size:18px;font-weight:700;color:#2C2C2C;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+/* === GRID mode stays same === */
 .btn.plus{background:#FFC107;border-color:#FFC107;color:#3E2000;box-shadow:0 2px 8px rgba(255,193,7,0.45);}
 .btn:active{transform:scale(0.88);}
 .qty-num{font-size:15px;font-weight:700;min-width:18px;text-align:center;}
@@ -340,49 +208,17 @@ body.view-list .menu-grid{display:flex;flex-direction:column;gap:0;padding:0;}wi
 .promo-mid-sub{font-size:12px;color:rgba(255,255,255,0.88);margin-top:3px;font-weight:600;}
 .promo-mid-badge{position:absolute;top:10px;right:10px;background:#FFC107;color:#3E2000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;}
 
-/* === GRID FIX (2 columns default, list still works) === */
-.menu-grid{
-  display:grid !important;
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-}
 
-
-/* === APP CARD STYLE === */
-.card{
-  background:#fff;
-  border-radius:16px;
-  overflow:hidden;
-  box-shadow:0 4px 14px rgba(0,0,0,0.08);
-  display:flex;
-  flex-direction:column;
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-.card:active{
-  transform:scale(0.97);
-}
-.card .food-img{
-  width:100%;
-  height:130px;
-  background:#f5f5f5;
-  overflow:hidden;
-}
-.card .food-img img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.card .name{font-weight:700;}
-.card .price-tag{color:#ff6b00;font-weight:800;}
 
 
 
 
 @keyframes imModalFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes imModalSlideUp{from{transform:translateY(40px) scale(0.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-#login-modal{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;padding:20px;}
+#login-modal{display:none;position:fixed;inset:0;z-index:500;align-items:flex-end;justify-content:center;padding:0;}
 #login-modal.open{display:flex;}
 #login-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);animation:imModalFadeIn .2s ease;}
-#login-modal-box{position:relative;z-index:1;background:#fff;border-radius:28px;width:100%;max-width:340px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:imModalSlideUp .35s cubic-bezier(.34,1.56,.64,1);}
+#login-modal-box{position:relative;z-index:1;background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-shadow:0 -8px 40px rgba(0,0,0,0.25);animation:imModalSlideUp .35s cubic-bezier(.34,1.56,.64,1);}
 .im-modal-header{background:linear-gradient(135deg,#FFC107 0%,#FF8C00 100%);padding:28px 24px 22px;text-align:center;position:relative;}
 .im-modal-icon{font-size:52px;line-height:1;margin:0 auto 10px;display:block;text-align:center;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));}
 .im-modal-title{font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.25);}
@@ -480,7 +316,7 @@ body.view-list .card .price-tag {
 
 /* tablet / desktop — หน้าจอใหญ่ */
 @media (min-width: 600px) {
-  .menu-grid {
+  body:not(.view-card):not(.view-list) .menu-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
   .card .name { font-size: 16px !important; }
@@ -489,7 +325,7 @@ body.view-list .card .price-tag {
 }
 
 @media (min-width: 900px) {
-  .menu-grid {
+  body:not(.view-card):not(.view-list) .menu-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     max-width: 1100px;
     margin: 0 auto;
@@ -504,13 +340,14 @@ body.view-list .card .price-tag {
 
 /* มือถือเล็กมาก (< 360px) — ลด gap/padding ให้การ์ดใหญ่ขึ้น */
 @media (max-width: 359px) {
-  .menu-grid {
+  body:not(.view-card):not(.view-list) .menu-grid {
     gap: 8px !important;
     padding: 0 8px 8px !important;
   }
-  .card .food-img {
-    aspect-ratio: 1/1 !important; /* สี่เหลี่ยมจัตุรัส — ดูใหญ่ขึ้น */
+  body:not(.view-card):not(.view-list) .card .food-img {
+    aspect-ratio: 1/1 !important;
   }
+  body.view-card .card .food-img { aspect-ratio: unset !important; width: 120px !important; min-height: 110px !important; }
   .featured-card {
     width: 120px !important;
   }
@@ -521,13 +358,14 @@ body.view-list .card .price-tag {
 
 /* มือถือปกติ (360–599px) */
 @media (min-width: 360px) and (max-width: 599px) {
-  .menu-grid {
+  body:not(.view-card):not(.view-list) .menu-grid {
     gap: 12px !important;
     padding: 0 12px 8px !important;
   }
-  .card .food-img {
-    aspect-ratio: 3/2 !important; /* กว้างขึ้นนิดนึง */
+  body:not(.view-card):not(.view-list) .card .food-img {
+    aspect-ratio: 3/2 !important;
   }
+  body.view-card .card .food-img { aspect-ratio: unset !important; width: 120px !important; min-height: 110px !important; }
   .featured-card {
     width: clamp(130px, 38vw, 160px) !important;
   }
@@ -536,13 +374,13 @@ body.view-list .card .price-tag {
   }
 }
 
-/* Tablet (600–899px) — 3 คอลัมน์ (override จาก responsive font fix) */
+/* Tablet (600–899px) — 3 คอลัมน์ */
 @media (min-width: 600px) and (max-width: 899px) {
-  .menu-grid {
+  body:not(.view-card):not(.view-list) .menu-grid {
     gap: 16px !important;
     padding: 0 16px 8px !important;
   }
-  .card .food-img {
+  body:not(.view-card):not(.view-list) .card .food-img {
     aspect-ratio: 4/3 !important;
   }
   .featured-card {
@@ -555,11 +393,11 @@ body.view-list .card .price-tag {
 
 /* Desktop (900px+) — 4 คอลัมน์ */
 @media (min-width: 900px) {
-  .menu-grid {
+  body:not(.view-card):not(.view-list) .menu-grid {
     gap: 20px !important;
     padding: 0 20px 12px !important;
   }
-  .card .food-img {
+  body:not(.view-card):not(.view-list) .card .food-img {
     aspect-ratio: 4/3 !important;
   }
   .featured-card {
@@ -575,6 +413,7 @@ body.view-list .card .price-tag {
   body.view-list .card .food-img {
     width: 72px !important;
     height: 72px !important;
+    aspect-ratio: 1/1 !important;
   }
 }
 @media (min-width: 600px) {
@@ -600,10 +439,13 @@ body.view-list .card .price-tag {
    HIDE / SHOW SECTIONS PER MODE
    ====================================================== */
 
-/* ค่า default: ซ่อน card-left, list-left, grid-footer */
+/* ค่า default: ซ่อน card-left, list-left, grid-footer + .left เดิม */
 .card .card-left  { display:none; }
 .card .list-left  { display:none; }
 .card .grid-footer{ display:none; }
+/* ซ่อน .left เดิม (position:absolute) ใน grid/list — ป้องกัน overlap */
+body.view-grid .card > .left:not(.card-left):not(.list-left) { display:none; }
+body.view-list .card > .left:not(.card-left):not(.list-left) { display:none; }
 
 /* --- GRID MODE (default / view-grid) ---
    แสดง grid-footer (ชื่อ+ราคา+qty ใต้รูป)
@@ -623,6 +465,14 @@ body.view-grid .card .food-img::after { display:none; }
 }
 .card .grid-footer-row {
   display:flex; align-items:center; justify-content:space-between;
+}
+.card .grid-footer .qty {
+  display:flex; align-items:center; gap:4px;
+  position:static; background:transparent; border:none; padding:0;
+}
+.card .grid-footer .qty .qty-num {
+  font-size:14px; font-weight:800; color:#2C2C2C;
+  min-width:18px; text-align:center; text-shadow:none;
 }
 
 /* --- CARD MODE (1 col, รูปซ้าย ข้อความขวา) --- */

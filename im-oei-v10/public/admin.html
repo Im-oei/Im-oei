@@ -2,921 +2,667 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="manifest" href="manifest.json">
-<title>อิ่มเอ๋ย Im-Oei | แอดมิน</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>อิ่มเอ้ย - IM OEI Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #f97316;
+    --primary-light: #fff7ed;
+    --primary-dark: #ea580c;
+    --sidebar-bg: #1a1a2e;
+    --sidebar-active: #f97316;
+    --text-main: #1f2937;
+    --text-sub: #6b7280;
+    --border: #e5e7eb;
+    --card-bg: #ffffff;
+    --bg: #f8f9fb;
+    --green: #10b981;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+  }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; min-width: 220px; background: #fff; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px; padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-img {
+    width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#f97316,#fb923c);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden;
+  }
+  .logo-text { line-height: 1.2; }
+  .logo-text .name { font-weight: 700; font-size: 14px; color: var(--text-main); }
+  .logo-text .badge {
+    display: inline-block; background: var(--primary); color: #fff;
+    font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600;
+  }
+  .sidebar-nav { flex: 1; padding: 10px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    color: var(--text-sub); font-size: 14px; font-weight: 500; cursor: pointer;
+    border-radius: 8px; margin: 2px 8px; transition: all 0.15s; text-decoration: none;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--primary-light); color: var(--primary); }
+  .nav-item.active { background: var(--primary); color: #fff; }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 16px; }
+  .nav-item .badge-count {
+    margin-left: auto; background: var(--red); color: #fff;
+    font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 700;
+  }
+  .nav-item.active .badge-count { background: rgba(255,255,255,0.3); }
+  .sidebar-footer {
+    padding: 12px; border-top: 1px solid var(--border);
+  }
+  .plan-box {
+    background: linear-gradient(135deg, #fff7ed, #fed7aa);
+    border: 1px solid #fdba74; border-radius: 10px; padding: 12px;
+    margin-bottom: 10px;
+  }
+  .plan-box .plan-label { font-size: 12px; color: var(--text-sub); }
+  .plan-box .plan-name { font-weight: 700; font-size: 13px; color: var(--primary-dark); }
+  .plan-box .plan-name span { color: #eab308; }
+  .plan-box .plan-expire { font-size: 11px; color: var(--text-sub); margin: 2px 0 6px; }
+  .plan-progress { background: #fde68a; height: 4px; border-radius: 2px; }
+  .plan-progress-bar { background: var(--primary); height: 4px; border-radius: 2px; width: 75%; }
+  .plan-detail-btn {
+    display: block; text-align: center; background: var(--primary); color: #fff;
+    border-radius: 6px; padding: 5px; font-size: 12px; font-weight: 600;
+    cursor: pointer; margin-top: 8px; text-decoration: none;
+  }
+  .logout-btn {
+    display: flex; align-items: center; gap: 8px; color: var(--text-sub);
+    font-size: 13px; cursor: pointer; padding: 6px 4px;
+  }
+  .logout-btn:hover { color: var(--red); }
 
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="css/admin.css">
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* TOPBAR */
+  .topbar {
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; padding: 0 24px; height: 60px;
+    flex-shrink: 0;
+  }
+  .search-box {
+    flex: 1; max-width: 380px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+  }
+  .search-box input { border: none; background: none; outline: none; font-family: 'Sarabun', sans-serif; font-size: 14px; width: 100%; color: var(--text-main); }
+  .search-box input::placeholder { color: var(--text-sub); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .notif-btn {
+    position: relative; width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
+  }
+  .notif-btn .dot {
+    position: absolute; top: 3px; right: 3px; width: 16px; height: 16px;
+    background: var(--red); border-radius: 50%; font-size: 10px; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border);
+  }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fed7aa; overflow: hidden; }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-info .uname { font-size: 13px; font-weight: 600; }
+  .user-info .ustatus { font-size: 11px; color: var(--green); }
+  .ustatus::before { content: '● '; }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; }
+  .page-header p { color: var(--text-sub); font-size: 13px; }
+  .page-header-row { display: flex; align-items: flex-start; justify-content: space-between; }
+  .date-badge {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--text-sub); font-size: 13px;
+  }
+
+  /* STAT CARDS */
+  .stat-cards { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    flex: 1; min-width: 140px; background: var(--card-bg);
+    border-radius: 12px; padding: 16px; border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .stat-card.primary { background: linear-gradient(135deg, #f97316, #fb923c); border-color: transparent; }
+  .stat-card.primary * { color: #fff !important; }
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .stat-card.primary .stat-icon { background: rgba(255,255,255,0.2); }
+  .stat-icon.green { background: #d1fae5; }
+  .stat-icon.blue { background: #dbeafe; }
+  .stat-icon.purple { background: #ede9fe; }
+  .stat-icon.yellow { background: #fef3c7; }
+  .stat-body .label { font-size: 12px; color: var(--text-sub); margin-bottom: 2px; }
+  .stat-body .value { font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1; }
+  .stat-body .change { font-size: 12px; color: var(--green); margin-top: 2px; }
+  .stat-card.primary .stat-body .label { color: rgba(255,255,255,0.8); }
+  .stat-card.primary .stat-body .change { color: rgba(255,255,255,0.85); }
+
+  /* GRID LAYOUT */
+  .grid-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-row.two { grid-template-columns: 1.8fr 1fr 1fr; }
+  .grid-row.three-equal { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card {
+    background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px;
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-link { font-size: 12px; color: var(--primary); cursor: pointer; font-weight: 600; }
+
+  /* CHART */
+  .chart-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .chart-title { font-size: 14px; font-weight: 700; }
+  .chart-period-btn {
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+    font-size: 12px; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 4px;
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  /* ORDER LIST */
+  .order-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .order-item:last-child { border-bottom: none; }
+  .order-id { font-size: 13px; font-weight: 700; flex: 1; }
+  .order-id .sub { font-size: 11px; color: var(--text-sub); font-weight: 400; margin-top: 1px; }
+  .order-price { font-size: 13px; font-weight: 700; text-align: right; }
+  .order-price .sub { font-size: 11px; color: var(--text-sub); font-weight: 400; }
+  .status-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap;
+  }
+  .status-badge.inprogress { background: #dbeafe; color: #1d4ed8; }
+  .status-badge.done { background: #d1fae5; color: #065f46; }
+  .status-badge.cancel { background: #fee2e2; color: #991b1b; }
+  .status-badge.ready { background: #f3f4f6; color: #374151; }
+  .channel-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+  /* NOTIFICATION */
+  .notif-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .notif-dot.red { background: #fee2e2; }
+  .notif-dot.yellow { background: #fef3c7; }
+  .notif-dot.blue { background: #dbeafe; }
+  .notif-dot.green { background: #d1fae5; }
+  .notif-body { flex: 1; }
+  .notif-body .ntitle { font-size: 13px; font-weight: 600; }
+  .notif-body .nsub { font-size: 11px; color: var(--text-sub); }
+  .notif-time { font-size: 11px; color: var(--text-sub); white-space: nowrap; }
+
+  /* CHANNELS PIE */
+  .channel-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .channel-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .channel-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .channel-name { flex: 1; color: var(--text-sub); }
+  .channel-pct { font-weight: 700; }
+
+  /* MENU TOP */
+  .menu-item {
+    display: flex; align-items: center; gap: 10px; padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .menu-rank.r1 { background: #f59e0b; }
+  .menu-rank.r2 { background: #9ca3af; }
+  .menu-rank.r3 { background: #cd7f32; }
+  .menu-img { width: 36px; height: 36px; border-radius: 8px; background: #f3f4f6; overflow: hidden; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+  .menu-info { flex: 1; }
+  .menu-info .mname { font-size: 13px; font-weight: 600; }
+  .menu-info .msub { font-size: 11px; color: var(--text-sub); }
+  .menu-price { font-size: 13px; font-weight: 700; color: var(--primary); }
+
+  /* NEW CUSTOMERS */
+  .new-customer-card { text-align: center; }
+  .customer-count { font-size: 36px; font-weight: 800; color: var(--green); }
+  .customer-change { font-size: 12px; color: var(--green); margin-bottom: 8px; }
+  .avatar-group { display: flex; justify-content: center; }
+  .avatar-group .av { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; margin-left: -8px; background: linear-gradient(135deg,#f97316,#fbbf24); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .avatar-group .av:first-child { margin-left: 0; }
+  .av-more { background: #e5e7eb; color: var(--text-sub); font-size: 10px; font-weight: 700; }
+
+  /* REVIEW */
+  .review-item { padding: 8px 0; }
+  .review-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .review-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#3b82f6,#60a5fa); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .review-name { font-size: 13px; font-weight: 600; }
+  .review-stars { color: #f59e0b; font-size: 13px; }
+  .review-date { font-size: 11px; color: var(--text-sub); margin-left: auto; }
+  .review-text { font-size: 12px; color: var(--text-sub); }
+
+  /* FOOTER */
+  .footer { text-align: center; padding: 8px; font-size: 12px; color: var(--text-sub); }
+
+  /* DONUT */
+  .donut-wrap { display: flex; align-items: center; gap: 16px; }
+  .donut-center { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+  .donut-total { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .donut-total .total-num { font-size: 18px; font-weight: 800; }
+  .donut-total .total-label { font-size: 10px; color: var(--text-sub); }
+</style>
 </head>
 <body>
-<!-- HEADER -->
-<div class="admin-header">
-  <div class="brand">
-    <div class="brand-logo" id="admin-logo-wrap">
-      <img src="logo.webp" alt="logo" style="width:44px;height:44px;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <svg style="display:none" width="26" height="26" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="14" r="8" fill="#FFC107"/><ellipse cx="20" cy="32" rx="13" ry="7" fill="#FF8C00"/></svg>
-    </div>
-    <div class="admin-brand-text">
-      <div class="brand-name" id="admin-brand-name">อิ่มเอ๋ย</div>
-      <div class="brand-sub" id="admin-brand-sub">แอดมิน</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-img">🍱</div>
+    <div class="logo-text">
+      <div class="name">อิ่มเอ้ย - IM OEI</div>
+      <span class="badge">Admin ✓</span>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <div class="store-toggle" style="display:flex;align-items:center;gap:6px;">
-      <span class="toggle-label" id="store-status-label">เปิดร้าน</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="store-open-toggle" checked onchange="toggleStore()">
-        <span class="slider"></span>
-      </label>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="#">
+      <span class="icon">🏠</span> แดชบอร์ด
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">📋</span> ออเดอร์
+      <span class="badge-count">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">🍽️</span> เมนู
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">📢</span> แบนเนอร์
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">👥</span> ลูกค้า
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">🎁</span> แต้ม &amp; Loyalty
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">📊</span> สถิติ &amp; รายงาน
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">🏪</span> จัดการร้านค้า
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">⚙️</span> ตั้งค่า
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="plan-box">
+      <div class="plan-label">แพ็กเกจ:</div>
+      <div class="plan-name"><span>👑</span> Premium</div>
+      <div class="plan-expire">ใช้งานได้ถึง 31/12/2567</div>
+      <div class="plan-progress"><div class="plan-progress-bar"></div></div>
+      <a class="plan-detail-btn" href="#">ดูรายละเอียดแพ็กเกจ</a>
     </div>
-    <button id="notif-bell-btn" onclick="toggleNotifications()" title="แจ้งเตือน" class="header-icon-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;background:#FF4444;border-radius:50%;border:2px solid #fff;"></span>
-    </button>
-    <button onclick="window.location.href='index.html'" title="ดูหน้าร้าน" class="header-icon-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </button>
-    <button onclick="doLogout()" title="ออกจากระบบ" class="header-icon-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    </button>
-  </div>
-</div>
-
-<!-- TABS -->
-<div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('orders', this)">📋 ออเดอร์</button>
-  <button class="tab-btn" onclick="switchTab('menu', this)">🍽️ เมนู</button>
-  <button class="tab-btn" onclick="switchTab('banners', this)">📢 แบนเนอร์</button>
-  <button class="tab-btn" onclick="switchTab('loyalty', this)">🎁 แต้ม</button>
-  <button class="tab-btn" onclick="switchTab('customers', this)">👥 ลูกค้า</button>
-  <button class="tab-btn" onclick="switchTab('stats', this)">📊 สถิติ</button>
-  <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ ตั้งค่า</button>
-</div>
-
-<!-- ====== ORDERS PANEL ====== -->
-<div id="panel-orders" class="panel active">
-  <div class="realtime-bar" id="realtime-bar"><span class="realtime-dot" id="realtime-dot" style="background:#aaa"></span><span id="realtime-status">กำลังเชื่อมต่อ Firestore...</span></div>
-  <div class="summary-grid">
-    <div class="sum-card yellow"><div class="label">ออเดอร์วันนี้</div><div class="value" id="sum-total-orders">-</div></div>
-    <div class="sum-card green"><div class="label">ยอดรวมวันนี้</div><div class="value" id="sum-revenue">-</div></div>
-    <div class="sum-card blue"><div class="label">รอดำเนินการ</div><div class="value" id="sum-pending">-</div></div>
-    <div class="sum-card red"><div class="label">เสร็จแล้ว</div><div class="value" id="sum-done">-</div></div>
-  </div>
-  <div class="order-filter" id="order-filter">
-    <button class="filter-chip active" onclick="filterOrders('all', this)">ทั้งหมด</button>
-    <button class="filter-chip" onclick="filterOrders('pending', this)">🟡 รอรับ</button>
-    <button class="filter-chip" onclick="filterOrders('preparing', this)">🔵 กำลังทำ</button>
-    <button class="filter-chip" onclick="filterOrders('ready', this)">🟢 พร้อมรับ</button>
-    <button class="filter-chip" onclick="filterOrders('done', this)">✅ รับแล้ว</button>
-    <button class="filter-chip" onclick="filterOrders('cancelled', this)">❌ ยกเลิก</button>
-  </div>
-  <div id="orders-list" style="padding-bottom:30px"></div>
-</div>
-
-<!-- ====== MENU PANEL ====== -->
-<div id="panel-menu" class="panel">
-  <div class="menu-admin-section">
-    <!-- Category Management -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <h3 style="margin-bottom:0">หมวดหมู่</h3>
-      <button class="action-btn btn-preparing" onclick="openAddCategory()" style="padding:8px 14px">+ เพิ่มหมวดหมู่</button>
-    </div>
-    <div id="cat-admin-list"></div>
-    <div class="section-sep"></div>
-    <!-- Menu Items -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <h3 style="margin-bottom:0">รายการเมนู</h3>
-    </div>
-    <div id="menu-admin-list"></div>
-    <button class="add-item-btn" onclick="openAddItem()">+ เพิ่มเมนูใหม่</button>
-  </div>
-</div>
-
-<!-- ====== BANNERS PANEL ====== -->
-<div id="panel-banners" class="panel">
-  <div class="menu-admin-section">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <h3 style="margin-bottom:0">📢 แบนเนอร์โปรโมชัน</h3>
-      <button class="action-btn btn-preparing" onclick="openAddBanner()">+ เพิ่มแบนเนอร์</button>
-    </div>
-    <p style="font-size:12px;color:var(--text-sub);margin-bottom:12px">แบนเนอร์จะแสดงเป็น slider หน้าแรก เรียงตามลำดับที่กำหนด</p>
-    <div id="banners-list"></div>
-  </div>
-</div>
-
-<!-- ====== CUSTOMERS PANEL ====== -->
-<div id="panel-customers" class="panel">
-  <div class="menu-admin-section">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <h3 style="margin-bottom:0">👥 ตารางลูกค้า</h3>
-      <button class="action-btn btn-preparing" onclick="openAddCustomer()" style="padding:8px 14px">+ เพิ่มลูกค้า</button>
-    </div>
-    <div class="cust-source-tab">
-      <button id="tab-line-btn" class="active" onclick="switchCustTab('line')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="#06C755" style="vertical-align:middle;margin-right:3px"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M12 7c-3.3 0-6 2.2-6 5 0 2.5 2.2 4.6 5.2 5l.8.8.8-.8c3-.4 5.2-2.5 5.2-5 0-2.8-2.7-5-6-5z" fill="#fff"/></svg>
-        LINE Users
-      </button>
-      <button id="tab-manual-btn" onclick="switchCustTab('manual')">👤 เพิ่มเอง</button>
-    </div>
-    <div class="customer-search-bar">
-      <input type="text" class="form-input" id="cust-search" placeholder="🔍 ค้นหาชื่อ / เบอร์ / userId" oninput="filterCustomers()" style="flex:1">
-    </div>
-    <div id="customers-list">
-      <div class="empty-state"><div class="icon">👥</div><p>กำลังโหลด...</p></div>
+    <div class="logout-btn">
+      <span>↩</span> ออกจากระบบ
     </div>
   </div>
-</div>
+</aside>
 
-<div id="panel-stats" class="panel">
-  <div style="padding:16px 14px">
-
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1A237E,#283593);border-radius:22px;padding:20px 18px;margin-bottom:16px;box-shadow:0 8px 28px rgba(26,35,126,0.3);position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.05);border-radius:50%"></div>
-      <div style="font-size:22px;font-weight:800;color:#fff">📊 Dashboard ยอดขาย</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ข้อมูลจากออเดอร์จริง · อัพเดทอัตโนมัติ</div>
-
-      <!-- Period Tabs -->
-      <div style="display:flex;gap:6px;margin-top:16px">
-        <button id="period-today" onclick="setStatsPeriod('today')" style="flex:1;padding:8px 4px;border-radius:10px;border:none;background:rgba(255,255,255,0.9);color:#1A237E;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;cursor:pointer">วันนี้</button>
-        <button id="period-week" onclick="setStatsPeriod('week')" style="flex:1;padding:8px 4px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;cursor:pointer">7 วัน</button>
-        <button id="period-month" onclick="setStatsPeriod('month')" style="flex:1;padding:8px 4px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;cursor:pointer">เดือนนี้</button>
-        <button id="period-year" onclick="setStatsPeriod('year')" style="flex:1;padding:8px 4px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;cursor:pointer">ปีนี้</button>
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า...">
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn">🔔<div class="dot">8</div></div>
+      <div class="user-chip">
+        <div class="user-avatar" style="background:#fed7aa;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+        <div class="user-info">
+          <div class="uname">Anya (Admin)</div>
+          <div class="ustatus">ออนไลน์</div>
+        </div>
+        <span style="color:#9ca3af;font-size:11px;">▼</span>
       </div>
     </div>
+  </header>
 
-    <!-- KPI Cards -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div style="background:linear-gradient(135deg,#FF8F00,#FFC107);border-radius:20px;padding:16px 14px;box-shadow:0 6px 20px rgba(255,143,0,0.3)">
-        <div style="font-size:10px;font-weight:700;color:rgba(62,32,0,0.6);letter-spacing:0.5px">💰 รายได้</div>
-        <div id="kpi-revenue" style="font-size:22px;font-weight:800;color:#3E2000;margin-top:4px">-</div>
-        <div id="kpi-revenue-vs" style="font-size:11px;color:rgba(62,32,0,0.5);margin-top:2px">เทียบช่วงก่อน</div>
-      </div>
-      <div style="background:linear-gradient(135deg,#2E7D32,#43A047);border-radius:20px;padding:16px 14px;box-shadow:0 6px 20px rgba(46,125,50,0.25)">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.5px">📦 ออเดอร์</div>
-        <div id="kpi-orders" style="font-size:22px;font-weight:800;color:#fff;margin-top:4px">-</div>
-        <div id="kpi-orders-vs" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">เทียบช่วงก่อน</div>
-      </div>
-      <div style="background:linear-gradient(135deg,#1565C0,#1976D2);border-radius:20px;padding:16px 14px;box-shadow:0 6px 20px rgba(21,101,192,0.25)">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.5px">🧾 เฉลี่ย/ออเดอร์</div>
-        <div id="kpi-avg" style="font-size:22px;font-weight:800;color:#fff;margin-top:4px">-</div>
-        <div id="kpi-avg-sub" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">บาทต่อออเดอร์</div>
-      </div>
-      <div style="background:linear-gradient(135deg,#6A1B9A,#7B1FA2);border-radius:20px;padding:16px 14px;box-shadow:0 6px 20px rgba(106,27,154,0.25)">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.5px">👥 ลูกค้า</div>
-        <div id="kpi-customers" style="font-size:22px;font-weight:800;color:#fff;margin-top:4px">-</div>
-        <div id="kpi-customers-sub" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">คนที่สั่งในช่วงนี้</div>
-      </div>
-    </div>
-
-    <!-- Revenue Trend Chart -->
-    <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <!-- CONTENT -->
+  <div class="content">
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-header-row">
         <div>
-          <div style="font-size:15px;font-weight:800">📈 กราฟยอดขาย</div>
-          <div id="trend-subtitle" style="font-size:11px;color:var(--text-sub);margin-top:2px">รายวัน</div>
+          <h1>แดชบอร์ด</h1>
+          <p>ภาพรวมการขายและข้อมูลสำคัญของร้าน</p>
         </div>
-        <select id="revenue-year-select" onchange="renderStats()" style="border:2px solid #F0E8D8;border-radius:12px;padding:7px 12px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:#FAFAF8;outline:none;display:none"></select>
-      </div>
-      <div id="monthly-revenue-chart"></div>
-    </div>
-
-    <!-- 2-col: Top Menu + Peak Hour -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <div style="background:#fff;border-radius:22px;padding:16px 14px;box-shadow:var(--shadow)">
-        <div style="font-size:14px;font-weight:800;margin-bottom:3px">🏆 เมนูฮิต</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:12px">ยอดสั่งสูงสุด</div>
-        <div id="stats-chart" class="chart-bar-wrap"></div>
-      </div>
-      <div style="background:#fff;border-radius:22px;padding:16px 14px;box-shadow:var(--shadow)">
-        <div style="font-size:14px;font-weight:800;margin-bottom:3px">⏰ ชั่วโมงพีค</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:12px">ช่วงออเดอร์เยอะที่สุด</div>
-        <div id="stats-time" class="chart-bar-wrap"></div>
+        <div class="date-badge">📅 5 พฤษภาคม 2567</div>
       </div>
     </div>
 
-    <!-- Order Status Breakdown -->
-    <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-      <div style="font-size:15px;font-weight:800;margin-bottom:14px">📋 สถานะออเดอร์</div>
-      <div id="stats-status-breakdown" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"></div>
-    </div>
-
-    <!-- Ratings -->
-    <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-      <div style="font-size:15px;font-weight:800;margin-bottom:3px">⭐ Rating เมนู</div>
-      <div style="font-size:11px;color:var(--text-sub);margin-bottom:14px">เฉลี่ยจากรีวิวลูกค้า</div>
-      <div id="stats-ratings" class="chart-bar-wrap"></div>
-    </div>
-
-    <!-- Export CSV -->
-    <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-      <div style="font-size:15px;font-weight:800;margin-bottom:4px">📥 Export ข้อมูล</div>
-      <div style="font-size:11px;color:var(--text-sub);margin-bottom:14px">ดาวน์โหลด CSV สำหรับ Excel</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button onclick="exportOrdersCSV()" style="flex:1;min-width:130px;padding:12px;border-radius:14px;border:none;background:linear-gradient(135deg,#2E7D32,#43A047);color:#fff;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(46,125,50,0.3)">📦 Export ออเดอร์</button>
-        <button onclick="exportRevenueCSV()" style="flex:1;min-width:130px;padding:12px;border-radius:14px;border:none;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(21,101,192,0.3)">📊 Export ยอดรายเดือน</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ====== LOYALTY PANEL ====== -->
-<div id="panel-loyalty" class="panel">
-  <div style="padding:16px 14px">
-
-    <!-- Header Banner -->
-    <div style="background:linear-gradient(135deg,#FF8F00,#FF6B35);border-radius:22px;padding:20px 18px;margin-bottom:16px;box-shadow:0 8px 28px rgba(255,107,53,0.3);position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,0.08);border-radius:50%"></div>
-      <div style="font-size:22px;font-weight:800;color:#fff">🎁 Loyalty System</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px">แต้มจากยอดซื้อ · แลกรางวัล · Tier System</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px">
-        <div style="background:rgba(255,255,255,0.15);border-radius:14px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700">ลูกค้ามีแต้ม</div>
-          <div id="loyalty-cust-count" style="font-size:20px;font-weight:800;color:#fff">-</div>
+    <!-- STAT CARDS -->
+    <div class="stat-cards">
+      <div class="stat-card primary">
+        <div class="stat-icon">🛍️</div>
+        <div class="stat-body">
+          <div class="label">ยอดขายวันนี้</div>
+          <div class="value">2,739฿</div>
+          <div class="change">↑ 18.5% จากเมื่อวาน</div>
         </div>
-        <div style="background:rgba(255,255,255,0.15);border-radius:14px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700">แต้มรวม</div>
-          <div id="loyalty-total-pts" style="font-size:20px;font-weight:800;color:#fff">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">📦</div>
+        <div class="stat-body">
+          <div class="label">ออเดอร์วันนี้</div>
+          <div class="value" style="color:var(--green)">8</div>
+          <div class="change">↑ 33.5% จากเมื่อวาน</div>
         </div>
-        <div style="background:rgba(255,255,255,0.15);border-radius:14px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:700">แลกแล้ว</div>
-          <div id="loyalty-redeemed-count" style="font-size:20px;font-weight:800;color:#fff">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">🕐</div>
+        <div class="stat-body">
+          <div class="label">กำลังทำ</div>
+          <div class="value" style="color:var(--blue)">2</div>
+          <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">✅</div>
+        <div class="stat-body">
+          <div class="label">เสร็จแล้ว</div>
+          <div class="value" style="color:var(--purple)">2</div>
+          <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow">👥</div>
+        <div class="stat-body">
+          <div class="label">ลูกค้าทั้งหมด</div>
+          <div class="value" style="color:var(--yellow)">142</div>
+          <div class="change" style="color:var(--text-sub)">คน</div>
         </div>
       </div>
     </div>
 
-    <!-- Tabs inside Loyalty -->
-    <div style="display:flex;background:#fff;border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-      <button id="ltab-config" onclick="switchLoyaltyTab('config')" style="flex:1;padding:12px 6px;border:none;background:var(--yellow);color:#3E2000;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer">⚙️ ตั้งค่า</button>
-      <button id="ltab-rewards" onclick="switchLoyaltyTab('rewards')" style="flex:1;padding:12px 6px;border:none;background:#fff;color:#999;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer">🎁 รางวัล</button>
-      <button id="ltab-tiers" onclick="switchLoyaltyTab('tiers')" style="flex:1;padding:12px 6px;border:none;background:#fff;color:#999;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer">🏆 Tier</button>
-      <button id="ltab-history" onclick="switchLoyaltyTab('history')" style="flex:1;padding:12px 6px;border:none;background:#fff;color:#999;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📋 ประวัติ</button>
-    </div>
+    <!-- CHART + ORDERS + NOTIF ROW -->
+    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+      <!-- CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">กราฟยอดขาย</div>
+          <button class="chart-period-btn">7 วันที่ผ่านมา ▾</button>
+        </div>
+        <canvas id="salesChart" height="130"></canvas>
+      </div>
 
-    <!-- TAB: Config -->
-    <div id="lpanel-config">
-      <!-- Point Rate Config -->
-      <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="font-size:15px;font-weight:800;margin-bottom:4px">⚙️ ตั้งค่าระบบแต้ม</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:16px">กำหนดอัตราสะสมแต้ม</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-          <div>
-            <label style="font-size:12px;font-weight:700;color:#888;display:block;margin-bottom:6px">💰 ทุก ? บาท = 1 แต้ม</label>
-            <input type="number" class="form-input" id="points-per-baht" value="20" min="1"
-              style="border-radius:14px;padding:13px 14px;font-size:15px;font-weight:700;text-align:center">
+      <!-- RECENT ORDERS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">ออเดอร์ล่าสุด</div>
+          <div class="card-link">ดูทั้งหมด</div>
+        </div>
+        <div class="order-item">
+          <div class="channel-icon">🏠</div>
+          <div class="order-id">#JJC5DRH
+            <div class="sub">4 พ.ค. 15:27 น. • 7 รายการ</div>
           </div>
-          <div>
-            <label style="font-size:12px;font-weight:700;color:#888;display:block;margin-bottom:6px">🎯 เป้าแต้ม (legacy)</label>
-            <input type="number" class="form-input" id="stamp-goal" value="10" min="1" max="9999"
-              style="border-radius:14px;padding:13px 14px;font-size:15px;font-weight:700;text-align:center">
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;">749 ฿</div>
+            <div class="status-badge inprogress">กำลังทำ</div>
           </div>
         </div>
-        <div style="margin-bottom:14px">
-          <label style="font-size:12px;font-weight:700;color:#888;display:block;margin-bottom:6px">⏳ แต้มหมดอายุใน (วัน, 0 = ไม่หมดอายุ)</label>
-          <input type="number" class="form-input" id="points-expiry-days" value="0" min="0"
-            placeholder="เช่น 365 = หมดอายุใน 1 ปี"
-            style="border-radius:14px;padding:13px 14px;font-size:15px;font-weight:700">
-        </div>
-        <button onclick="saveStampConfig()" style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FF8F00,#FFC107);font-family:'Sarabun',sans-serif;font-size:15px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,143,0,0.3)">💾 บันทึกการตั้งค่า</button>
-      </div>
-
-      <!-- Lookup Card -->
-      <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="font-size:15px;font-weight:800;margin-bottom:4px">🔍 ค้นหาแต้มลูกค้า</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:16px">กรอกเบอร์โทรเพื่อดู/แก้ไขแต้ม</div>
-        <div style="display:flex;gap:10px">
-          <input type="tel" class="form-input" id="stamp-phone-input" placeholder="0812345678"
-            style="flex:1;border-radius:14px;padding:14px 16px;font-size:15px"
-            onkeydown="if(event.key==='Enter')lookupStamp()">
-          <button onclick="lookupStamp()"
-            style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">🔍 ค้นหา</button>
-        </div>
-        <div id="stamp-result" style="margin-top:14px"></div>
-      </div>
-
-      <!-- Leaderboard -->
-      <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="font-size:15px;font-weight:800;margin-bottom:4px">🏅 Top ลูกค้าสะสมแต้ม</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:14px">เรียงตามแต้มสะสมคงเหลือ</div>
-        <div id="loyalty-leaderboard">
-          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px">⏳ กำลังโหลด...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB: Rewards Catalog -->
-    <div id="lpanel-rewards" style="display:none">
-      <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div>
-            <div style="font-size:15px;font-weight:800">🎁 รายการรางวัล</div>
-            <div style="font-size:11px;color:var(--text-sub);margin-top:2px">admin จัดการ catalog ได้เอง</div>
+        <div class="order-item">
+          <div class="channel-icon">🛵</div>
+          <div class="order-id">#FLYAL0WW
+            <div class="sub">4 พ.ค. 09:03 น. • 5 รายการ</div>
           </div>
-          <button onclick="openAddReward()" style="padding:9px 16px;border-radius:12px;border:none;background:linear-gradient(135deg,#FF8F00,#FFC107);font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer">+ เพิ่มรางวัล</button>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;">650 ฿</div>
+            <div class="status-badge done">เสร็จแล้ว</div>
+          </div>
         </div>
-        <div id="rewards-list">
-          <div style="text-align:center;padding:30px;color:var(--text-sub);font-size:13px">⏳ กำลังโหลด...</div>
+        <div class="order-item">
+          <div class="channel-icon">🏠</div>
+          <div class="order-id">#Z99XHZ8A
+            <div class="sub">4 พ.ค. 09:01 น. • 3 รายการ</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;">320 ฿</div>
+            <div class="status-badge done">เสร็จแล้ว</div>
+          </div>
+        </div>
+        <div class="order-item">
+          <div class="channel-icon">🛵</div>
+          <div class="order-id">#AA12BC3D
+            <div class="sub">4 พ.ค. 08:45 น. • 4 รายการ</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;">480 ฿</div>
+            <div class="status-badge cancel">ยกเลิก</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">แจ้งเตือน</div>
+          <div class="card-link">ดูทั้งหมด</div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot red">🔔</div>
+          <div class="notif-body">
+            <div class="ntitle">ออเดอร์ค้างนาน</div>
+            <div class="nsub">มี 2 ออเดอร์ที่ค้างเกิน 30 นาที</div>
+          </div>
+          <div class="notif-time">1 นาทีที่แล้ว</div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot yellow">⚠️</div>
+          <div class="notif-body">
+            <div class="ntitle">วัตถุดิบใกล้หมด</div>
+            <div class="nsub">วัตถุดิบ 3 รายการใกล้หมด</div>
+          </div>
+          <div class="notif-time">10 นาทีที่แล้ว</div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot blue">👤</div>
+          <div class="notif-body">
+            <div class="ntitle">ลูกค้าใหม่</div>
+            <div class="nsub">มีลูกค้าใหม่ 5 คนวันนี้</div>
+          </div>
+          <div class="notif-time">30 นาทีที่แล้ว</div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot green">📈</div>
+          <div class="notif-body">
+            <div class="ntitle">ยอดขายเพิ่มขึ้น</div>
+            <div class="nsub">ยอดขายวันนี้เพิ่มขึ้น 18.5%</div>
+          </div>
+          <div class="notif-time">1 ชั่วโมงที่แล้ว</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB: Tiers -->
-    <div id="lpanel-tiers" style="display:none">
-      <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="font-size:15px;font-weight:800;margin-bottom:4px">🏆 Tier System</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:16px">กำหนด lifetime points ที่ต้องถึงแต่ละ Tier</div>
-        <div id="tier-cards" style="display:flex;flex-direction:column;gap:12px">
-          <!-- Silver -->
-          <div style="background:linear-gradient(135deg,#ECEFF1,#CFD8DC);border-radius:18px;padding:16px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-              <span style="font-size:28px">🥈</span>
-              <div><div style="font-size:16px;font-weight:800;color:#455A64">Silver</div><div style="font-size:11px;color:#78909C">ระดับแรก</div></div>
+    <!-- BOTTOM ROW -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+      <!-- CHANNELS DONUT -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">ช่องทางการขาย</div>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut-center">
+            <canvas id="donutChart"></canvas>
+            <div class="donut-total">
+              <div class="total-num">8</div>
+              <div class="total-label">ออเดอร์รวม</div>
             </div>
-            <label style="font-size:12px;font-weight:700;color:#546E7A;display:block;margin-bottom:6px">แต้มสะสมตลอดชีพ (ขั้นต่ำ)</label>
-            <input type="number" class="form-input" id="tier-silver" value="500" style="border-radius:12px;font-weight:700">
           </div>
-          <!-- Gold -->
-          <div style="background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:18px;padding:16px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-              <span style="font-size:28px">🥇</span>
-              <div><div style="font-size:16px;font-weight:800;color:#F57F17">Gold</div><div style="font-size:11px;color:#F9A825">ระดับกลาง</div></div>
+          <div class="channel-list">
+            <div class="channel-row">
+              <div class="channel-color" style="background:#f97316"></div>
+              <div class="channel-name">รับที่ร้าน</div>
+              <div class="channel-pct">50%</div>
             </div>
-            <label style="font-size:12px;font-weight:700;color:#F57F17;display:block;margin-bottom:6px">แต้มสะสมตลอดชีพ (ขั้นต่ำ)</label>
-            <input type="number" class="form-input" id="tier-gold" value="2000" style="border-radius:12px;font-weight:700">
-          </div>
-          <!-- Platinum -->
-          <div style="background:linear-gradient(135deg,#EDE7F6,#CE93D8);border-radius:18px;padding:16px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-              <span style="font-size:28px">💎</span>
-              <div><div style="font-size:16px;font-weight:800;color:#6A1B9A">Platinum</div><div style="font-size:11px;color:#8E24AA">ระดับสูงสุด</div></div>
+            <div class="channel-row">
+              <div class="channel-color" style="background:#10b981"></div>
+              <div class="channel-name">เดลิเวอรี่</div>
+              <div class="channel-pct">37.5%</div>
             </div>
-            <label style="font-size:12px;font-weight:700;color:#6A1B9A;display:block;margin-bottom:6px">แต้มสะสมตลอดชีพ (ขั้นต่ำ)</label>
-            <input type="number" class="form-input" id="tier-platinum" value="5000" style="border-radius:12px;font-weight:700">
+            <div class="channel-row">
+              <div class="channel-color" style="background:#f59e0b"></div>
+              <div class="channel-name">เช็คเมตี</div>
+              <div class="channel-pct">12.5%</div>
+            </div>
           </div>
         </div>
-        <button onclick="saveTierConfig()" style="width:100%;margin-top:16px;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#7B1FA2,#9C27B0);font-family:'Sarabun',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(123,31,162,0.3)">💾 บันทึก Tier Config</button>
       </div>
-    </div>
 
-    <!-- TAB: Redemption History -->
-    <div id="lpanel-history" style="display:none">
-      <div style="background:#fff;border-radius:22px;padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="font-size:15px;font-weight:800;margin-bottom:4px">📋 ประวัติการแลกรางวัล</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-bottom:14px">รายการที่ลูกค้าแลกล่าสุด</div>
-        <div id="redemption-history-list">
-          <div style="text-align:center;padding:30px;color:var(--text-sub);font-size:13px">⏳ กำลังโหลด...</div>
+      <!-- NEW CUSTOMERS -->
+      <div class="card new-customer-card">
+        <div class="card-header">
+          <div class="card-title">ลูกค้าใหม่ (7 วัน)</div>
+        </div>
+        <div class="customer-count">+12 คน</div>
+        <div class="customer-change">↑ 20% จากสัปดาห์ก่อน</div>
+        <div class="avatar-group">
+          <div class="av">👤</div>
+          <div class="av" style="background:linear-gradient(135deg,#3b82f6,#60a5fa)">👤</div>
+          <div class="av" style="background:linear-gradient(135deg,#10b981,#34d399)">👤</div>
+          <div class="av" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)">👤</div>
+          <div class="av av-more">+7</div>
         </div>
       </div>
-    </div>
 
-  </div>
-</div>
-
-<!-- ====== MODAL: REWARD ====== -->
-<div class="modal-overlay" id="modal-reward">
-  <div class="modal-sheet">
-    <button class="modal-close" onclick="closeModal('modal-reward')">✕</button>
-    <h3 id="modal-reward-title">เพิ่มรางวัล</h3>
-    <input type="hidden" id="reward-edit-id">
-    <div class="form-group">
-      <label>ประเภทรางวัล</label>
-      <select class="form-input" id="reward-type" onchange="updateRewardTypeUI()">
-        <option value="free_item">🍽️ แลกเมนูฟรี</option>
-        <option value="discount_percent">💰 ส่วนลด %</option>
-        <option value="special">🎁 ของรางวัลพิเศษ</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>ชื่อรางวัล</label>
-      <input type="text" class="form-input" id="reward-name" placeholder="เช่น แซนวิชฟรี 1 ชิ้น">
-    </div>
-    <div class="form-group">
-      <label>คำอธิบาย</label>
-      <input type="text" class="form-input" id="reward-desc" placeholder="รายละเอียดรางวัล">
-    </div>
-    <div class="form-group">
-      <label>🌟 แต้มที่ต้องใช้แลก</label>
-      <input type="number" class="form-input" id="reward-cost" placeholder="เช่น 500" min="1">
-    </div>
-    <!-- free_item fields -->
-    <div id="reward-menuitem-group" class="form-group">
-      <label>เมนูที่แลกได้ (ถ้าเป็นเมนูฟรี)</label>
-      <select class="form-input" id="reward-menuitem-id">
-        <option value="">-- เลือกเมนู --</option>
-      </select>
-    </div>
-    <!-- discount fields -->
-    <div id="reward-discount-group" class="form-group" style="display:none">
-      <label>ส่วนลด (%)</label>
-      <input type="number" class="form-input" id="reward-discount-value" placeholder="เช่น 10" min="1" max="100">
-    </div>
-    <div class="form-group">
-      <label>Emoji / ไอคอน</label>
-      <input type="text" class="form-input" id="reward-emoji" placeholder="🎁" maxlength="4">
-    </div>
-    <div class="form-group">
-      <label>🏆 จำกัด Tier (ใครเห็นได้บ้าง)</label>
-      <select class="form-input" id="reward-required-tier">
-        <option value="none">ทุกคน (ไม่จำกัด)</option>
-        <option value="silver">🥈 Silver ขึ้นไป</option>
-        <option value="gold">🥇 Gold ขึ้นไป</option>
-        <option value="platinum">💎 Platinum เท่านั้น</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>🔢 จำนวนสูงสุด (0 = ไม่จำกัด)</label>
-      <input type="number" class="form-input" id="reward-max-qty" placeholder="0" min="0">
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <label style="font-size:13px;font-weight:700">เปิดใช้งาน</label>
-      <input type="checkbox" id="reward-active" checked style="width:20px;height:20px;accent-color:var(--yellow)">
-    </div>
-    <button class="save-btn" onclick="saveReward()">💾 บันทึกรางวัล</button>
-  </div>
-</div>
-
-
-<!-- ====== SETTINGS PANEL ====== -->
-<div id="panel-settings" class="panel">
-  <div class="settings-section">
-    <div class="settings-card">
-      <h3>⏰ เวลาร้าน</h3>
-      <div class="form-group">
-        <label>รับออเดอร์ถึง</label>
-        <input type="time" class="form-input" id="set-cutoff" value="06:30">
-      </div>
-      <div class="form-group">
-        <label>เวลาเริ่มรับอาหาร</label>
-        <input type="time" class="form-input" id="set-pickup-start" value="07:00">
-      </div>
-      <div class="form-group">
-        <label>เวลาสิ้นสุดรับอาหาร</label>
-        <input type="time" class="form-input" id="set-pickup-end" value="08:00">
-      </div>
-      <button class="save-btn" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
-    </div>
-
-    <!-- ====== BRAND PANEL ====== -->
-    <div class="settings-card" style="border:2px solid #FFE082;background:linear-gradient(135deg,#FFFDF5,#FFF8E1);">
-      <h3 style="color:#5D3A00;">🎨 ตราร้าน &amp; อัตลักษณ์แบรนด์</h3>
-      <p style="font-size:12px;color:var(--text-sub);margin-bottom:16px">เปลี่ยนชื่อร้าน, โลโก้, และรูปพื้นหลังได้ที่นี่</p>
-
-      <!-- ชื่อร้าน -->
-      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #F0E8D8;">
-        <div style="font-size:14px;font-weight:800;color:#3E2000;margin-bottom:12px;">📝 ชื่อร้าน</div>
-        <div class="form-group">
-          <label>ชื่อร้าน (แสดงใน Header)</label>
-          <input type="text" class="form-input" id="set-store-name" placeholder="เช่น อิ่มเอ๋ย">
+      <!-- LATEST REVIEW -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">รีวิวล่าสุด</div>
+          <div class="card-link">ดูทั้งหมด</div>
         </div>
-        <div class="form-group">
-          <label>ชื่อรอง / Tagline</label>
-          <input type="text" class="form-input" id="set-store-tagline" placeholder="เช่น แซนวิช • ข้าวกล่อง • เครื่องดื่ม">
-        </div>
-        <div class="form-group">
-          <label>ชื่อเว็บ (Tab Browser)</label>
-          <input type="text" class="form-input" id="set-site-title" placeholder="เช่น อิ่มเอ๋ย | สั่งอาหาร">
-        </div>
-        <button class="save-btn" onclick="saveStoreName()">💾 บันทึกชื่อร้าน</button>
-      </div>
-
-      <!-- โลโก้ร้าน -->
-      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #F0E8D8;">
-        <div style="font-size:14px;font-weight:800;color:#3E2000;margin-bottom:12px;">🏷️ โลโก้ร้าน</div>
-        <!-- Preview current logo -->
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-          <div style="width:70px;height:70px;border-radius:50%;border:3px solid #FFC107;overflow:hidden;flex-shrink:0;background:#FFF8E1;display:flex;align-items:center;justify-content:center;">
-            <img id="brand-logo-preview" src="logo.webp" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">
+        <div class="review-item">
+          <div class="review-header">
+            <div class="review-av">👤</div>
+            <div>
+              <div class="review-name">Waranon•Ws</div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+            <div class="review-date">4 พ.ค. 14:30 น.</div>
           </div>
-          <div style="font-size:13px;color:#888;">โลโก้ปัจจุบัน<br><span style="font-size:11px">แสดงใน Header และหน้าแรก</span></div>
+          <div class="review-text">อร่อยมากครับ ส่งไวด้วย 👍</div>
         </div>
-        <div class="photo-upload-area" onclick="document.getElementById('brand-logo-file').click()" style="margin-bottom:10px">
-          <div style="font-size:28px;margin-bottom:4px">📷</div>
-          <div style="font-size:13px;color:var(--text-sub);font-weight:700">แตะเพื่ออัพโหลดโลโก้ใหม่</div>
-          <div style="font-size:11px;color:#bbb;margin-top:2px">PNG / JPG แนะนำรูปวงกลม</div>
-        </div>
-        <input type="file" id="brand-logo-file" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
-        <div class="form-group">
-          <label>หรือใส่ URL โลโก้</label>
-          <input type="url" class="form-input" id="set-hero-logo-url" placeholder="https://..." oninput="previewHeroLogo()">
-          <img id="hero-logo-preview-img" class="banner-preview" alt="Hero logo preview" style="border-radius:12px;margin-top:8px;">
-        </div>
-        <button class="save-btn" onclick="saveHeroLogo()">💾 บันทึกโลโก้</button>
       </div>
 
-      <!-- Hero / Banner หลัก -->
-      <div style="background:#fff;border-radius:14px;padding:16px;border:1px solid #F0E8D8;">
-        <div style="font-size:14px;font-weight:800;color:#3E2000;margin-bottom:12px;">🖼️ รูปพื้นหลัง Hero (หน้าแรก)</div>
-        <img id="brand-hero-preview" class="banner-preview" style="display:none;border-radius:12px;height:140px;margin-bottom:10px;" alt="">
-        <div class="photo-upload-area" onclick="document.getElementById('brand-hero-file').click()" style="margin-bottom:10px">
-          <div style="font-size:28px;margin-bottom:4px">🌅</div>
-          <div style="font-size:13px;color:var(--text-sub);font-weight:700">แตะเพื่ออัพโหลดรูป Hero</div>
-          <div style="font-size:11px;color:#bbb;margin-top:2px">แนะนำขนาด 1200×400px</div>
+      <!-- TOP MENUS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">เมนูขายดีวันนี้</div>
+          <div class="card-link">ดูทั้งหมด</div>
         </div>
-        <input type="file" id="brand-hero-file" accept="image/*" style="display:none" onchange="uploadBrandHero(this)">
-        <div class="form-group">
-          <label>หรือใส่ URL รูปพื้นหลัง</label>
-          <input type="url" class="form-input" id="set-banner-url" placeholder="https://..." oninput="previewBanner()">
-          <img id="banner-preview-img" class="banner-preview" alt="Banner preview" style="border-radius:12px;margin-top:8px;">
+        <div class="menu-item">
+          <div class="menu-rank r1">1</div>
+          <div class="menu-img">🥪</div>
+          <div class="menu-info">
+            <div class="mname">ขนมปังปิ้งเนยนม</div>
+            <div class="msub">ขาย 23 ชิ้น</div>
+          </div>
+          <div class="menu-price">690 ฿</div>
         </div>
-        <button class="save-btn" onclick="saveBanner()">💾 บันทึกรูป Hero</button>
+        <div class="menu-item">
+          <div class="menu-rank r2">2</div>
+          <div class="menu-img">🥗</div>
+          <div class="menu-info">
+            <div class="mname">หมูหยองน้ำสลัด</div>
+            <div class="msub">ขาย 18 ชิ้น</div>
+          </div>
+          <div class="menu-price">540 ฿</div>
+        </div>
+        <div class="menu-item">
+          <div class="menu-rank r3">3</div>
+          <div class="menu-img">🍫</div>
+          <div class="menu-info">
+            <div class="mname">ขนมปังช็อกโกแลต</div>
+            <div class="msub">ขาย 15 ชิ้น</div>
+          </div>
+          <div class="menu-price">450 ฿</div>
+        </div>
       </div>
     </div>
 
-    <div class="settings-card">
-      <h3>📅 สั่งล่วงหน้า (Pre-order)</h3>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <label style="font-size:14px;font-weight:700">เปิดให้ลูกค้าสั่งล่วงหน้าวันถัดไป</label>
-        <input type="checkbox" id="preorder-enabled" checked style="width:20px;height:20px;accent-color:var(--yellow)">
-      </div>
-      <button class="save-btn" onclick="savePreorderSetting()">💾 บันทึก</button>
-    </div>
-
-    <div class="settings-card">
-      <h3>⭐ เมนูแนะนำ (Featured)</h3>
-      <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px">เลือกเมนูที่จะปรากฏในแถว "เมนูแนะนำ" (สูงสุด 5 เมนู)</p>
-      <div id="featured-checkboxes" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
-      <button class="save-btn" style="margin-top:12px" onclick="saveFeaturedItems()">💾 บันทึกเมนูแนะนำ</button>
-    </div>
-
-    <div class="settings-card owner-only">
-      <h3>🔑 ตั้งค่ารหัสผ่าน</h3>
-      <div class="form-group">
-        <label>รหัสผ่านแอดมิน</label>
-        <input type="password" class="form-input" id="set-admin-password" placeholder="ตั้งรหัสผ่านใหม่">
-      </div>
-      <div class="form-group">
-        <label>รหัสผ่านเจ้าของร้าน</label>
-        <input type="password" class="form-input" id="set-owner-password" placeholder="ตั้งรหัสผ่านใหม่">
-      </div>
-      <button class="save-btn" onclick="savePasswords()">💾 บันทึกรหัสผ่าน</button>
-    </div>
-
-    <!-- ====== PICKUP LOCATIONS ====== -->
-    <div class="settings-card">
-      <h3>📍 จุดรับอาหาร</h3>
-      <p style="font-size:12px;color:var(--text-sub);margin-bottom:12px;">กำหนดจุดรับอาหารที่ลูกค้าเลือกได้ตอนสั่ง</p>
-      <div id="pickup-locations-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="new-pickup-name" class="form-input" placeholder="ชื่อจุดรับ เช่น หน้าบ้าน, โรงเรียน" style="flex:1;margin:0;">
-        <button onclick="addPickupLocation()" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:12px;padding:10px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;white-space:nowrap;">+ เพิ่ม</button>
-      </div>
-      <button class="save-btn" style="margin-top:12px;" onclick="savePickupLocations()">💾 บันทึกจุดรับอาหาร</button>
-    </div>
-
-    <!-- ====== DANGER ZONE ====== -->
-    <div class="settings-card">
-      <h3>⚠️ Danger Zone</h3>
-
-      <!-- ล้าง Rating -->
-      <div class="danger-item" style="background:#FFF8E1;border:1.5px solid #FFE082;">
-        <div class="d-icon" style="background:#FFF3CD;">⭐</div>
-        <div class="d-info">
-          <div class="d-title" style="color:#B8860B;">ล้าง Rating ทั้งหมด</div>
-          <div class="d-desc">ลบคะแนนรีวิวเมนูทั้งหมดออกจากระบบ</div>
-        </div>
-        <button class="d-btn" onclick="openDangerDialog('rating')" style="background:linear-gradient(135deg,#F9A825,#F57F17);color:#1A0A00;">ล้างคะแนน</button>
-      </div>
-
-      <!-- ลบออเดอร์เก่า -->
-      <div class="danger-item" style="background:#FFFBF0;border:1.5px solid #FFE082;">
-        <div class="d-icon" style="background:#FFF3CD;">🧹</div>
-        <div class="d-info">
-          <div class="d-title" style="color:#B8860B;">ลบออเดอร์ที่เสร็จแล้ว</div>
-          <div class="d-desc">สถานะ "รับแล้ว" และ "ยกเลิก" จะถูกลบ</div>
-        </div>
-        <button class="d-btn" onclick="openDangerDialog('completed')" style="background:linear-gradient(135deg,#F9A825,#F57F17);color:#1A0A00;">ลบเก่า</button>
-      </div>
-
-      <!-- ลบออเดอร์ทั้งหมด -->
-      <div class="danger-item" style="background:#FFF5F5;border:1.5px solid #FFCDD2;">
-        <div class="d-icon" style="background:#FFEBEE;">🔥</div>
-        <div class="d-info">
-          <div class="d-title" style="color:#C62828;">ลบออเดอร์ทั้งหมด</div>
-          <div class="d-desc">ลบทุกรายการออกจากระบบถาวร</div>
-        </div>
-        <button class="d-btn" onclick="openDangerDialog('all')" style="background:linear-gradient(135deg,#E53935,#B71C1C);color:#fff;box-shadow:0 3px 10px rgba(183,28,28,0.25);">ลบทั้งหมด</button>
-      </div>
-
-      <!-- รีเซ็ตระบบ -->
-      <div class="danger-item" style="background:#F9F5FF;border:1.5px solid #E1BEE7;">
-        <div class="d-icon" style="background:#F3E5F5;">💣</div>
-        <div class="d-info">
-          <div class="d-title" style="color:#6A1B9A;">รีเซ็ตข้อมูลทั้งระบบ</div>
-          <div class="d-desc">ออเดอร์ + แต้มสะสมทั้งหมด (เมนูยังอยู่)</div>
-        </div>
-        <button class="d-btn" onclick="openDangerDialog('reset')" style="background:linear-gradient(135deg,#7B1FA2,#4A148C);color:#fff;box-shadow:0 3px 10px rgba(106,27,154,0.25);">รีเซ็ต</button>
-      </div>
-    </div>
+    <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
   </div>
 </div>
 
+<script>
+// Sales Line Chart
+const ctx = document.getElementById('salesChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['29 เม.ย.','30 เม.ย.','1 พ.ค.','2 พ.ค.','3 พ.ค.','4 พ.ค.','5 พ.ค.'],
+    datasets: [
+      {
+        label: 'รายได้ (บาท)',
+        data: [1200, 980, 1500, 2800, 2100, 2400, 2739],
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249,115,22,0.08)',
+        tension: 0.4, fill: true, pointRadius: 4,
+        pointBackgroundColor: '#f97316',
+      },
+      {
+        label: 'ออเดอร์ (ออเดอร์)',
+        data: [4, 3, 5, 9, 7, 8, 8],
+        borderColor: '#fb923c',
+        backgroundColor: 'rgba(251,146,60,0.05)',
+        tension: 0.4, fill: false, pointRadius: 4,
+        borderDash: [4,3],
+        pointBackgroundColor: '#fb923c',
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: true, labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 12, padding: 10 } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11 } } },
+      y: { grid: { color: '#f3f4f6' }, ticks: { font: { family: 'Sarabun', size: 11 } } }
+    }
+  }
+});
 
-<!-- ====== DANGER DIALOGS ====== -->
-<div class="danger-dialog-overlay" id="danger-dialog-overlay">
-  <div class="danger-dialog">
-    <div class="danger-dialog-header">
-      <div class="danger-dialog-icon" id="dd-icon-wrap">
-        <span id="dd-icon">🧹</span>
-      </div>
-      <div class="danger-dialog-title" id="dd-title">ลบออเดอร์ที่เสร็จแล้ว</div>
-      <div class="danger-dialog-desc" id="dd-desc">การกระทำนี้ไม่สามารถย้อนกลับได้</div>
-    </div>
-    <div class="danger-dialog-input-wrap" id="dd-input-wrap" style="display:none">
-      <label class="danger-dialog-input-label" id="dd-input-label">พิมพ์เพื่อยืนยัน</label>
-      <input class="danger-dialog-input" type="text" id="dd-input" autocomplete="off" placeholder="">
-    </div>
-    <div class="danger-dialog-actions">
-      <button class="danger-dialog-cancel" onclick="closeDangerDialog()">ยกเลิก</button>
-      <button class="danger-dialog-confirm" id="dd-confirm-btn" onclick="confirmDangerAction()">ยืนยัน</button>
-    </div>
-  </div>
-</div>
-
-<!-- ====== GENERAL CONFIRM DIALOG ====== -->
-<div class="danger-dialog-overlay" id="confirm-dialog-overlay">
-  <div class="danger-dialog">
-    <div class="danger-dialog-header">
-      <div class="danger-dialog-icon" id="cd-icon-wrap" style="background:#FFF3E0;border:2px solid #FFE0B2;">
-        <span id="cd-icon">🗑️</span>
-      </div>
-      <div class="danger-dialog-title" id="cd-title">ยืนยันการลบ</div>
-      <div class="danger-dialog-desc" id="cd-desc">คุณแน่ใจหรือไม่?</div>
-    </div>
-    <div class="danger-dialog-actions">
-      <button class="danger-dialog-cancel" onclick="closeConfirmDialog()">ยกเลิก</button>
-      <button class="danger-dialog-confirm" id="cd-confirm-btn" onclick="_confirmDialogResolve(true)" style="background:linear-gradient(135deg,#E53935,#B71C1C);color:#fff;">ยืนยัน</button>
-    </div>
-  </div>
-</div>
-
-<!-- ====== NOTIFICATION PANEL ====== -->
-<div class="notif-panel-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
-<div class="notif-panel" id="notif-panel">
-  <div class="notif-panel-head">
-    <h3>🔔 การแจ้งเตือน</h3>
-    <button class="notif-close-btn" onclick="toggleNotifications()">✕</button>
-  </div>
-  <div id="notif-permission-bar" class="notif-permission-bar" style="display:none">
-    <span>🔕 ยังไม่ได้อนุญาต Push</span>
-    <button onclick="requestNotifPermission()">อนุญาต</button>
-  </div>
-  <div class="notif-sound-row">
-    <span>🔊 เสียงแจ้งเตือน</span>
-    <label class="notif-toggle-switch">
-      <input type="checkbox" id="notif-sound-toggle" checked onchange="saveSoundPref()">
-      <span class="slider"></span>
-    </label>
-  </div>
-  <div class="notif-list" id="notif-list">
-    <div class="notif-empty">
-      <div class="notif-empty-icon">🔔</div>
-      <div>ยังไม่มีการแจ้งเตือน</div>
-    </div>
-  </div>
-  <button class="notif-clear-btn" onclick="clearNotifications()">🗑️ ล้างการแจ้งเตือนทั้งหมด</button>
-</div>
-
-<!-- MODAL: EDIT ITEM -->
-<div class="modal-overlay" id="modal-edit">
-  <div class="modal-sheet">
-    <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
-    <h3 id="modal-edit-title">แก้ไขเมนู</h3>
-    <input type="hidden" id="edit-item-id">
-    <div class="form-group">
-      <label>ชื่อเมนู</label>
-      <input type="text" class="form-input" id="edit-name" placeholder="ชื่อเมนู">
-    </div>
-    <div class="form-group">
-      <label>คำอธิบาย</label>
-      <input type="text" class="form-input" id="edit-desc" placeholder="ส่วนผสม, คำอธิบาย">
-    </div>
-    <div class="form-group">
-      <label>ราคา (บาท)</label>
-      <input type="number" class="form-input" id="edit-price" placeholder="0">
-    </div>
-    <div class="form-group">
-      <label>หมวดหมู่</label>
-      <select class="form-input" id="edit-catkey">
-        <option value="sandwich">🥪 แซนวิช</option>
-        <option value="rice">🍚 ข้าว</option>
-        <option value="noodle">🍜 หมี่</option>
-        <option value="drink">🥤 เครื่องดื่ม</option>
-        <option value="other">🍽️ อื่นๆ</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Emoji (ถ้าไม่มีรูปภาพ)</label>
-      <input type="text" class="form-input" id="edit-emoji" placeholder="🍜">
-    </div>
-    <div class="form-group">
-      <label>URL รูปภาพ (ไม่บังคับ)</label>
-      <input type="url" class="form-input" id="edit-image-url" placeholder="https://..." oninput="previewEditImg()">
-      <img id="edit-img-preview" class="banner-preview" style="display:none;margin-top:8px" alt="">
-    </div>
-    <div class="form-group">
-      <label>หรืออัพโหลดรูป</label>
-      <div class="photo-upload-area" onclick="document.getElementById('item-photo-file').click()">
-        <div style="font-size:24px;margin-bottom:4px">📷</div>
-        <div style="font-size:12px;color:var(--text-sub)">แตะเพื่อเลือกรูปอาหาร</div>
-      </div>
-      <input type="file" id="item-photo-file" accept="image/*" style="display:none" onchange="uploadItemPhoto(this)">
-    </div>
-    <button class="save-btn" onclick="saveMenuItem()" style="margin-top:6px">💾 บันทึก</button>
-  </div>
-</div>
-
-<!-- ====== MODAL: UPLOAD IMAGE ====== -->
-<div class="modal-overlay" id="modal-image">
-  <div class="modal-sheet">
-    <button class="modal-close" onclick="closeModal('modal-image')">✕</button>
-    <h3>เปลี่ยนรูปภาพ</h3>
-    <input type="hidden" id="img-item-id">
-    <div class="form-group">
-      <label>URL รูปภาพ</label>
-      <input type="url" class="form-input" id="img-url-input" placeholder="https://..." oninput="previewImgModal()">
-    </div>
-    <img id="img-modal-preview" class="photo-preview" style="display:none" alt="">
-    <div class="form-group" style="margin-top:12px">
-      <div class="photo-upload-area" onclick="document.getElementById('quick-photo-file').click()">
-        <div style="font-size:28px;margin-bottom:4px">📷</div>
-        <div style="font-size:13px;color:var(--text-sub)">อัพโหลดจากเครื่อง</div>
-        <div style="font-size:11px;color:#ccc;margin-top:4px">(จะ convert เป็น base64)</div>
-      </div>
-      <input type="file" id="quick-photo-file" accept="image/*" style="display:none" onchange="quickUploadPhoto(this)">
-    </div>
-    <button class="save-btn" onclick="saveItemImage()" style="margin-top:10px">💾 บันทึกรูป</button>
-  </div>
-</div>
-
-<!-- ====== MODAL: BANNER ====== -->
-<div class="modal-overlay" id="modal-banner">
-  <div class="modal-sheet">
-    <button class="modal-close" onclick="closeModal('modal-banner')">✕</button>
-    <h3 id="modal-banner-title">เพิ่มแบนเนอร์</h3>
-    <input type="hidden" id="banner-edit-id">
-    <div class="form-group">
-      <label>ประเภทแบนเนอร์</label>
-      <select class="form-input" id="banner-type" onchange="previewBannerModal()">
-        <option value="slider">🖼️ Slider ปกติ</option>
-        <option value="promo">🎉 โปรโมชัน (สีม่วง-ชมพู)</option>
-        <option value="gradient">🌅 Gradient สีส้ม</option>
-        <option value="announcement">📢 ประกาศ (สีเขียว)</option>
-        <option value="sale">🔥 Flash Sale (สีแดง)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>ตำแหน่งการแสดง</label>
-      <select class="form-input" id="banner-position">
-        <option value="hero">📍 Hero (บนสุดหน้าแรก)</option>
-        <option value="mid">📢 กลางหน้า (ระหว่างเมนูแนะนำ)</option>
-        <option value="bottom">⬇️ ล่างสุด (ก่อน footer)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>ขนาดแบนเนอร์</label>
-      <select class="form-input" id="banner-size" onchange="previewBannerModal()">
-        <option value="small">📐 เล็ก (120px)</option>
-        <option value="medium" selected>📐 กลาง (180px)</option>
-        <option value="large">📐 ใหญ่ (240px)</option>
-        <option value="full">📐 เต็มจอ (300px)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>ชื่อ/หัวข้อ (ไม่บังคับ)</label>
-      <input type="text" class="form-input" id="banner-title" placeholder="เช่น โปรโมชันพิเศษ" oninput="previewBannerModal()">
-    </div>
-    <div class="form-group">
-      <label>คำอธิบายย่อ (ไม่บังคับ)</label>
-      <input type="text" class="form-input" id="banner-subtitle" placeholder="เช่น ลด 20% ทุกเมนู" oninput="previewBannerModal()">
-    </div>
-    <div class="form-group">
-      <label>ลำดับการแสดง (1 = แรกสุด)</label>
-      <input type="number" class="form-input" id="banner-order" placeholder="1" value="1" min="1">
-    </div>
-    <div class="form-group">
-      <label>รูปภาพ (URL)</label>
-      <input type="url" class="form-input" id="banner-img-url" placeholder="https://..." oninput="previewBannerModal()">
-    </div>
-    <div class="form-group">
-      <label>หรืออัพโหลดรูป</label>
-      <div class="photo-upload-area" onclick="document.getElementById('banner-upload-file').click()">
-        <div style="font-size:26px;margin-bottom:4px">📤</div>
-        <div style="font-size:12px;color:var(--text-sub)">แตะเพื่อเลือกรูป</div>
-      </div>
-      <input type="file" id="banner-upload-file" accept="image/*" style="display:none" onchange="uploadBannerModal(this)">
-    </div>
-
-    <!-- LIVE PREVIEW -->
-    <div id="banner-live-preview" style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:8px">👁️ ตัวอย่างแบนเนอร์</div>
-      <div id="banner-preview-box" style="border-radius:12px;overflow:hidden;position:relative;background:#f0e8d8;height:180px;transition:height 0.3s">
-        <img id="banner-modal-preview" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" alt="">
-        <div id="banner-preview-bg" style="position:absolute;inset:0;opacity:0.85"></div>
-        <div id="banner-preview-overlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:12px;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 60%)">
-          <div id="banner-preview-title" style="font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>
-          <div id="banner-preview-sub" style="font-size:12px;color:rgba(255,255,255,0.88);margin-top:2px"></div>
-        </div>
-        <div id="banner-preview-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;position:absolute;inset:0">🖼️</div>
-        <div id="banner-preview-badge" style="position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px"></div>
-      </div>
-      <div id="banner-preview-info" style="font-size:11px;color:#999;margin-top:6px;text-align:center"></div>
-    </div>
-
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <label style="font-size:13px;font-weight:700;color:var(--text-sub)">เปิดใช้งาน</label>
-      <input type="checkbox" id="banner-active" checked style="width:20px;height:20px;accent-color:var(--yellow)">
-    </div>
-    <button class="save-btn" onclick="saveBannerItem()">💾 บันทึก</button>
-  </div>
-</div>
-
-<!-- ====== MODAL: CATEGORY ====== -->
-<div class="modal-overlay" id="modal-category">
-  <div class="modal-sheet">
-    <button class="modal-close" onclick="closeModal('modal-category')">✕</button>
-    <h3 id="modal-cat-title">เพิ่มหมวดหมู่</h3>
-    <input type="hidden" id="cat-edit-key">
-    <div class="form-group">
-      <label>Key (ภาษาอังกฤษ ไม่มีช่องว่าง)</label>
-      <input type="text" class="form-input" id="cat-key" placeholder="เช่น rice, noodle, drink">
-    </div>
-    <div class="form-group">
-      <label>ชื่อหมวดหมู่</label>
-      <input type="text" class="form-input" id="cat-name" placeholder="เช่น ข้าวกล่อง">
-    </div>
-    <div class="form-group">
-      <label>Emoji</label>
-      <input type="text" class="form-input" id="cat-emoji" placeholder="🍚" maxlength="4">
-    </div>
-    <div class="form-group">
-      <label>ลำดับ (น้อย = แรก)</label>
-      <input type="number" class="form-input" id="cat-sort" placeholder="1" value="10" min="1">
-    </div>
-    <button class="save-btn" onclick="saveCategoryItem()">💾 บันทึก</button>
-  </div>
-</div>
-
-<!-- ====== MODAL: CUSTOMER ====== -->
-<div class="modal-overlay" id="modal-customer">
-  <div class="modal-sheet">
-    <button class="modal-close" onclick="closeModal('modal-customer')">✕</button>
-    <h3 id="modal-customer-title">เพิ่มลูกค้า</h3>
-    <input type="hidden" id="cust-edit-id">
-    <input type="hidden" id="cust-source">
-    <!-- LINE profile preview (shown when editing LINE user) -->
-    <div id="cust-line-preview" style="display:none;background:#F0FFF4;border:1.5px solid #B2DFDB;border-radius:14px;padding:12px 14px;margin-bottom:14px;display:none;align-items:center;gap:12px;">
-      <img id="cust-line-photo" src="" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2.5px solid #06C755;flex-shrink:0;">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#1B5E20;" id="cust-line-name-preview"></div>
-        <div style="font-size:11px;color:#388E3C;margin-top:2px;">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="#06C755" style="vertical-align:middle"><rect x="2" y="2" width="20" height="20" rx="5"/></svg>
-          LINE เชื่อมต่อแล้ว
-        </div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>ชื่อลูกค้า</label>
-      <input type="text" class="form-input" id="cust-name" placeholder="ชื่อ-นามสกุล">
-    </div>
-    <div class="form-group">
-      <label>User ID (LINE)</label>
-      <input type="text" class="form-input" id="cust-userid" placeholder="เช่น U1234abcd..." style="font-size:12px">
-    </div>
-    <div class="form-group">
-      <label>เบอร์โทรศัพท์</label>
-      <input type="tel" class="form-input" id="cust-phone" placeholder="0812345678">
-    </div>
-    <div class="form-group">
-      <label>ที่อยู่จัดส่ง</label>
-      <input type="text" class="form-input" id="cust-address" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ...">
-    </div>
-    <div class="form-group">
-      <label>แต้มสะสม</label>
-      <input type="number" class="form-input" id="cust-points" placeholder="0" value="0" min="0">
-    </div>
-    <div class="form-group">
-      <label>หมายเหตุ</label>
-      <input type="text" class="form-input" id="cust-note" placeholder="เพิ่มเติม...">
-    </div>
-    <button class="save-btn" onclick="saveCustomer()">💾 บันทึก</button>
-  </div>
-</div>
-
-<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
-<div class="toast" id="toast"></div>
-
-<!-- ====== GLOBAL UI FUNCTIONS (non-module, global scope) ====== -->
-
-
-<!-- ====== NOTIFICATION FUNCTIONS (non-module, global scope) ====== -->
-
-  <script src="js/admin.js"></script>
-  <script type="module" src="js/admin.module.js"></script>
+// Donut Chart
+const ctx2 = document.getElementById('donutChart').getContext('2d');
+new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    labels: ['รับที่ร้าน','เดลิเวอรี่','เช็คเมตี'],
+    datasets: [{
+      data: [4, 3, 1],
+      backgroundColor: ['#f97316','#10b981','#f59e0b'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true, cutout: '68%',
+    plugins: { legend: { display: false } }
+  }
+});
+</script>
 </body>
 </html>

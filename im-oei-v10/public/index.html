@@ -156,15 +156,13 @@
         <span class="im-chip">⭐ สะสมแต้ม</span>
       </div>
 
-      <div class="im-or-divider"><span>หรือ กรอกชื่อ + เบอร์</span></div>
+      <div class="im-or-divider"><span>หรือ เข้าแบบผู้เยี่ยมชม</span></div>
 
-      <!-- Guest form -->
+      <!-- Guest form — ใช้แค่ชื่อ ไม่ต้องใส่เบอร์ -->
       <label class="im-field-label">👤 ชื่อของคุณ</label>
-      <input type="text" id="modal-name" class="im-field" placeholder="เช่น สมชาย, นิสา" maxlength="30">
-      <label class="im-field-label">📱 เบอร์โทรศัพท์</label>
-      <input type="tel" id="modal-phone" class="im-field" placeholder="0812345678" maxlength="10"
-        oninput="this.value=this.value.replace(/\D/g,'')"
+      <input type="text" id="modal-name" class="im-field" placeholder="เช่น สมชาย, นิสา" maxlength="30"
         onkeydown="if(event.key==='Enter')submitLoginModal()">
+      <p style="font-size:11px;color:#AAA;margin:-4px 0 10px;text-align:center;">ไม่ต้องกรอกเบอร์ — แต่จะไม่ได้แต้มสะสม</p>
       <button class="im-submit-btn" onclick="submitLoginModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E2000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         เริ่มสั่งอาหาร

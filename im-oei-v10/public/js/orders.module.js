@@ -242,18 +242,20 @@ function renderActiveCard(o){
 let _unsubOrders = null;
 
 function startOrdersRealtime() {
-  if (!user.phone && !user.lineUserId) { loadOrders(); return; }
+  // รองรับ lineId (field เก่า) และ lineUserId (field ใหม่)
+  const lineId = user.lineUserId || user.lineId || '';
+  if (!user.phone && !lineId && !user.guestId) { loadOrders(); return; }
 
-  const qField = user.phone ? 'customerPhone' : 'lineUserId';
-  const qValue = user.phone ? user.phone : user.lineUserId;
+  const qField = lineId ? 'lineUserId' : (user.phone ? 'customerPhone' : 'guestId');
+  const qValue = lineId || user.phone || user.guestId;
   const q = query(collection(db,'orders'), where(qField,'==', qValue));
 
   _unsubOrders = onSnapshot(q, async (snap) => {
     let docs = snap.docs.map(d=>({id:d.id,...d.data()}));
-    // ถ้ามีทั้ง phone และ lineUserId → merge จากทั้งสอง field
-    if (user.phone && user.lineUserId) {
+    // legacy: ถ้ามี phone ด้วย → merge
+    if (user.lineUserId && user.phone) {
       try {
-        const q2 = query(collection(db,'orders'), where('lineUserId','==', user.lineUserId));
+        const q2 = query(collection(db,'orders'), where('customerPhone','==', user.phone));
         const snap2 = await getDocs(q2);
         const extra = snap2.docs.map(d=>({id:d.id,...d.data()})).filter(o=>!docs.find(x=>x.id===o.id));
         docs = [...docs, ...extra];
@@ -270,18 +272,24 @@ function startOrdersRealtime() {
 
 async function loadOrders(){
   showLoading(true);
+  const lineId = user.lineUserId || user.lineId || '';
   try {
     let docs = [];
-    if (user.phone) {
-      const snap = await getDocs(query(collection(db,'orders'), where('customerPhone','==', user.phone)));
+    if (lineId) {
+      const snap = await getDocs(query(collection(db,'orders'), where('lineUserId','==', lineId)));
       docs = snap.docs.map(d=>({id:d.id,...d.data()}));
     }
-    if (user.lineUserId) {
-      const snap2 = await getDocs(query(collection(db,'orders'), where('lineUserId','==', user.lineUserId)));
+    if (user.phone) {
+      const snap2 = await getDocs(query(collection(db,'orders'), where('customerPhone','==', user.phone)));
       const extra = snap2.docs.map(d=>({id:d.id,...d.data()})).filter(o=>!docs.find(x=>x.id===o.id));
       docs = [...docs, ...extra];
     }
-    if (!docs.length && !user.phone && !user.lineUserId) {
+    if (user.guestId && !docs.length) {
+      const snap3 = await getDocs(query(collection(db,'orders'), where('guestId','==', user.guestId)));
+      const extra = snap3.docs.map(d=>({id:d.id,...d.data()})).filter(o=>!docs.find(x=>x.id===o.id));
+      docs = [...docs, ...extra];
+    }
+    if (!docs.length && !user.phone && !user.lineUserId && !user.guestId) {
       // ไม่มีข้อมูล user เลย
       renderOrders([]);
       showLoading(false);

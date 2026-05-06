@@ -101,6 +101,8 @@ window.checkout = async function() {
   var isNextDay = pickupRaw.startsWith('next:');
   var pickupTime = pickupRaw.replace('next:', '');
   const phone = userObj.phone || '';
+  const lineUserId = userObj.lineUserId || '';
+  const guestId = userObj.guestId || '';
 
   var orderItems = [];
   Object.keys(cart).forEach(function(id) {
@@ -121,7 +123,9 @@ window.checkout = async function() {
       total,
       note,
       customerName,
-      customerPhone: phone,
+      ...(phone ? { customerPhone: phone } : {}),
+      ...(lineUserId ? { lineUserId } : {}),
+      ...(guestId ? { guestId } : {}),
       pickupTime,
       pickupLocation: selectedLocation,
       pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation,
@@ -134,13 +138,15 @@ window.checkout = async function() {
     // อัพเดทแต้ม (20 บาท = 1 แต้ม, คำนวณจากยอดออเดอร์)
     // upsert ข้อมูลลูกค้าลง customers collection ทุกครั้งที่สั่ง
     try {
-      const custId = 'phone_' + phone;
       const u = (() => { try { return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); } catch(e){ return null; } })();
+      const custId = lineUserId ? ('line_' + lineUserId) : (phone ? 'phone_' + phone : 'guest_' + guestId);
       await setDoc(doc(db, 'customers', custId), {
-        name: customerName, phone,
-        source: u?.lineUserId ? 'line' : 'phone',
-        userId: u?.lineUserId || '',
-        photoUrl: u?.avatar || u?.photoURL || '',
+        name: customerName,
+        ...(phone ? { phone } : {}),
+        ...(lineUserId ? { lineUserId } : {}),
+        ...(guestId ? { guestId } : {}),
+        source: lineUserId ? 'line' : (phone ? 'phone' : 'guest'),
+        photoUrl: u?.photoURL || '',
         lastOrderAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -153,7 +159,8 @@ window.checkout = async function() {
     let stampMsg = null;
     try {
       // อ่านแต้มเก่าจาก localStorage เพื่อแสดง UI (ไม่ได้เขียน Firestore)
-      const cachedStamps = localStorage.getItem('imkum_stamps_' + phone);
+      const stampKey = lineUserId || phone || guestId;
+      const cachedStamps = localStorage.getItem('imkum_stamps_' + stampKey);
       const cached = cachedStamps ? JSON.parse(cachedStamps) : { points: 0 };
       const stSnap = await fetch ? null : null; // placeholder
       const stSettings = await getDoc(doc(db, 'settings', 'stamps')).catch(() => null);

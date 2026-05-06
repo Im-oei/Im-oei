@@ -197,12 +197,8 @@ function getCount(){var s=0;Object.values(cart).forEach(function(v){s+=v;});retu
 function render(){
   ALL_ITEMS.forEach(function(item){
     var el=document.getElementById('qty-'+item.id);
-    var el2=document.getElementById('qty-fl-'+item.id);
-    var el3=document.getElementById('qty-list-'+item.id);
     var v=cart[item.id]||0;
     if(el) el.textContent=v;
-    if(el2) el2.textContent=v;
-    if(el3) el3.textContent=v;
   });
   var t=getTotal(),c=getCount();
   var te=document.getElementById('home-total');
@@ -275,47 +271,53 @@ function buildMenuList(){
       } else if (item.avgRating && item.ratingCount > 0) {
         topBadge = '<span class="rating-badge">⭐ '+item.avgRating.toFixed(1)+'</span>';
       }
+      // qty ID เดียวทุก mode — ไม่ซ้ำใน DOM
       var qtyBtns = isSoldOut
         ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>'
         : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>' +
           '<span class="qty-num" id="qty-'+item.id+'">0</span>' +
           '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>';
-      var qtyListBtns = isSoldOut
-        ? '<span style="font-size:11px;font-weight:700;color:#B71C1C;">หมดแล้ว</span>'
-        : '<button class="btn" onclick="remove(\''+item.id+'\')">−</button>' +
-          '<span class="qty-num" id="qty-list-'+item.id+'">0</span>' +
-          '<button class="btn plus" onclick="add(\''+item.id+'\')">+</button>';
 
-      html +=
-        '<div class="card">' +
-          // รูปอาหาร
-          '<div class="food-img">' + foodImg(item) + topBadge + '</div>' +
-
-          // === CARD MODE: ชื่อ+desc+ราคา+qty ทางขวา ===
-          '<div class="left card-left">' +
-            '<div class="name">' + item.name + '</div>' +
-            '<div class="desc card-desc">' + (item.desc || '') + '</div>' +
-            '<div class="price-tag card-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
-            '<div class="qty card-qty">' + qtyListBtns + '</div>' +
-          '</div>' +
-
-          // === GRID MODE: ชื่อ+ราคา+qty ใต้รูป ===
-          '<div class="grid-footer">' +
-            '<div class="grid-name">' + item.name + '</div>' +
-            '<div class="grid-footer-row">' +
-              '<div class="price-tag">' + item.price + ' <span class="price-unit">บาท</span></div>' +
-              '<div class="qty">' + qtyBtns + '</div>' +
+      if (viewMode === 'card') {
+        // CARD MODE: รูปซ้าย, ข้อความ+qty ขวา
+        html +=
+          '<div class="card">' +
+            '<div class="food-img">' + foodImg(item) + topBadge + '</div>' +
+            '<div class="card-left">' +
+              '<div class="name">' + item.name + '</div>' +
+              '<div class="desc">' + (item.desc || '') + '</div>' +
+              '<div class="price-tag card-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+              '<div class="qty card-qty">' + qtyBtns + '</div>' +
             '</div>' +
-          '</div>' +
+          '</div>';
 
-          // === LIST MODE: desc+ราคา ทางซ้าย qty ทางขวา ===
-          '<div class="left list-left">' +
-            '<div class="name">' + item.name + '</div>' +
-            '<div class="desc">' + (item.desc || '') + '</div>' +
-            '<div class="price-tag list-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
-            '<div class="qty list-qty">' + qtyListBtns + '</div>' +
-          '</div>' +
-        '</div>';
+      } else if (viewMode === 'list') {
+        // LIST MODE: รูปซ้าย, ข้อความซ้าย, qty ขวา
+        html +=
+          '<div class="card">' +
+            '<div class="food-img">' + foodImg(item) + topBadge + '</div>' +
+            '<div class="list-left">' +
+              '<div class="name">' + item.name + '</div>' +
+              '<div class="desc">' + (item.desc || '') + '</div>' +
+              '<div class="price-tag list-price">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+              '<div class="qty list-qty">' + qtyBtns + '</div>' +
+            '</div>' +
+          '</div>';
+
+      } else {
+        // GRID MODE (default): รูปบน, ชื่อ+ราคา+qty ใต้รูป
+        html +=
+          '<div class="card">' +
+            '<div class="food-img">' + foodImg(item) + topBadge + '</div>' +
+            '<div class="grid-footer">' +
+              '<div class="grid-name">' + item.name + '</div>' +
+              '<div class="grid-footer-row">' +
+                '<div class="price-tag">' + item.price + ' <span class="price-unit">บาท</span></div>' +
+                '<div class="qty">' + qtyBtns + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      }
     });
     html+='</div></div>';
   });
@@ -394,32 +396,37 @@ function showLoginModal(callback) {
   window._loginModalCb = callback || null;
   var m = document.getElementById('login-modal');
   m.classList.add('open');
+  // Lock body scroll while modal is open
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
   var u = getUser();
   if (u && u.name) document.getElementById('modal-name').value = u.name;
-  if (u && u.phone) document.getElementById('modal-phone').value = u.phone;
-  setTimeout(function(){ document.getElementById('modal-name').focus(); }, 350);
+  setTimeout(function(){
+    var box = document.getElementById('login-modal-box');
+    if (box) box.scrollTop = 0;
+    var inp = document.getElementById('modal-name');
+    if (inp) inp.focus();
+  }, 350);
 }
 function closeLoginModal() {
   document.getElementById('login-modal').classList.remove('open');
   document.getElementById('modal-error').style.display = 'none';
+  // Restore body scroll
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
 }
 async function submitLoginModal() {
   var name = document.getElementById('modal-name').value.trim();
-  var phone = document.getElementById('modal-phone').value.trim();
   var err = document.getElementById('modal-error');
   if (!name) { err.textContent='กรุณากรอกชื่อของคุณ'; err.style.display='block'; return; }
-  if (!phone || phone.length < 9) { err.textContent='กรุณากรอกเบอร์โทรให้ครบถ้วน'; err.style.display='block'; return; }
   err.style.display = 'none';
-  // ตรวจสอบเบอร์ซ้ำจาก localStorage ก่อน (fast check)
-  var savedPhone = localStorage.getItem('imkum_phone');
-  var savedName = localStorage.getItem('imkum_name');
-  if (savedPhone && savedPhone === phone && savedName && savedName !== name) {
-    err.textContent = 'เบอร์ ' + phone + ' ถูกใช้โดย "' + savedName + '" แล้ว';
-    err.style.display = 'block'; return;
-  }
-  sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
+  // Guest login — ใช้ชื่อ + guestId (random) เป็น ID
+  var guestId = localStorage.getItem('imkum_guest_id') || ('guest_' + Math.random().toString(36).slice(2,10));
+  localStorage.setItem('imkum_guest_id', guestId);
+  sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, guestId, loginAt: Date.now() }));
   localStorage.setItem('imkum_name', name);
-  localStorage.setItem('imkum_phone', phone);
   closeLoginModal();
   updateUserBadge();
   showToast('ยินดีต้อนรับ ' + name + ' 👋');
@@ -441,7 +448,7 @@ async function submitLoginModal() {
     }
   }
 
-  // ─── หลัง redirect กลับมา: ตรวจ LIFF login + ดึงข้อมูล ──────────────
+  // ─── หลัง redirect กลับมา: ตรวจ LIFF login + บันทึก lineUser ──────────────
   async function handleLiffReturn() {
     try {
       await ensureLiff();
@@ -452,36 +459,40 @@ async function submitLoginModal() {
 
       // โหลด Firebase
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-      const { getFirestore, doc, getDoc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const { getFirestore, doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
       const { FIREBASE_CONFIG } = await import('../config.js');
 
       const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
       const db = getFirestore(app);
 
-      // ตรวจ lineUsers ตรงจาก Firestore (rules ต้องอนุญาต read ด้วย lineUserId)
-      let linked = false, phone = null;
+      // บันทึก lineUsers โดยใช้ userId เป็น key (ไม่ต้องการเบอร์)
       try {
-        const snap = await getDoc(doc(db, 'lineUsers', userId));
-        if (snap.exists() && snap.data().phone) {
-          linked = true;
-          phone = snap.data().phone;
-        }
+        await setDoc(doc(db, 'lineUsers', userId), {
+          userId, displayName,
+          pictureUrl: pictureUrl || null,
+          lastLogin: Date.now(),
+          updatedAt: Date.now()
+        }, { merge: true });
       } catch(e) {
-        console.warn('lineUsers read error (rules?):', e.message);
+        console.warn('lineUsers write error:', e.message);
       }
 
-      if (linked && phone) {
-        // ผูกแล้ว → save session
-        _saveLiffSession(displayName, phone, userId, pictureUrl);
-        closeLoginModal();
-        if (typeof updateUserBadge === 'function') updateUserBadge();
-        if (typeof showToast === 'function') showToast('ยินดีต้อนรับ ' + displayName + ' 👋');
-      } else {
-        // ยังไม่ผูกเบอร์ → แสดง modal กรอกเบอร์
-        window._liffProfile = { userId, displayName, pictureUrl };
-        window._liffDb = db;
-        _showPhoneBindModal(displayName, pictureUrl);
+      // บันทึก customers โดยใช้ line_userId เป็น ID
+      try {
+        await setDoc(doc(db, 'customers', 'line_' + userId), {
+          name: displayName, lineUserId: userId,
+          pictureUrl: pictureUrl || null,
+          lastLogin: Date.now(), updatedAt: Date.now()
+        }, { merge: true });
+      } catch(e) {
+        console.warn('customers write error:', e.message);
       }
+
+      // save session → login สำเร็จเลย ไม่ต้องกรอกเบอร์
+      _saveLiffSession(displayName, userId, pictureUrl);
+      closeLoginModal();
+      if (typeof updateUserBadge === 'function') updateUserBadge();
+      if (typeof showToast === 'function') showToast('ยินดีต้อนรับ ' + displayName + ' 👋');
     } catch(e) {
       console.error('LIFF handleLiffReturn error:', e);
     }
@@ -511,82 +522,19 @@ async function submitLoginModal() {
     }
   };
 
-  // ─── Modal กรอกเบอร์ ────────────────────────────────────────────────
+  // ─── (ไม่ใช้แล้ว — ยกเลิก phone binding) ───────────────────────────
   function _showPhoneBindModal(displayName, pictureUrl) {
-    const modal = document.getElementById('login-modal');
-    if (!modal) return;
-
-    if (!document.getElementById('liff-phone-section')) {
-      const section = document.createElement('div');
-      section.id = 'liff-phone-section';
-      section.style.cssText = 'margin-top:14px;padding-top:14px;border-top:1.5px solid #EEE8E0;';
-      section.innerHTML =
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
-          (pictureUrl ? '<img src="' + pictureUrl + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">' : '') +
-          '<div style="font-size:13px;color:#555;">สวัสดี <strong>' + displayName + '</strong><br>' +
-          '<span style="font-size:11px;color:#888;">กรอกเบอร์เพื่อผูกบัญชี LINE</span></div>' +
-        '</div>' +
-        '<input type="tel" id="liff-phone-input" class="im-field" placeholder="0812345678" maxlength="10"' +
-          ' oninput="this.value=this.value.replace(/\D/g,\'\')" style="margin-bottom:8px;">' +
-        '<button onclick="submitLiffPhone()" class="im-submit-btn" style="background:#06C755;color:#fff;">' +
-          'ยืนยันเบอร์โทรศัพท์</button>';
-      const body = modal.querySelector('.im-modal-body');
-      if (body) body.appendChild(section);
-      else modal.appendChild(section);
-    }
-    modal.classList.add('open');
+    // deprecated: ใช้ LINE userId แทนเบอร์แล้ว
   }
-
-  // ─── กดยืนยันเบอร์ → เขียน Firestore ตรง ────────────────────────────
   window.submitLiffPhone = async function() {
-    const phone = document.getElementById('liff-phone-input')?.value.trim();
-    if (!phone || !/^0[6-9]\d{8}$/.test(phone)) {
-      if (typeof showToast === 'function') showToast('กรุณากรอกเบอร์ให้ถูกต้อง (06x-09x)');
-      return;
-    }
-    const profile = window._liffProfile;
-    const db = window._liffDb;
-    if (!profile || !db) return;
-
-    const btn = document.querySelector('#liff-phone-section .im-submit-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
-
-    try {
-      const { setDoc, doc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      const { userId, displayName, pictureUrl } = profile;
-
-      await setDoc(doc(db, 'lineUsers', userId), {
-        userId, displayName, phone,
-        pictureUrl: pictureUrl || null,
-        linkedAt: Date.now(), updatedAt: Date.now()
-      }, { merge: true });
-
-      await setDoc(doc(db, 'linePhoneMap', phone), {
-        userId, displayName, updatedAt: Date.now()
-      }, { merge: true });
-
-      await setDoc(doc(db, 'customers', 'phone_' + phone), {
-        phone, name: displayName, lineUserId: userId,
-        updatedAt: Date.now()
-      }, { merge: true });
-
-      _saveLiffSession(displayName, phone, userId, pictureUrl);
-      closeLoginModal();
-      if (typeof updateUserBadge === 'function') updateUserBadge();
-      if (typeof showToast === 'function') showToast('ผูก LINE สำเร็จ! ยินดีต้อนรับ ' + displayName + ' 🎉');
-    } catch(e) {
-      console.error('submitLiffPhone error:', e);
-      if (typeof showToast === 'function') showToast('บันทึกไม่สำเร็จ: ' + (e.message || 'ลองใหม่อีกครั้ง'));
-      if (btn) { btn.disabled = false; btn.textContent = 'ยืนยันเบอร์โทรศัพท์'; }
-    }
+    // deprecated
   };
 
-  function _saveLiffSession(name, phone, userId, pictureUrl) {
+  function _saveLiffSession(name, userId, pictureUrl) {
     sessionStorage.setItem('imkum_user', JSON.stringify({
-      role: 'customer', name, phone, lineUserId: userId,
+      role: 'customer', name, lineUserId: userId,
       photoURL: pictureUrl || null, loginAt: Date.now()
     }));
-    localStorage.setItem('imkum_phone', phone);
     localStorage.setItem('imkum_name', name);
     localStorage.setItem('imkum_userId', userId);
     localStorage.setItem('imkum_line_linked', 'true');

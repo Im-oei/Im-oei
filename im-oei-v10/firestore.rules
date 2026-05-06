@@ -18,21 +18,17 @@ service cloud.firestore {
     }
 
     // ─── ORDERS ───────────────────────────────────────────────────────────────
-    // 🔴 FIX: อ่านได้เฉพาะ admin หรือ owner (ต้อง auth แล้ว uid ตรงกับ userId)
-    //         ก่อนหน้า: || isValidPhone(resource.data.customerPhone) = ใครก็อ่านได้
     match /orders/{orderId} {
-      allow create: if request.resource.data.keys().hasAll(['items','total','customerPhone','status','createdAt'])
+      // รองรับทั้ง customerPhone (เดิม) และ lineUserId / guestId (ใหม่)
+      allow create: if request.resource.data.keys().hasAny(['customerPhone','lineUserId','guestId'])
+        && request.resource.data.keys().hasAll(['items','total','status','createdAt'])
         && request.resource.data.status == 'pending'
         && request.resource.data.total is number
         && request.resource.data.total > 0
         && request.resource.data.items is list
-        && request.resource.data.items.size() > 0
-        && isValidPhone(request.resource.data.customerPhone);
+        && request.resource.data.items.size() > 0;
 
-      // ลูกค้า query ด้วย where('customerPhone','==',phone) — ไม่มี Firebase Auth
-      // อนุญาต read เฉพาะ admin หรือ query แบบ unauthenticated (Firestore rules ไม่ filter query)
       allow read: if isAdmin() || true;
-
       allow update, delete: if isAdmin();
     }
 
@@ -61,13 +57,11 @@ service cloud.firestore {
     }
 
     // ─── PUSH QUEUE ───────────────────────────────────────────────────────────
-    // 🔴 FIX: ปิด public create — ผ่าน Cloud Function (enqueuePushNotification)
     match /pushQueue/{docId} {
       allow read, write: if isAdmin();
     }
 
     // ─── LINE QUEUE ───────────────────────────────────────────────────────────
-    // 🔴 FIX: ปิด public write ทั้งหมด — ก่อนหน้า ใครก็ยิง LINE ได้
     match /lineQueue/{docId} {
       allow read: if isAdmin();
       allow write: if isAdmin();
@@ -85,19 +79,13 @@ service cloud.firestore {
     }
 
     // ─── CUSTOMERS ────────────────────────────────────────────────────────────
+    // รองรับ 3 รูปแบบ ID: "phone_XXXXXXXXXX" | "line_XXXXXXXXXX" | "guest_XXXXXXXXXX"
     match /customers/{customerId} {
       allow read: if isAdmin();
-      // customerId = "phone_XXXXXXXXXX"
-      // เขียนได้เฉพาะคนที่ login แล้ว (Anonymous หรือ Firebase Auth)
-      // และต้องเป็น phone ของตัวเอง (validate ผ่าน data.phone)
-      allow create: if isLoggedIn()
-        && request.resource.data.keys().hasAll(['phone','createdAt'])
-        && isValidPhone(request.resource.data.phone)
-        && customerId == ('phone_' + request.resource.data.phone);
+      allow create: if true; // เปิดให้ทุกคน create ได้ (guest, LINE, phone)
       allow update: if isAdmin()
-        || (isLoggedIn()
-            && isValidPhone(request.resource.data.phone)
-            && customerId == ('phone_' + request.resource.data.phone));
+        || (customerId == ('line_' + request.resource.data.lineUserId))
+        || (customerId.matches('^guest_.*'));
       allow delete: if isAdmin();
     }
 
@@ -108,25 +96,17 @@ service cloud.firestore {
     }
 
     // ─── LINE USERS ───────────────────────────────────────────────────────────
-    // 🔴 FIX: ปิด public read (|| true) และปิด public write
-    //         ก่อนหน้า: ชื่อ/phone ของลูกค้าทุกคน leak ได้
     match /lineUsers/{userId} {
-      // อ่านได้: admin หรือ LIFF ที่มี auth (anonymous signIn)
-      allow read: if isAdmin()
-        || isLoggedIn();
-      // เขียนได้: LIFF ที่ login แล้วเขียน doc ของตัวเอง (userId ต้องตรงกับ doc key)
+      allow read: if isAdmin() || isLoggedIn();
+      // ไม่ต้องการ phone แล้ว — เขียนได้เฉพาะ doc ของตัวเอง (userId == doc key)
       allow write: if isLoggedIn()
-        && request.resource.data.userId == userId
-        && request.resource.data.phone is string
-        && request.resource.data.phone.matches('^0[0-9]{9}$');
+        && request.resource.data.userId == userId;
     }
 
-    // ─── LINE PHONE MAP ───────────────────────────────────────────────────────
-    // 🔴 FIX: ปิด public write — ก่อนหน้า ใครก็ hijack phone→LINE mapping ได้
+    // ─── LINE PHONE MAP (legacy — ยังคงไว้เผื่อข้อมูลเก่า) ────────────────
     match /linePhoneMap/{phone} {
       allow read: if isAdmin();
-      // LIFF เขียน mapping phone→userId ได้ถ้า login แล้ว
-      allow write: if isLoggedIn();
+      allow write: if isAdmin();
     }
 
     // ─── ADMINS ───────────────────────────────────────────────────────────────
@@ -144,35 +124,34 @@ service cloud.firestore {
     // ─── REWARD REDEMPTIONS ───────────────────────────────────────────────────
     match /rewardRedemptions/{docId} {
       allow read: if isAdmin();
-      allow create: if request.resource.data.keys().hasAll(['phone','rewardId','createdAt'])
-        && isValidPhone(request.resource.data.phone);
+      // รองรับ lineUserId แทน phone
+      allow create: if (request.resource.data.keys().hasAll(['phone','rewardId','createdAt'])
+          && isValidPhone(request.resource.data.phone))
+        || (request.resource.data.keys().hasAll(['lineUserId','rewardId','createdAt'])
+          && request.resource.data.lineUserId is string);
       allow update: if isAdmin();
       allow delete: if false;
     }
 
     // ─── STAMPS ───────────────────────────────────────────────────────────────
-    // 🔴 FIX: Anonymous Auth ไม่มี phone_number claim
-    //    → ใช้ uid ที่เก็บไว้ใน customers/phone_XXXXXXXXXX แทน
-    //    → อ่านได้เฉพาะคนที่ uid ตรงกับ customers doc ของ phone นั้น
-    match /stamps/{phone} {
+    // รองรับทั้ง phone (เดิม) และ lineUserId (ใหม่)
+    match /stamps/{customerId} {
       allow read: if isAdmin()
         || (isLoggedIn()
-            && exists(/databases/$(database)/documents/customers/$('phone_' + phone))
-            && get(/databases/$(database)/documents/customers/$('phone_' + phone)).data.uid == request.auth.uid);
-      // ห้าม client เขียนเด็ดขาด — ให้ onOrderCreate Cloud Function เขียน
-      allow create, update, delete: if false;
+            && (exists(/databases/$(database)/documents/customers/$('line_' + customerId))
+                || exists(/databases/$(database)/documents/customers/$('phone_' + customerId))));
+      allow create, update, delete: if false; // Cloud Function only
     }
 
     // ─── PUSH SUBSCRIPTIONS ───────────────────────────────────────────────────
-    match /pushSubscriptions/{phone} {
+    match /pushSubscriptions/{id} {
       allow read: if isAdmin();
       allow create, update: if isAdmin()
-        || (isValidPhone(phone)
-            && request.resource.data.keys().hasAll(['phone','endpoint','createdAt']));
+        || request.resource.data.keys().hasAll(['endpoint','createdAt']);
       allow delete: if isAdmin();
     }
 
-    // ─── INTERNAL (Cloud Functions only via Admin SDK) ─────────────────────
+    // ─── INTERNAL ─────────────────────────────────────────────────────────────
     match /rateLimits/{docId} {
       allow read, write: if false;
     }

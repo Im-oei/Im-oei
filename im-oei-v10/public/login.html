@@ -49,7 +49,7 @@
       <div class="fallback-toggle-left">
         <div class="fallback-toggle-icon">📝</div>
         <div>
-          <span class="fallback-toggle-text-main">กรอกชื่อ + เบอร์โทร</span>
+          <span class="fallback-toggle-text-main">เข้าแบบไม่ต้อง LINE</span>
           <span class="fallback-toggle-text-sub">สำหรับสั่งแบบไม่ต้อง login LINE</span>
         </div>
       </div>
@@ -62,15 +62,10 @@
       <div class="collapse-inner">
         <div class="form-group">
           <label class="form-label">👤 ชื่อของคุณ</label>
-          <input type="text" class="form-input" id="cust-name-1" placeholder="เช่น สมชาย, นิสา" maxlength="30">
-        </div>
-        <div class="form-group">
-          <label class="form-label">📱 เบอร์โทรศัพท์</label>
-          <input type="tel" class="form-input" id="cust-phone-1" placeholder="0812345678" maxlength="10"
-            oninput="this.value=this.value.replace(/\D/g,'')"
+          <input type="text" class="form-input" id="cust-name-1" placeholder="เช่น สมชาย, นิสา" maxlength="30"
             onkeydown="if(event.key==='Enter')customerLogin()">
-          <div class="phone-hint">ใช้ติดตามออเดอร์ • ไม่มีการส่ง SMS</div>
         </div>
+        <p style="font-size:11.5px;color:#AAA;margin:2px 0 12px;text-align:center;">ไม่ต้องใส่เบอร์ — แต่จะไม่ได้แต้มสะสม</p>
         <button class="guest-btn" id="guest-btn" onclick="customerLogin()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           เริ่มสั่งอาหาร
@@ -116,25 +111,15 @@
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/login.module.js"></script>
 <script>
-  function toggleGuest() {
-    const form = document.getElementById('guest-form');
-    const chevron = document.getElementById('guest-chevron');
-    const open = form.classList.toggle('open');
-    chevron.classList.toggle('open', open);
-  }
-  function toggleAdmin() {
-    document.getElementById('admin-form').classList.toggle('open');
-  }
-  function lineLogin() {
-    // TODO: redirect ไป LINE LIFF / OAuth URL จริง
-    // window.location.href = 'https://access.line.me/oauth2/v2.1/authorize?...';
-    const t = document.getElementById('toast');
-    t.textContent = '🟢 กำลังเชื่อมต่อ LINE...';
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
-  }
+// Global stubs — ทำงานก่อน module โหลดเสร็จ ป้องกัน "not defined"
+function lineLogin(){ window._mod_lineLogin && window._mod_lineLogin(); }
+function toggleGuest(){ var f=document.getElementById('guest-form'),c=document.getElementById('guest-chevron'); if(!f)return; var o=f.classList.toggle('open'); c&&c.classList.toggle('open',o); }
+function toggleAdmin(){ var f=document.getElementById('admin-form'); if(f) f.classList.toggle('open'); }
+function toggleAdminPwd(){ window._mod_toggleAdminPwd && window._mod_toggleAdminPwd(); }
+function adminLogin(){ window._mod_adminLogin && window._mod_adminLogin(); }
+function customerLogin(){ window._mod_customerLogin && window._mod_customerLogin(); }
 </script>
+<script type="module" src="js/login.module.js"></script>
 </body>
 </html>
