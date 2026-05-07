@@ -91,8 +91,7 @@
   /* MAIN */
   .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .topbar { height: var(--header-h); flex-shrink: 0; }
-  .tab-bar { flex-shrink: 0; }
-
+  
   /* TOPBAR */
   .topbar {
     background: #fff; border-bottom: 1px solid var(--border);
@@ -183,7 +182,7 @@
 
   /* ===== MOBILE: ≤767px ===== */
   @media (max-width: 767px) {
-    body { overflow: auto; flex-direction: column; height: auto; }
+    body { overflow: auto; flex-direction: column; height: auto; min-height: 100vh; }
 
     /* Sidebar becomes top drawer */
     .sidebar {
@@ -198,6 +197,7 @@
 
     /* Main takes full width */
     .main { width: 100%; height: auto; min-height: 100vh; overflow: visible; }
+    .content { flex: 1; min-height: calc(100vh - 60px - 48px - 58px); }
 
     /* Topbar */
     .topbar { padding: 0 14px; gap: 8px; }
@@ -205,7 +205,7 @@
     .search-box { max-width: 100%; flex: 1; }
 
     /* Content */
-    .content { padding: 14px; overflow: visible; }
+    .content { padding: 14px; padding-bottom: 70px; overflow: visible; }
 
     /* Stat cards — 2 columns on mobile */
     .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -236,7 +236,7 @@
   @media (max-width: 400px) {
     .stat-cards { grid-template-columns: 1fr; }
     .stat-card.primary { grid-column: unset; }
-    .content { padding: 10px; }
+    .content { padding: 10px; padding-bottom: 70px; }
   }
 
   .card {
@@ -540,32 +540,32 @@
     </div>
   </div>
   <nav class="sidebar-nav">
-    <a class="nav-item active" href="#" onclick="switchPanel('dashboard',this);return false">
+    <a class="nav-item active" href="#" onclick="switchTab('dashboard',this);return false">
       <span class="icon">🏠</span> แดชบอร์ด
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('orders',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('orders',this);return false">
       <span class="icon">📋</span> ออเดอร์
       <span class="badge-count" id="nav-orders-badge">0</span>
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('menu',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('menu',this);return false">
       <span class="icon">🍽️</span> เมนู
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('banners',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('banners',this);return false">
       <span class="icon">📢</span> แบนเนอร์
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('customers',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('customers',this);return false">
       <span class="icon">👥</span> ลูกค้า
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('loyalty',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('loyalty',this);return false">
       <span class="icon">🎁</span> แต้ม &amp; Loyalty
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('stats',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('stats',this);return false">
       <span class="icon">📊</span> สถิติ &amp; รายงาน
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('store',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('store',this);return false">
       <span class="icon">🏪</span> จัดการร้านค้า
     </a>
-    <a class="nav-item" href="#" onclick="switchPanel('settings',this);return false">
+    <a class="nav-item" href="#" onclick="switchTab('settings',this);return false">
       <span class="icon">⚙️</span> ตั้งค่า
     </a>
   </nav>
@@ -588,26 +588,26 @@
 
 <!-- MOBILE BOTTOM TAB BAR -->
 <div class="bottom-tab-bar" id="bottom-tab-bar">
-  <button class="bottom-tab-item active" id="btab-dashboard" onclick="switchPanelMobile('dashboard',this)">
+  <button class="bottom-tab-item active" id="btab-dashboard" onclick="switchTab('dashboard',this)">
     <span class="bt-icon">🏠</span>หน้าหลัก
   </button>
-  <button class="bottom-tab-item" id="btab-orders" onclick="switchPanelMobile('orders',this)">
+  <button class="bottom-tab-item" id="btab-orders" onclick="switchTab('orders',this)">
     <span class="bt-icon">📋</span>ออเดอร์
     <span class="bottom-tab-badge" id="btab-orders-badge"></span>
   </button>
-  <button class="bottom-tab-item" id="btab-menu" onclick="switchPanelMobile('menu',this)">
+  <button class="bottom-tab-item" id="btab-menu" onclick="switchTab('menu',this)">
     <span class="bt-icon">🍽️</span>เมนู
   </button>
-  <button class="bottom-tab-item" id="btab-customers" onclick="switchPanelMobile('customers',this)">
+  <button class="bottom-tab-item" id="btab-customers" onclick="switchTab('customers',this)">
     <span class="bt-icon">👥</span>ลูกค้า
   </button>
-  <button class="bottom-tab-item" id="btab-loyalty" onclick="switchPanelMobile('loyalty',this)">
+  <button class="bottom-tab-item" id="btab-loyalty" onclick="switchTab('loyalty',this)">
     <span class="bt-icon">🎁</span>แต้ม
   </button>
-  <button class="bottom-tab-item" id="btab-stats" onclick="switchPanelMobile('stats',this)">
+  <button class="bottom-tab-item" id="btab-stats" onclick="switchTab('stats',this)">
     <span class="bt-icon">📊</span>สถิติ
   </button>
-  <button class="bottom-tab-item" id="btab-settings" onclick="switchPanelMobile('settings',this)">
+  <button class="bottom-tab-item" id="btab-settings" onclick="switchTab('settings',this)">
     <span class="bt-icon">⚙️</span>ตั้งค่า
   </button>
 </div>
@@ -634,18 +634,6 @@
       </div>
     </div>
   </header>
-
-  <!-- HORIZONTAL TAB BAR -->
-  <div class="tab-bar" id="main-tab-bar">
-    <button class="tab-btn active" onclick="switchTab('dashboard',this)">🏠 แดชบอร์ด</button>
-    <button class="tab-btn" onclick="switchTab('orders',this)">📋 ออเดอร์<span id="tab-orders-badge" style="display:none;margin-left:4px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 6px">0</span></button>
-    <button class="tab-btn" onclick="switchTab('menu',this)">🍽️ เมนู</button>
-    <button class="tab-btn" onclick="switchTab('banners',this)">📢 แบนเนอร์</button>
-    <button class="tab-btn" onclick="switchTab('loyalty',this)">🎁 แต้ม</button>
-    <button class="tab-btn" onclick="switchTab('customers',this)">👥 ลูกค้า</button>
-    <button class="tab-btn" onclick="switchTab('stats',this)">📊 สถิติ</button>
-    <button class="tab-btn" onclick="switchTab('settings',this)">⚙️ ตั้งค่า</button>
-  </div>
 
 
   <!-- CONTENT -->

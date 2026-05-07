@@ -922,9 +922,9 @@ async function loadSettings() {
   const d = await Promise.race([getDoc(doc(db, 'settings', 'store')), timeout]);
   if (d.exists()) {
     const s = d.data();
-    if (s.orderCutoff) const el_cutoff = document.getElementById('set-cutoff'); if (el_cutoff) el_cutoff.value = s.orderCutoff;
-    if (s.pickupStart) const el_ps = document.getElementById('set-pickup-start'); if (el_ps) el_ps.value = s.pickupStart;
-    if (s.pickupEnd) const el_pe = document.getElementById('set-pickup-end'); if (el_pe) el_pe.value = s.pickupEnd;
+    if (s.orderCutoff) { const el_cutoff = document.getElementById('set-cutoff'); if (el_cutoff) el_cutoff.value = s.orderCutoff; }
+    if (s.pickupStart) { const el_ps = document.getElementById('set-pickup-start'); if (el_ps) el_ps.value = s.pickupStart; }
+    if (s.pickupEnd) { const el_pe = document.getElementById('set-pickup-end'); if (el_pe) el_pe.value = s.pickupEnd; }
     if (s.bannerUrl) {
       const el_bu = document.getElementById('set-banner-url'); if (el_bu) el_bu.value = s.bannerUrl;
       const img = document.getElementById('banner-preview-img');

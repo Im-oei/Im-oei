@@ -14,8 +14,7 @@ const firebaseConfig = {
 function switchTab(name, btn) {
   // Hide all panels
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  // Deactivate all tab-btn (horizontal tab bar)
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  // (tab bar แนวนอนถูกลบออกแล้ว)
   // Deactivate sidebar nav-items
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   // Deactivate bottom tab bar
@@ -25,13 +24,14 @@ function switchTab(name, btn) {
   const panel = document.getElementById('panel-' + name);
   if (panel) panel.classList.add('active');
 
-  // Activate clicked tab-btn
+  // activate caller element
   if (btn) btn.classList.add('active');
 
   // Sync sidebar nav-item
   document.querySelectorAll('.nav-item').forEach(n => {
     const oc = n.getAttribute('onclick') || '';
-    if (oc.includes("'" + name + "'")) n.classList.add('active');
+    const isMatch = oc.includes("'" + name + "'");
+    n.classList.toggle('active', isMatch);
   });
 
   // Sync bottom tab
