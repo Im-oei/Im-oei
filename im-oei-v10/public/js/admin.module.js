@@ -922,11 +922,11 @@ async function loadSettings() {
   const d = await Promise.race([getDoc(doc(db, 'settings', 'store')), timeout]);
   if (d.exists()) {
     const s = d.data();
-    if (s.orderCutoff) document.getElementById('set-cutoff').value = s.orderCutoff;
-    if (s.pickupStart) document.getElementById('set-pickup-start').value = s.pickupStart;
-    if (s.pickupEnd) document.getElementById('set-pickup-end').value = s.pickupEnd;
+    if (s.orderCutoff) const el_cutoff = document.getElementById('set-cutoff'); if (el_cutoff) el_cutoff.value = s.orderCutoff;
+    if (s.pickupStart) const el_ps = document.getElementById('set-pickup-start'); if (el_ps) el_ps.value = s.pickupStart;
+    if (s.pickupEnd) const el_pe = document.getElementById('set-pickup-end'); if (el_pe) el_pe.value = s.pickupEnd;
     if (s.bannerUrl) {
-      document.getElementById('set-banner-url').value = s.bannerUrl;
+      const el_bu = document.getElementById('set-banner-url'); if (el_bu) el_bu.value = s.bannerUrl;
       const img = document.getElementById('banner-preview-img');
       img.src = s.bannerUrl; img.style.display = 'block';
     }
@@ -946,7 +946,7 @@ async function loadSettings() {
       if (inp) inp.value = s.siteTitle;
     }
     if (s.heroLogoUrl) {
-      document.getElementById('set-hero-logo-url').value = s.heroLogoUrl;
+      const el_hl = document.getElementById('set-hero-logo-url'); if (el_hl) el_hl.value = s.heroLogoUrl;
       const logoImg = document.getElementById('hero-logo-preview-img');
       logoImg.src = s.heroLogoUrl; logoImg.style.display = 'block';
       window._storeLogo = s.heroLogoUrl;
@@ -959,8 +959,10 @@ async function loadSettings() {
     }
     if (s.featuredIds) currentFeaturedIds = s.featuredIds;
     storeIsOpen = s.isOpen !== false;
-    document.getElementById('store-open-toggle').checked = storeIsOpen;
-    document.getElementById('store-status-label').textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
+    const togEl = document.getElementById('store-open-toggle');
+    const lblEl = document.getElementById('store-status-label');
+    if (togEl) togEl.checked = storeIsOpen;
+    if (lblEl) lblEl.textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
   }
   } catch(e) {
     console.warn('loadSettings error (ใช้ค่า default):', e.message);
@@ -968,6 +970,7 @@ async function loadSettings() {
     storeIsOpen = savedOpen !== 'false';
     const tog = document.getElementById('store-open-toggle');
     const lbl = document.getElementById('store-status-label');
+    if (!tog || !lbl) return;
     if(tog) tog.checked = storeIsOpen;
     if(lbl) lbl.textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
   }

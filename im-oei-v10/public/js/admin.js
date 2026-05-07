@@ -39,7 +39,10 @@ function switchTab(name, btn) {
   if (btab) btab.classList.add('active');
 
   // Trigger load/render ตาม panel ที่สลับไป
-  if (name === 'stats'     && typeof renderStats     === 'function') renderStats();
+  if (name === 'stats') {
+    if (typeof window._initCharts === 'function') window._initCharts();
+    if (typeof renderStats === 'function') renderStats();
+  }
   if (name === 'menu'      && typeof loadMenu        === 'function') loadMenu();
   if (name === 'banners'   && typeof loadBanners     === 'function') loadBanners();
   if (name === 'customers' && typeof loadCustomers   === 'function') loadCustomers();
