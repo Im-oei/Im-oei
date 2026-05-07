@@ -1,43 +1,57 @@
-const db = window._db;
+const firebaseConfig = {
+  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
+  authDomain: "im-oei.firebaseapp.com",
+  projectId: "im-oei",
+  storageBucket: "im-oei.firebasestorage.app",
+  messagingSenderId: "392812205535",
+  appId: "1:392812205535:web:65f6ce114feb3ce035a06a",
+  measurementId: "G-0LGSELSP0D"
+};
 
-if (!db) {
-  console.error("❌ Firebase not ready");
-}
-
-// 🔥 ดึง orders จริงจาก Firestore
-async function loadOrders() {
-  try {
-    const snapshot = await db.collection("orders").get();
-
-    const container = document.getElementById("orders");
-    container.innerHTML = "";
-
-    snapshot.forEach(doc => {
-      const o = doc.data();
-
-      container.innerHTML += `
-        <div style="border:1px solid #ccc;margin:10px;padding:10px">
-          <b>${o.customerName || 'ลูกค้า'}</b><br>
-          ${o.status}<br>
-        </div>
-      `;
-    });
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-loadOrders();
 // admin.html — plain scripts (UI, tabs, forms)
 
 // ====== TAB SWITCHING ======
 function switchTab(name, btn) {
+  // Hide all panels
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  // Deactivate all tab-btn (horizontal tab bar)
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  // Deactivate sidebar nav-items
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  // Deactivate bottom tab bar
+  document.querySelectorAll('.bottom-tab-item').forEach(b => b.classList.remove('active'));
+
+  // Show target panel
   const panel = document.getElementById('panel-' + name);
   if (panel) panel.classList.add('active');
+
+  // Activate clicked tab-btn
   if (btn) btn.classList.add('active');
+
+  // Sync sidebar nav-item
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const oc = n.getAttribute('onclick') || '';
+    if (oc.includes("'" + name + "'")) n.classList.add('active');
+  });
+
+  // Sync bottom tab
+  const btab = document.getElementById('btab-' + name);
+  if (btab) btab.classList.add('active');
+
+  // Trigger load/render ตาม panel ที่สลับไป
+  if (name === 'stats'     && typeof renderStats     === 'function') renderStats();
+  if (name === 'menu'      && typeof loadMenu        === 'function') loadMenu();
+  if (name === 'banners'   && typeof loadBanners     === 'function') loadBanners();
+  if (name === 'customers' && typeof loadCustomers   === 'function') loadCustomers();
+  if (name === 'loyalty'   && typeof loadStampConfig === 'function') { loadStampConfig(); if (typeof loadRewards === 'function') loadRewards(); }
+  if (name === 'orders'    && typeof listenOrders    === 'function') listenOrders();
+  if (name === 'settings'  && typeof loadSettings    === 'function') loadSettings();
+
+  // Close sidebar on mobile
+  if (window.innerWidth <= 767 && typeof closeSidebar === 'function') closeSidebar();
+
+  // Scroll to top
+  window.scrollTo(0, 0);
 }
 
 // ====== LOGOUT ======

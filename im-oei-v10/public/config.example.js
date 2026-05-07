@@ -1,26 +1,23 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei",
-  storageBucket: "im-oei.firebasestorage.app",
-  messagingSenderId: "392812205535",
-  appId: "1:392812205535:web:65f6ce114feb3ce035a06a",
-  measurementId: "G-0LGSELSP0D"
-};
-
-// ===================================================
-//  config.example.js — template สำหรับ GitHub
-//  คัดลอกไฟล์นี้ → ตั้งชื่อ config.js → ใส่ค่าจริง
-// ===================================================
+// ──────────────────────────────────────────────────────────────────────────────
+// config.example.js — template สำหรับ local dev
+// คัดลอกไฟล์นี้เป็น config.js แล้วใส่ค่าจริง
+// ห้าม commit config.js (อยู่ใน .gitignore แล้ว)
+// ──────────────────────────────────────────────────────────────────────────────
 
 export const FIREBASE_CONFIG = {
-  apiKey:      "YOUR_FIREBASE_API_KEY",
-  authDomain:  "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:   "YOUR_PROJECT_ID"
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "im-oei.firebaseapp.com",
+  projectId:         "im-oei",
+  storageBucket:     "im-oei.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
 
-export const LINE_CHANNEL_TOKEN = "YOUR_LINE_CHANNEL_ACCESS_TOKEN";
-
+// LINE Developers → LIFF → LIFF ID
 export const LIFF_ID = "YOUR_LIFF_ID";
 
+// Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
 export const VAPID_PUBLIC_KEY = "YOUR_VAPID_PUBLIC_KEY";
+
+// หมายเหตุ: LINE_CHANNEL_TOKEN ถูกย้ายไปอยู่ใน Firebase Functions config แล้ว
+// firebase functions:config:set line.token="YOUR_TOKEN" line.liff_id="YOUR_LIFF_ID"

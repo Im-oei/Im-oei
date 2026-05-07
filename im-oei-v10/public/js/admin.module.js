@@ -83,6 +83,8 @@ window._filterOrdersByStatus = function(status) {
 };
 let storeIsOpen = true;
 let unsubOrders = null;
+let _unsubLineQueue = null;
+let currentFeaturedIds = [];
 
 // ====== INIT ======
 if (checkAuth()) {
@@ -152,7 +154,6 @@ function listenOrders() {
 }
 
 // ====== REALTIME LINE QUEUE STATUS ======
-let _unsubLineQueue = null;
 function listenLineQueue() {
   if (_unsubLineQueue) _unsubLineQueue();
   _unsubLineQueue = onSnapshot(collection(db, 'lineQueue'), snap => {
@@ -209,10 +210,217 @@ function updateSummary() {
     const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
     return d >= today;
   });
-  document.getElementById('sum-total-orders').textContent = todayOrders.length;
-  document.getElementById('sum-revenue').textContent = todayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0) + '฿';
-  document.getElementById('sum-pending').textContent = todayOrders.filter(o=>o.status==='pending'||o.status==='preparing').length;
-  document.getElementById('sum-done').textContent = todayOrders.filter(o=>o.status==='done').length;
+  const totalOrdersEl = document.getElementById('sum-total-orders');
+  const revenueEl = document.getElementById('sum-revenue');
+  const pendingEl = document.getElementById('sum-pending');
+  const doneEl = document.getElementById('sum-done');
+  const customersEl = document.getElementById('sum-customers');
+
+  if (totalOrdersEl) totalOrdersEl.textContent = todayOrders.length;
+  const revenue = todayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0);
+  if (revenueEl) revenueEl.textContent = revenue.toLocaleString('th-TH') + '฿';
+  const pendingCount = todayOrders.filter(o=>o.status==='pending'||o.status==='preparing').length;
+  if (pendingEl) pendingEl.textContent = pendingCount;
+  // sync bottom tab badge
+  const btabBadge = document.getElementById('btab-orders-badge');
+  if (btabBadge) {
+    btabBadge.textContent = pendingCount || '';
+    btabBadge.style.display = pendingCount > 0 ? 'block' : 'none';
+  }
+  const navBadge = document.getElementById('nav-orders-badge');
+  if (navBadge) navBadge.textContent = pendingCount;
+  // sync horizontal tab bar badge
+  const tabOrdersBadge = document.getElementById('tab-orders-badge');
+  if (tabOrdersBadge) {
+    tabOrdersBadge.textContent = pendingCount || '';
+    tabOrdersBadge.style.display = pendingCount > 0 ? 'inline' : 'none';
+  }
+  if (doneEl) doneEl.textContent = todayOrders.filter(o=>o.status==='done').length;
+  if (customersEl) customersEl.textContent = allOrders.map(o=>o.userId||o.lineUserId).filter((v,i,a)=>v&&a.indexOf(v)===i).length;
+
+  // --- Recent Orders (dashboard card) ---
+  const recentEl = document.getElementById('dashboard-recent-orders');
+  if (recentEl) {
+    const recent = [...allOrders].sort((a,b)=>{
+      const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
+      const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||0);
+      return db - da;
+    }).slice(0,4);
+    if (!recent.length) {
+      recentEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">ยังไม่มีออเดอร์</div>`;
+    } else {
+      const statusLabel = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'เสร็จแล้ว', cancelled:'ยกเลิก' };
+      const statusBadgeClass = { pending:'inprogress', preparing:'inprogress', ready:'inprogress', done:'done', cancelled:'cancel' };
+      const channelIcon = { delivery:'🛵', pickup:'🏠', checkmee:'📱' };
+      recentEl.innerHTML = recent.map(o => {
+        const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt||0);
+        const dateStr = d.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+        const itemCount = (o.items||[]).reduce((s,i)=>s+(i.qty||i.quantity||1),0);
+        const shortId = (o.id||'').toUpperCase().slice(0,8);
+        const icon = channelIcon[o.channel||o.orderType] || '🏠';
+        const badge = statusLabel[o.status] || o.status;
+        const cls = statusBadgeClass[o.status] || 'inprogress';
+        return `<div class="order-item">
+          <div class="channel-icon">${icon}</div>
+          <div class="order-id">#${shortId}<div class="sub">${dateStr} • ${itemCount} รายการ</div></div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;">${(o.total||0).toLocaleString('th-TH')} ฿</div>
+            <div class="status-badge ${cls}">${badge}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // --- Notifications (dynamic from live data) ---
+  const notifEl = document.getElementById('dashboard-notifications');
+  if (notifEl) {
+    const notifs = [];
+    const stuckOrders = todayOrders.filter(o=>{
+      if (o.status!=='preparing'&&o.status!=='pending') return false;
+      const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt||0);
+      return (Date.now()-d.getTime()) > 30*60*1000;
+    });
+    if (stuckOrders.length) notifs.push({ dot:'red', icon:'🔔', title:'ออเดอร์ค้างนาน', sub:`มี ${stuckOrders.length} ออเดอร์ที่ค้างเกิน 30 นาที`, time:'ตอนนี้' });
+    if (todayOrders.length) notifs.push({ dot:'green', icon:'📈', title:'ยอดขายวันนี้', sub:`รวม ${revenue.toLocaleString('th-TH')} บาท จาก ${todayOrders.length} ออเดอร์`, time:'อัปเดตล่าสุด' });
+    const newToday = todayOrders.map(o=>o.userId||o.lineUserId).filter((v,i,a)=>v&&a.indexOf(v)===i).length;
+    if (newToday) notifs.push({ dot:'blue', icon:'👤', title:'ลูกค้าวันนี้', sub:`มีลูกค้า ${newToday} คนสั่งออเดอร์วันนี้`, time:'วันนี้' });
+    if (!notifs.length) notifs.push({ dot:'green', icon:'✅', title:'ทุกอย่างเรียบร้อย', sub:'ไม่มีการแจ้งเตือนใหม่', time:'' });
+    notifEl.innerHTML = notifs.map(n=>`<div class="notif-item">
+      <div class="notif-dot ${n.dot}">${n.icon}</div>
+      <div class="notif-body"><div class="ntitle">${n.title}</div><div class="nsub">${n.sub}</div></div>
+      <div class="notif-time">${n.time}</div>
+    </div>`).join('');
+  }
+
+  // --- Donut Chart (channel breakdown) ---
+  const donutTotalEl = document.getElementById('donut-total-num');
+  const donutListEl = document.getElementById('donut-channel-list');
+  if (donutTotalEl) donutTotalEl.textContent = todayOrders.length;
+  const channelMap = { delivery:'เดลิเวอรี่', pickup:'รับที่ร้าน', checkmee:'เช็คเมตี' };
+  const channelColors = { pickup:'#f97316', delivery:'#10b981', checkmee:'#f59e0b' };
+  const channelKeys = ['pickup','delivery','checkmee'];
+  const channelCounts = channelKeys.map(k=>todayOrders.filter(o=>(o.channel||o.orderType)===k).length);
+  const total = channelCounts.reduce((a,b)=>a+b,0)||1;
+  if (window.donutChart) {
+    window.donutChart.data.datasets[0].data = channelCounts;
+    window.donutChart.update();
+  }
+  if (donutListEl) {
+    donutListEl.innerHTML = channelKeys.map((k,i)=>`<div class="channel-row">
+      <div class="channel-color" style="background:${channelColors[k]}"></div>
+      <div class="channel-name">${channelMap[k]}</div>
+      <div class="channel-pct">${Math.round(channelCounts[i]/total*100)}%</div>
+    </div>`).join('');
+  }
+
+  // --- Sales Line Chart (7 days) ---
+  if (window.salesChart) {
+    const days = [];
+    const revenuePerDay = [];
+    const ordersPerDay = [];
+    for (let i=6;i>=0;i--) {
+      const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i);
+      const next = new Date(d); next.setDate(next.getDate()+1);
+      days.push(d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+      const dayOrders = allOrders.filter(o=>{
+        const od = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt||0);
+        return od>=d && od<next;
+      });
+      revenuePerDay.push(dayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0));
+      ordersPerDay.push(dayOrders.length);
+    }
+    window.salesChart.data.labels = days;
+    window.salesChart.data.datasets[0].data = revenuePerDay;
+    window.salesChart.data.datasets[1].data = ordersPerDay;
+    window.salesChart.update();
+  }
+
+  // --- New Customers (7 days) ---
+  const newCustCountEl = document.getElementById('new-customers-count');
+  const newCustChangeEl = document.getElementById('new-customers-change');
+  const newCustAvatarEl = document.getElementById('new-customers-avatars');
+  const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate()-7); sevenDaysAgo.setHours(0,0,0,0);
+  const fourteenDaysAgo = new Date(); fourteenDaysAgo.setDate(fourteenDaysAgo.getDate()-14); fourteenDaysAgo.setHours(0,0,0,0);
+  const week1Orders = allOrders.filter(o=>{ const d=o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0); return d>=sevenDaysAgo; });
+  const week2Orders = allOrders.filter(o=>{ const d=o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0); return d>=fourteenDaysAgo && d<sevenDaysAgo; });
+  const uniqWeek1 = [...new Set(week1Orders.map(o=>o.userId||o.lineUserId).filter(Boolean))];
+  const uniqWeek2 = [...new Set(week2Orders.map(o=>o.userId||o.lineUserId).filter(Boolean))];
+  const newCustCount = uniqWeek1.length;
+  if (newCustCountEl) newCustCountEl.textContent = '+' + newCustCount + ' คน';
+  if (newCustChangeEl) {
+    if (uniqWeek2.length && newCustCount) {
+      const pct = Math.round((newCustCount-uniqWeek2.length)/Math.max(uniqWeek2.length,1)*100);
+      newCustChangeEl.textContent = (pct>=0?'↑ ':'↓ ') + Math.abs(pct) + '% จากสัปดาห์ก่อน';
+      newCustChangeEl.style.color = pct>=0 ? 'var(--green)' : 'var(--red,#ef4444)';
+    } else {
+      newCustChangeEl.textContent = 'ข้อมูลไม่เพียงพอ';
+      newCustChangeEl.style.color = 'var(--text-sub)';
+    }
+  }
+  if (newCustAvatarEl) {
+    const avColors = ['linear-gradient(135deg,#f97316,#fb923c)','linear-gradient(135deg,#3b82f6,#60a5fa)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#8b5cf6,#a78bfa)'];
+    const show = Math.min(newCustCount, 4);
+    const more = newCustCount - show;
+    let html = '';
+    for (let i=0;i<show;i++) html += `<div class="av" style="background:${avColors[i%avColors.length]}">👤</div>`;
+    if (more>0) html += `<div class="av av-more">+${more}</div>`;
+    newCustAvatarEl.innerHTML = html;
+  }
+
+  // --- Top Menus (from today's orders) ---
+  const topMenusEl = document.getElementById('dashboard-top-menus');
+  if (topMenusEl) {
+    const menuCount = {};
+    const menuRevenue = {};
+    todayOrders.filter(o=>o.status!=='cancelled').forEach(o=>{
+      (o.items||[]).forEach(it=>{
+        const name = it.name||it.itemName||'ไม่ระบุ';
+        const qty = it.qty||it.quantity||1;
+        menuCount[name] = (menuCount[name]||0) + qty;
+        menuRevenue[name] = (menuRevenue[name]||0) + (it.price||0)*qty;
+      });
+    });
+    const sorted = Object.entries(menuCount).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    if (!sorted.length) {
+      topMenusEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">ยังไม่มีออเดอร์วันนี้</div>`;
+    } else {
+      const rankClass = ['r1','r2','r3'];
+      topMenusEl.innerHTML = sorted.map(([name,qty],i)=>`<div class="menu-item">
+        <div class="menu-rank ${rankClass[i]}">${i+1}</div>
+        <div class="menu-img">🍞</div>
+        <div class="menu-info"><div class="mname">${name}</div><div class="msub">ขาย ${qty} ชิ้น</div></div>
+        <div class="menu-price">${(menuRevenue[name]||0).toLocaleString('th-TH')} ฿</div>
+      </div>`).join('');
+    }
+  }
+
+  // --- Latest Review ---
+  const reviewEl = document.getElementById('dashboard-latest-review');
+  if (reviewEl) {
+    const withReview = [...allOrders].filter(o=>o.review||o.rating).sort((a,b)=>{
+      const da=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);
+      const db=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);
+      return db-da;
+    });
+    if (!withReview.length) {
+      reviewEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">ยังไม่มีรีวิว</div>`;
+    } else {
+      const r = withReview[0];
+      const d = r.createdAt?.toDate?r.createdAt.toDate():new Date(r.createdAt||0);
+      const dateStr = d.toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      const stars = '★'.repeat(r.rating||5) + '☆'.repeat(5-(r.rating||5));
+      const name = r.customerName||r.displayName||'ลูกค้า';
+      reviewEl.innerHTML = `<div class="review-item">
+        <div class="review-header">
+          <div class="review-av">👤</div>
+          <div><div class="review-name">${name}</div><div class="review-stars">${stars}</div></div>
+          <div class="review-date">${dateStr}</div>
+        </div>
+        <div class="review-text">${r.review||'ดีมากค่ะ 👍'}</div>
+      </div>`;
+    }
+  }
 }
 
 function renderOrders() {
@@ -1104,7 +1312,6 @@ function downloadCSV(rows, filename) {
 }
 
 // ====== FEATURED ITEMS PIN ======
-let currentFeaturedIds = [];
 
 function renderFeaturedCheckboxes() {
   const wrap = document.getElementById('featured-checkboxes');
@@ -1927,3 +2134,16 @@ window.exportCSV = function(){
   a.download = "orders.csv";
   a.click();
 };
+
+// ====== EXPOSE PANEL LOAD FUNCTIONS TO GLOBAL SCOPE ======
+window.loadMenu        = loadMenu;
+window.loadBanners     = loadBanners;
+window.loadCustomers   = loadCustomers;
+window.loadStampConfig = loadStampConfig;
+window.loadRewards     = loadRewards;
+window.loadSettings    = loadSettings;
+window.listenOrders    = listenOrders;
+window.listenLineQueue = listenLineQueue;
+window.renderStats     = renderStats;
+window.loadCategories  = loadCategories;
+window.loadPreorderSetting = loadPreorderSetting;

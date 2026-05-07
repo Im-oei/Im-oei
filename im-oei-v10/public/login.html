@@ -111,6 +111,7 @@
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
+
 <script>
 // Global stubs — ทำงานก่อน module โหลดเสร็จ ป้องกัน "not defined"
 function lineLogin(){ window._mod_lineLogin && window._mod_lineLogin(); }
@@ -121,5 +122,6 @@ function adminLogin(){ window._mod_adminLogin && window._mod_adminLogin(); }
 function customerLogin(){ window._mod_customerLogin && window._mod_customerLogin(); }
 </script>
 <script type="module" src="js/login.module.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </body>
 </html>

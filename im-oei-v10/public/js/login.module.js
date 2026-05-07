@@ -1,12 +1,4 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei",
-  storageBucket: "im-oei.firebasestorage.app",
-  messagingSenderId: "392812205535",
-  appId: "1:392812205535:web:65f6ce114feb3ce035a06a",
-  measurementId: "G-0LGSELSP0D"
-};
+
 
 // login.html — ES module (Firebase Auth + LIFF)
 
@@ -29,6 +21,7 @@ function hideError(){ document.getElementById('error-box').style.display='none';
 async function initLiff() {
   try {
     await liff.init({ liffId: LIFF_ID });
+    window._liffInited = true;
 
     // Auto-login เฉพาะเมื่อ redirect กลับมาจาก LINE (มี liff.state ใน URL)
     // ไม่ auto-login ถ้าแค่เปิดหน้า login ปกติ เพื่อไม่ขัด guest login
@@ -104,7 +97,28 @@ async function handleLiffLogin() {
                        resolvedRole === 'admin'  ? '🧑‍🍳 ยินดีต้อนรับ แอดมิน!' :
                        '✅ ยินดีต้อนรับ ' + lineUser.name + '!';
     showToast(welcomeMsg);
-    setTimeout(() => window.location.href = redirectTarget, 800);
+
+    // ถ้าเป็น admin → ไปหน้า admin ทันที ไม่ต้องผูกเบอร์
+    if (resolvedRole === 'admin' || resolvedRole === 'owner') {
+      setTimeout(() => window.location.href = 'admin.html', 800);
+      return;
+    }
+
+    // ตรวจว่าเคยผูกเบอร์ใน Firestore แล้วหรือยัง
+    showLoading(false);
+    let alreadyHasPhone = false;
+    try {
+      const uid = 'line_' + profile.userId;
+      const custSnap = await getDoc(doc(db, 'customers', uid));
+      if (custSnap.exists() && custSnap.data().phone) {
+        lineUser.phone = custSnap.data().phone;
+        lineUser.phoneVerified = true;
+        sessionStorage.setItem('imkum_user', JSON.stringify(lineUser));
+        alreadyHasPhone = true;
+      }
+    } catch(e) { console.warn('phone check:', e.message); }
+
+    setTimeout(() => window.location.href = 'index.html', 800);
   } catch (e) {
     showError('เข้าสู่ระบบ LINE ไม่สำเร็จ: ' + e.message);
     showLoading(false);
@@ -123,8 +137,9 @@ window._mod_lineLogin = window.lineLogin = async function() {
       return;
     }
 
-    if (!liff.isInitialized()) {
+    if (typeof liff.isInitialized === 'function' ? !liff.isInitialized() : !window._liffInited) {
       await liff.init({ liffId: LIFF_ID });
+      window._liffInited = true;
     }
 
     if (liff.isLoggedIn()) {
@@ -228,7 +243,10 @@ window._mod_customerLogin = window.customerLogin = async function(){
     localStorage.setItem('imkum_name', name);
     localStorage.removeItem('imkum_cart');
     localStorage.removeItem('imkum_cart_prices');
-    window.location.href='index.html';
+
+    showLoading(false);
+    showToast('✅ ยินดีต้อนรับ ' + name + '!');
+    setTimeout(() => window.location.href = 'index.html', 800);
 
   } catch(e){
     showError('เข้าสู่ระบบไม่สำเร็จ');
@@ -238,6 +256,7 @@ window._mod_customerLogin = window.customerLogin = async function(){
     showLoading(false);
   }
 };
+
 
 // ─── Session check + LIFF init ────────────────────────────────────────────
 
