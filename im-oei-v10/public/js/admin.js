@@ -534,3 +534,4 @@ window.switchTab = function(tab, el) {
 document.addEventListener('DOMContentLoaded', () => {
   window.switchTab('dashboard');
 });
+
