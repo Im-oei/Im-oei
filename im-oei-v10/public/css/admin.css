@@ -36,7 +36,13 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 
 /* PANELS */
 .panel { display: none; }
-.panel.active { display: block; }
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+}
 
 /* SUMMARY CARDS */
 .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
