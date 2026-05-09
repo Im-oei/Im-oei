@@ -505,9 +505,8 @@ function renderOrderCard(o) {
 // ====== LOAD MENU ======
 async function loadMenu() {
   try {
-    const timeout2 = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 5000));
-    const snap = await Promise.race([getDocs(collection(db, 'menu')), timeout2]);
-    allMenuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'menu'));
+allMenuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     // ถ้าไม่มีเมนูใน Firestore ใช้ default แบบ local (ไม่ write ลง Firestore)
     if (!allMenuItems.length) loadDefaultMenu();
   } catch(e) {
