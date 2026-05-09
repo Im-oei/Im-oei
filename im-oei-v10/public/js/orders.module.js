@@ -12,7 +12,7 @@ const firebaseConfig = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { FIREBASE_CONFIG, VAPID_PUBLIC_KEY } from "../config.js";
 
 const sess = sessionStorage.getItem('imkum_user');
@@ -27,6 +27,173 @@ if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html';
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+// ─── Phone Verify Banner (สำหรับคนที่ยังไม่ได้ผูกเบอร์) ──────────────────
+function injectPhoneBanner() {
+  if (user.phoneVerified || user.phone) return; // มีเบอร์แล้ว ไม่ต้องแสดง
+  const banner = document.createElement('div');
+  banner.id = 'phone-verify-banner';
+  banner.innerHTML = `
+    <div style="margin:16px;background:linear-gradient(135deg,#FFF8E1,#FFF3CD);
+      border:1.5px solid #FFD54F;border-radius:18px;padding:16px 18px;
+      display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(255,193,7,0.15)">
+      <div style="font-size:28px;flex-shrink:0">📱</div>
+      <div style="flex:1">
+        <div style="font-family:'Prompt',sans-serif;font-size:14px;font-weight:800;color:#3E2000">
+          ยืนยันเบอร์เพื่อดูออเดอร์
+        </div>
+        <div style="font-family:'Sarabun',sans-serif;font-size:12px;color:#888;margin-top:2px">
+          ผูกเบอร์ครั้งเดียว ดูออเดอร์ได้ทุกครั้ง
+        </div>
+      </div>
+      <button onclick="openPhoneVerifyModal()"
+        style="background:linear-gradient(135deg,#FFC107,#FF8F00);border:none;
+          border-radius:12px;padding:10px 16px;font-family:'Prompt',sans-serif;
+          font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;flex-shrink:0">
+        ผูกเบอร์
+      </button>
+    </div>`;
+  const activeSection = document.getElementById('active-section');
+  if (activeSection) activeSection.parentNode.insertBefore(banner, activeSection);
+}
+
+// OTP Modal สำหรับหน้า orders
+function injectOtpModal() {
+  if (document.getElementById('orders-otp-overlay')) return;
+  const modal = document.createElement('div');
+  modal.id = 'orders-otp-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:700;display:none;align-items:flex-end;justify-content:center';
+  modal.innerHTML = `
+    <div style="width:100%;max-width:480px;background:#fff;border-radius:28px 28px 0 0;
+      padding:28px 24px 40px;animation:slideUpOtp 0.3s cubic-bezier(0.34,1.56,0.64,1)">
+      <style>@keyframes slideUpOtp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+      <div style="font-family:'Prompt',sans-serif;font-size:20px;font-weight:800;color:#3E2000;text-align:center;margin-bottom:6px">
+        📱 ยืนยันเบอร์โทรศัพท์
+      </div>
+      <div id="oorders-sub" style="font-family:'Sarabun',sans-serif;font-size:13px;color:#888;text-align:center;margin-bottom:20px">
+        เพื่อดูออเดอร์ของคุณ
+      </div>
+      <div id="oorders-step1">
+        <div style="display:flex;align-items:center;gap:10px;border:2px solid #E8E0D8;border-radius:14px;padding:4px 14px;margin-bottom:14px;background:#FAFAF8">
+          <span style="font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;color:#888">+66</span>
+          <input id="oorders-phone" type="tel" maxlength="10" placeholder="0812345678" inputmode="numeric"
+            style="flex:1;border:none;background:transparent;outline:none;font-family:'Sarabun',sans-serif;font-size:16px;font-weight:700;color:#3E2000;padding:12px 0">
+        </div>
+        <div id="oorders-recaptcha"></div>
+        <button id="oorders-send-btn" onclick="ordersOtpSend()"
+          style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,#FFC107,#FF8F00);font-family:'Prompt',sans-serif;font-size:15px;font-weight:800;color:#3E2000;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(255,160,0,0.35)">
+          ส่ง OTP
+        </button>
+        <button onclick="ordersOtpClose()"
+          style="width:100%;background:none;border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#AAA;cursor:pointer;padding:8px;text-decoration:underline">
+          ยกเลิก
+        </button>
+      </div>
+      <div id="oorders-step2" style="display:none">
+        <div id="oorders-hint" style="font-family:'Sarabun',sans-serif;font-size:13px;color:#666;text-align:center;margin-bottom:14px;line-height:1.5"></div>
+        <input id="oorders-code" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" inputmode="numeric"
+          style="width:100%;border:2px solid #E8E0D8;border-radius:14px;padding:16px;font-family:'Prompt',sans-serif;font-size:28px;font-weight:800;color:#3E2000;text-align:center;letter-spacing:12px;outline:none;background:#FAFAF8;margin-bottom:14px;box-sizing:border-box">
+        <button id="oorders-verify-btn" onclick="ordersOtpVerify()"
+          style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,#FFC107,#FF8F00);font-family:'Prompt',sans-serif;font-size:15px;font-weight:800;color:#3E2000;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(255,160,0,0.35)">
+          ยืนยัน OTP
+        </button>
+        <button onclick="ordersOtpStep1()"
+          style="width:100%;background:none;border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#AAA;cursor:pointer;padding:8px;text-decoration:underline">
+          ส่งรหัสใหม่
+        </button>
+      </div>
+      <div id="oorders-error" style="font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#E53935;text-align:center;margin-top:8px;min-height:20px"></div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+let _ordersConfirmation = null;
+
+window.openPhoneVerifyModal = function() {
+  injectOtpModal();
+  document.getElementById('orders-otp-overlay').style.display = 'flex';
+  document.getElementById('oorders-step1').style.display = '';
+  document.getElementById('oorders-step2').style.display = 'none';
+  document.getElementById('oorders-error').textContent = '';
+};
+window.ordersOtpClose = function() {
+  document.getElementById('orders-otp-overlay').style.display = 'none';
+};
+window.ordersOtpStep1 = function() {
+  _ordersConfirmation = null;
+  document.getElementById('oorders-step1').style.display = '';
+  document.getElementById('oorders-step2').style.display = 'none';
+  document.getElementById('oorders-error').textContent = '';
+};
+window.ordersOtpSend = async function() {
+  const rawPhone = (document.getElementById('oorders-phone').value || '').trim();
+  const phone = rawPhone.replace(/^0/, '+66');
+  if (!/^\+66[0-9]{9}$/.test(phone)) {
+    document.getElementById('oorders-error').textContent = 'กรุณากรอกเบอร์ให้ถูกต้อง';
+    return;
+  }
+  document.getElementById('oorders-error').textContent = '';
+  const btn = document.getElementById('oorders-send-btn');
+  btn.disabled = true; btn.textContent = 'กำลังส่ง…';
+  try {
+    if (!window._ordersRecaptcha) {
+      window._ordersRecaptcha = new RecaptchaVerifier(auth, 'oorders-recaptcha', { size: 'invisible', callback: () => {} });
+    }
+    _ordersConfirmation = await signInWithPhoneNumber(auth, phone, window._ordersRecaptcha);
+    document.getElementById('oorders-step1').style.display = 'none';
+    document.getElementById('oorders-step2').style.display = '';
+    document.getElementById('oorders-hint').textContent = `ส่งรหัส OTP ไปที่ ${rawPhone} แล้ว`;
+    document.getElementById('oorders-code').value = '';
+    document.getElementById('oorders-code').focus();
+  } catch(e) {
+    const msg = e.code === 'auth/too-many-requests' ? 'ลองมากเกินไป กรุณารอสักครู่'
+      : e.code === 'auth/invalid-phone-number' ? 'เบอร์โทรไม่ถูกต้อง'
+      : 'ส่ง OTP ไม่สำเร็จ';
+    document.getElementById('oorders-error').textContent = msg;
+    if (window._ordersRecaptcha) { try { window._ordersRecaptcha.clear(); } catch(_) {} window._ordersRecaptcha = null; }
+  } finally {
+    btn.disabled = false; btn.textContent = 'ส่ง OTP';
+  }
+};
+window.ordersOtpVerify = async function() {
+  const code = (document.getElementById('oorders-code').value || '').trim();
+  if (code.length < 6) { document.getElementById('oorders-error').textContent = 'กรุณากรอกรหัส 6 หลัก'; return; }
+  if (!_ordersConfirmation) { document.getElementById('oorders-error').textContent = 'กรุณาส่ง OTP ใหม่'; return; }
+  document.getElementById('oorders-error').textContent = '';
+  const btn = document.getElementById('oorders-verify-btn');
+  btn.disabled = true; btn.textContent = 'กำลังยืนยัน…';
+  try {
+    const result = await _ordersConfirmation.confirm(code);
+    const phone = result.user.phoneNumber?.replace('+66', '0') || '';
+    // อัปเดต session
+    user.phone = phone;
+    user.phoneVerified = true;
+    sessionStorage.setItem('imkum_user', JSON.stringify(user));
+    // อัปเดต Firestore customers
+    try {
+      const cId = user.uid || ('line_' + (user.lineUserId || user.guestId || ''));
+      await setDoc(doc(db, 'customers', cId), { phone, phoneVerified: true, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch(e) { console.warn('customers update:', e.message); }
+    // ซ่อน banner + modal แล้ว reload orders
+    const banner = document.getElementById('phone-verify-banner');
+    if (banner) banner.remove();
+    window.ordersOtpClose();
+    showToast('✅ ผูกเบอร์สำเร็จ! โหลดออเดอร์ใหม่…');
+    // อัปเดต phone display
+    const span = document.getElementById('phone-text');
+    if (span) span.textContent = phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    // reload orders ด้วย phone ใหม่
+    if (_unsubOrders) { _unsubOrders(); _unsubOrders = null; }
+    startOrdersRealtime();
+  } catch(e) {
+    const msg = e.code === 'auth/invalid-verification-code' ? 'รหัส OTP ไม่ถูกต้อง'
+      : e.code === 'auth/code-expired' ? 'รหัส OTP หมดอายุ กรุณาส่งใหม่'
+      : 'ยืนยันไม่สำเร็จ';
+    document.getElementById('oorders-error').textContent = msg;
+  } finally {
+    btn.disabled = false; btn.textContent = 'ยืนยัน OTP';
+  }
+};
 
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
@@ -467,6 +634,7 @@ async function loadStamps(){
 }
 
 startOrdersRealtime();
+injectPhoneBanner();
 loadStamps();
 
 // ============================
@@ -968,3 +1136,127 @@ initCustomerNotifications();
 loadMyRatings();
 loadMyRedemptions();
 
+
+
+// ===== Realtime Orders Fix =====
+async function renderRealtimeOrders() {
+  const container =
+    document.getElementById('orders-container') ||
+    document.getElementById('orders-list') ||
+    document.getElementById('active-orders') ||
+    document.getElementById('active-section');
+
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="padding:24px;text-align:center;color:#888">
+      กำลังโหลดออเดอร์...
+    </div>
+  `;
+
+  const q = query(
+    collection(db, 'orders'),
+    where('userId', '==', user.uid)
+  );
+
+  onSnapshot(q, (snapshot) => {
+    container.innerHTML = '';
+
+    if (snapshot.empty) {
+      container.innerHTML = `
+        <div class="empty-orders-state">
+          <div class="empty-orders-icon">🧾</div>
+          <div class="empty-orders-title">ยังไม่มีคำสั่งซื้อ</div>
+          <div class="empty-orders-sub">
+            เริ่มสั่งอาหารได้เลย
+          </div>
+
+          <a href="index.html" class="empty-orders-btn">
+            ไปเลือกเมนู
+          </a>
+        </div>
+      `;
+      return;
+    }
+
+    const docs = [];
+    snapshot.forEach((d) => docs.push({
+      id: d.id,
+      ...d.data()
+    }));
+
+    docs.sort((a,b)=>{
+      const at = a.createdAt?.seconds || 0;
+      const bt = b.createdAt?.seconds || 0;
+      return bt - at;
+    });
+
+    docs.forEach((order) => {
+      const card = document.createElement('div');
+      card.className = 'stream-order-card';
+
+      const items = Array.isArray(order.items)
+        ? order.items.map(i => `
+          <div class="stream-order-item">
+            <span>${i.name || '-'}</span>
+            <span>x${i.qty || 1}</span>
+          </div>
+        `).join('')
+        : '';
+
+      card.innerHTML = `
+        <div class="stream-order-top">
+          <div>
+            <div class="stream-order-id">
+              #${order.id.slice(0,6)}
+            </div>
+
+            <div class="stream-order-date">
+              ${order.createdAt?.toDate
+                ? order.createdAt.toDate().toLocaleString()
+                : '-'}
+            </div>
+          </div>
+
+          <div class="stream-status ${order.status || 'pending'}">
+            ${order.status || 'pending'}
+          </div>
+        </div>
+
+        <div class="stream-order-items">
+          ${items}
+        </div>
+
+        <div class="stream-order-footer">
+          <div class="stream-total">
+            ฿${order.total || 0}
+          </div>
+
+          <button class="stream-reorder-btn">
+            สั่งอีกครั้ง
+          </button>
+        </div>
+      `;
+
+      const reorderBtn = card.querySelector('.stream-reorder-btn');
+      reorderBtn.onclick = () => {
+        localStorage.setItem(
+          'imkum_cart',
+          JSON.stringify(order.items || [])
+        );
+
+        window.location.href = 'cart.html';
+      };
+
+      container.appendChild(card);
+    });
+  });
+}
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    renderRealtimeOrders();
+  }, 500);
+});
+
+// ===== End Realtime Orders Fix =====

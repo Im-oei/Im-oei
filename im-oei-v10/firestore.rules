@@ -14,12 +14,19 @@ service cloud.firestore {
 
     // ─── ORDERS ───────────────────────────────────────────────────────────────
     match /orders/{orderId} {
+      // 🔐 FIX: ลบ "|| resource.data.lineUserId != null" ออก
+      // เดิม: ใครก็ตามที่รู้ orderId อ่านได้ทันที (no auth required)
+      // ใหม่: ต้อง login + เป็นเจ้าของออเดอร์ หรือ admin เท่านั้น
       allow read: if isFirebaseAdmin()
         || (request.auth != null
           && request.auth.token.phone_number != null
           && resource.data.customerPhone == request.auth.token.phone_number)
-        || resource.data.lineUserId != null
-        || resource.data.guestId != null;
+        || (request.auth != null
+          && request.auth.uid != null
+          && resource.data.lineUserId == request.auth.uid)
+        || (request.auth != null
+          && request.auth.uid != null
+          && resource.data.guestId == request.auth.uid);
       allow create: if request.resource.data.keys().hasAny(['customerPhone','lineUserId','guestId'])
         && request.resource.data.keys().hasAll(['items','total','status','createdAt'])
         && request.resource.data.status == 'pending'
@@ -88,7 +95,9 @@ service cloud.firestore {
     // ─── RATINGS ──────────────────────────────────────────────────────────────
     match /ratings/{ratingId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['orderId','itemId','star','createdAt'])
+      // 🔐 FIX: เพิ่ม request.auth != null — เดิมใครก็เขียน rating ได้โดยไม่ต้อง login
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['orderId','itemId','star','createdAt'])
         && request.resource.data.star is int
         && request.resource.data.star >= 1
         && request.resource.data.star <= 5;
@@ -104,11 +113,14 @@ service cloud.firestore {
 
     // ─── REWARD REDEMPTIONS ───────────────────────────────────────────────────
     match /rewardRedemptions/{docId} {
+      // 🔐 FIX: ลบ "|| resource.data.lineUserId != null" ออก — เดิมอ่านได้โดยไม่ต้อง auth
       allow read: if isFirebaseAdmin()
         || (request.auth != null
           && request.auth.token.phone_number != null
           && resource.data.phone == request.auth.token.phone_number)
-        || resource.data.lineUserId != null;
+        || (request.auth != null
+          && request.auth.uid != null
+          && resource.data.lineUserId == request.auth.uid);
       allow create: if (request.resource.data.keys().hasAll(['phone','rewardId','createdAt'])
             && isValidPhone(request.resource.data.phone))
           || (request.resource.data.keys().hasAll(['lineUserId','rewardId','createdAt'])
@@ -139,7 +151,11 @@ service cloud.firestore {
     // ─── PUSH SUBSCRIPTIONS ───────────────────────────────────────────────────
     match /pushSubscriptions/{id} {
       allow read: if isFirebaseAdmin();
-      allow create, update: if true;
+      // 🔐 FIX: จำกัด write เฉพาะ auth แล้ว และต้องมี endpoint field
+      // เดิม: allow: true = ใครก็ spam subscription ได้
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasAll(['endpoint'])
+        && request.resource.data.endpoint is string;
       allow delete: if isFirebaseAdmin();
     }
 

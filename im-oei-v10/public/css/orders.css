@@ -147,3 +147,101 @@
 @keyframes loSlideUp{from{transform:translateY(30px) scale(0.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
 #logout-modal{display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center;padding:20px;}
 #logout-modal.open{display:flex;}
+
+
+/* ===== Stream Orders Redesign ===== */
+
+.stream-order-card{
+  background:#fff;
+  border-radius:22px;
+  margin:14px 16px;
+  padding:18px;
+  box-shadow:0 6px 22px rgba(0,0,0,0.08);
+}
+
+.stream-order-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.stream-order-id{
+  font-size:18px;
+  font-weight:800;
+  color:#222;
+}
+
+.stream-order-date{
+  font-size:12px;
+  color:#777;
+  margin-top:4px;
+}
+
+.stream-status{
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  background:#fff3cd;
+}
+
+.stream-status.completed{
+  background:#d4edda;
+}
+
+.stream-order-items{
+  border-top:1px solid #eee;
+  border-bottom:1px solid #eee;
+  padding:12px 0;
+}
+
+.stream-order-item{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.stream-order-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:16px;
+}
+
+.stream-total{
+  font-size:24px;
+  font-weight:800;
+}
+
+.stream-reorder-btn,
+.empty-orders-btn{
+  border:none;
+  border-radius:999px;
+  padding:12px 18px;
+  background:#111;
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+}
+
+.empty-orders-state{
+  text-align:center;
+  padding:70px 20px;
+}
+
+.empty-orders-icon{
+  font-size:72px;
+  margin-bottom:10px;
+}
+
+.empty-orders-title{
+  font-size:22px;
+  font-weight:800;
+}
+
+.empty-orders-sub{
+  color:#777;
+  margin:8px 0 22px;
+}
+/* ===== End Stream Orders Redesign ===== */

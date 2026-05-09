@@ -1691,16 +1691,25 @@ window.savePasswords = async function() {
   const adminPass = document.getElementById('set-admin-password')?.value?.trim();
   const ownerPass = document.getElementById('set-owner-password')?.value?.trim();
   if (!adminPass && !ownerPass) { showToast('❌ กรุณาใส่รหัสผ่าน'); return; }
+  if (adminPass && adminPass.length < 6) { showToast('❌ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+  if (ownerPass && ownerPass.length < 6) { showToast('❌ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
   showLoading(true);
   try {
-    const data = {};
-    if (adminPass) data.adminPassword = adminPass;
-    if (ownerPass) data.ownerPassword = ownerPass;
-    await setDoc(doc(db, 'settings', 'store'), data, { merge: true });
-    showToast('✅ บันทึกรหัสผ่านแล้ว');
+    // 🔐 FIX: เรียก Cloud Function แทนการเขียน plaintext ตรง
+    // เดิม: setDoc(settings/store, { adminPassword: 'plaintext' }) — อันตราย
+    // ใหม่: hashAndSavePassword callable → hash ด้วย bcrypt server-side
+    const hashAndSavePassword = httpsCallable(functions, 'hashAndSavePassword');
+    const payload = {};
+    if (adminPass) payload.adminPassword = adminPass;
+    if (ownerPass) payload.ownerPassword = ownerPass;
+    await hashAndSavePassword(payload);
+    showToast('✅ บันทึกรหัสผ่านแล้ว (เข้ารหัส bcrypt)');
     if(document.getElementById('set-admin-password')) document.getElementById('set-admin-password').value='';
     if(document.getElementById('set-owner-password')) document.getElementById('set-owner-password').value='';
-  } catch(e) { showToast('❌ ' + (e.code||e.message)); }
+  } catch(e) {
+    const msg = e?.details?.message || e?.message || 'เกิดข้อผิดพลาด';
+    showToast('❌ ' + msg);
+  }
   finally { showLoading(false); }
 };
 

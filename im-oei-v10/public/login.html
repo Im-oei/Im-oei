@@ -111,6 +111,40 @@
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
+<!-- OTP Modal -->
+<div class="otp-overlay" id="otp-overlay">
+  <div class="otp-sheet">
+    <div class="otp-title">📱 ยืนยันเบอร์โทรศัพท์</div>
+    <div class="otp-sub" id="otp-sub">เพื่อดูออเดอร์และสะสมแต้มของคุณ</div>
+
+    <!-- Step 1: กรอกเบอร์ -->
+    <div id="otp-step1">
+      <div class="otp-field-wrap">
+        <span class="otp-prefix">+66</span>
+        <input class="otp-input" id="otp-phone" type="tel" maxlength="10"
+          placeholder="0812345678" inputmode="numeric">
+      </div>
+      <div id="recaptcha-container"></div>
+      <button class="otp-btn" id="otp-send-btn" onclick="otpSendCode()">
+        ส่ง OTP
+      </button>
+      <button class="otp-skip" onclick="otpSkip()">ข้ามไปก่อน</button>
+    </div>
+
+    <!-- Step 2: กรอก OTP -->
+    <div id="otp-step2" style="display:none">
+      <div class="otp-sent-hint" id="otp-sent-hint"></div>
+      <input class="otp-code-input" id="otp-code" type="tel" maxlength="6"
+        placeholder="_ _ _ _ _ _" inputmode="numeric">
+      <button class="otp-btn" id="otp-verify-btn" onclick="otpVerify()">
+        ยืนยัน OTP
+      </button>
+      <button class="otp-skip" onclick="otpResend()">ส่งรหัสใหม่</button>
+    </div>
+
+    <div class="otp-error" id="otp-error"></div>
+  </div>
+</div>
 
 <script>
 // Global stubs — ทำงานก่อน module โหลดเสร็จ ป้องกัน "not defined"
@@ -120,6 +154,10 @@ function toggleAdmin(){ var f=document.getElementById('admin-form'); if(f) f.cla
 function toggleAdminPwd(){ window._mod_toggleAdminPwd && window._mod_toggleAdminPwd(); }
 function adminLogin(){ window._mod_adminLogin && window._mod_adminLogin(); }
 function customerLogin(){ window._mod_customerLogin && window._mod_customerLogin(); }
+function otpSendCode(){ window._mod_otpSendCode && window._mod_otpSendCode(); }
+function otpVerify(){ window._mod_otpVerify && window._mod_otpVerify(); }
+function otpSkip(){ window._mod_otpSkip && window._mod_otpSkip(); }
+function otpResend(){ window._mod_otpResend && window._mod_otpResend(); }
 </script>
 <script type="module" src="js/login.module.js"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>

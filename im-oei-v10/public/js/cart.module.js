@@ -13,6 +13,7 @@ const firebaseConfig = {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { FIREBASE_CONFIG } from "../config.js";
 window._onSnapshot = onSnapshot;
 window._collection = collection;
@@ -20,6 +21,7 @@ window._collection = collection;
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const functions = getFunctions(app, 'asia-northeast1');
 
 loadPickupLocations(db);
 _execLoadPickup(db, getDocs, collection);
@@ -127,10 +129,12 @@ window.checkout = async function() {
     // ── ensure Firebase Auth ก่อน addDoc → Rules require request.auth != null ──
     await ensureAuth();
 
-    // เขียน order ลง Firestore โดยตรง
-    const orderRef = await addDoc(collection(db, 'orders'), {
-      items: orderItems,
-      total,
+    // 🔐 FIX: เรียก validateAndCreateOrder Cloud Function แทน addDoc ตรง
+    // เดิม: client ส่ง price + total เอง = แก้ราคาได้ (price manipulation)
+    // ใหม่: server ดึงราคาจาก menu collection แล้ว recalculate total
+    const validateAndCreateOrder = httpsCallable(functions, 'validateAndCreateOrder');
+    const orderResult = await validateAndCreateOrder({
+      items: Object.keys(cart).map(id => ({ id, qty: cart[id] })), // ส่งแค่ id + qty
       note,
       customerName,
       ...(phone ? { customerPhone: phone } : {}),
@@ -139,11 +143,13 @@ window.checkout = async function() {
       pickupTime,
       pickupLocation: selectedLocation,
       pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation,
-      status: 'pending',
       isPreorder: isNextDay || false,
       preorderDate: isNextDay ? (localStorage.getItem('imkum_preorder_date') || '') : null,
-      createdAt: serverTimestamp(),
     });
+    const { orderId, total: confirmedTotal } = orderResult.data;
+    // ใช้ total จาก server (ที่ validate แล้ว) แทน client-calculated
+    total = confirmedTotal;
+    const orderRef = { id: orderId };
 
     // อัพเดทแต้ม (20 บาท = 1 แต้ม, คำนวณจากยอดออเดอร์)
     // upsert ข้อมูลลูกค้าลง customers collection ทุกครั้งที่สั่ง

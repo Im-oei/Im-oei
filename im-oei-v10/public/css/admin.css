@@ -30,6 +30,9 @@ html, body { min-height: 100%; background: var(--bg); font-family: 'Sarabun', sa
 .header-icon-btn svg { display: block; }
 
 /* TABS */
+.tab-bar { display: flex; background: var(--white); border-bottom: 2px solid #F0E8D8; position: sticky; top: var(--header-h, 60px); z-index: 95; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.tab-btn { flex: 1; min-width: fit-content; padding: 14px 4px; font-size: 13px; font-weight: 700; color: var(--text-sub); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-family: 'Sarabun', sans-serif; white-space: nowrap; -webkit-tap-highlight-color: rgba(0,0,0,0.1); touch-action: manipulation; }
+.tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
 
 /* PANELS */
 .panel { display: none; }
