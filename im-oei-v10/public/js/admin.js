@@ -506,3 +506,27 @@ window.addEventListener('DOMContentLoaded', () => {
     switchTab('dashboard', firstNav);
   }
 });
+window.switchTab = function(tab) {
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.remove('active');
+  });
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+  });
+
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+
+  const nav = document.querySelector(`[data-tab="${tab}"]`);
+  if (nav) nav.classList.add('active');
+
+  // โหลดข้อมูลเฉพาะ tab
+  if (tab === 'menu' && typeof loadMenu === 'function') loadMenu();
+  if (tab === 'customers' && typeof loadCustomers === 'function') loadCustomers();
+  if (tab === 'settings' && typeof loadSettings === 'function') loadSettings();
+  if (tab === 'stats' && typeof renderStats === 'function') renderStats();
+};
+document.addEventListener('DOMContentLoaded', () => {
+  window.switchTab('dashboard');
+});
