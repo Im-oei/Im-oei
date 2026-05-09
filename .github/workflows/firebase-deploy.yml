@@ -11,14 +11,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-     - name: Create config.js
-      run: echo "${{ secrets.CONFIG_JS }}" > im-oei-v10/public/config.js
-
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: im-oei
-          entryPoint: im-oei-v10
+      - name: Create config.js
