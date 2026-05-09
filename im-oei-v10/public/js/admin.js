@@ -525,11 +525,30 @@ window.switchTab = function(tab, el) {
   if (el) {
     el.classList.add('active');
   }
+if (tab === 'menu' && typeof loadMenu === 'function')
+  loadMenu();
 
-  if (tab === 'menu' && typeof loadMenu === 'function') loadMenu();
-  if (tab === 'customers' && typeof loadCustomers === 'function') loadCustomers();
-  if (tab === 'settings' && typeof loadSettings === 'function') loadSettings();
-  if (tab === 'stats' && typeof renderStats === 'function') renderStats();
+if (tab === 'banners' && typeof loadBanners === 'function')
+  loadBanners();
+
+if (tab === 'customers' && typeof loadCustomers === 'function')
+  loadCustomers();
+
+if (tab === 'loyalty' && typeof loadStampConfig === 'function') {
+  loadStampConfig();
+
+  if (typeof loadRewards === 'function')
+    loadRewards();
+}
+
+if (tab === 'orders' && typeof listenOrders === 'function')
+  listenOrders();
+
+if (tab === 'settings' && typeof loadSettings === 'function')
+  loadSettings();
+
+if (tab === 'stats' && typeof renderStats === 'function')
+  renderStats();
 };
 document.addEventListener('DOMContentLoaded', () => {
   window.switchTab('dashboard');
