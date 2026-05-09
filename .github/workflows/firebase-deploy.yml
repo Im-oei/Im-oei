@@ -11,8 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-     - name: Create config.js
+      - name: Create config.js
         run: printf '%s' "${{ secrets.CONFIG_JS }}" > im-oei-v10/public/config.js
+
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
