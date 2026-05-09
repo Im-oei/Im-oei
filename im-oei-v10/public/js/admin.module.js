@@ -16,7 +16,7 @@ import {
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
   serverTimestamp, getDocs, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { FIREBASE_CONFIG } from "../config.js";
+import { firebaseConfig as FIREBASE_CONFIG } from '../config.js'
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
