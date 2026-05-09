@@ -506,7 +506,8 @@ window.addEventListener('DOMContentLoaded', () => {
     switchTab('dashboard', firstNav);
   }
 });
-window.switchTab = function(tab) {
+window.switchTab = function(tab, el) {
+
   document.querySelectorAll('.panel').forEach(p => {
     p.classList.remove('active');
   });
@@ -516,12 +517,15 @@ window.switchTab = function(tab) {
   });
 
   const panel = document.getElementById('panel-' + tab);
-  if (panel) panel.classList.add('active');
 
-  const nav = document.querySelector(`[data-tab="${tab}"]`);
-  if (nav) nav.classList.add('active');
+  if (panel) {
+    panel.classList.add('active');
+  }
 
-  // โหลดข้อมูลเฉพาะ tab
+  if (el) {
+    el.classList.add('active');
+  }
+
   if (tab === 'menu' && typeof loadMenu === 'function') loadMenu();
   if (tab === 'customers' && typeof loadCustomers === 'function') loadCustomers();
   if (tab === 'settings' && typeof loadSettings === 'function') loadSettings();
