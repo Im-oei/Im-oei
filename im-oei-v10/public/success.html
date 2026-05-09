@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>อิ่มเอ๋ย Im-Oei</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="success">
+  <div class="success-confetti">🎉 🎊 🎉</div>
+
+  <!-- LOGO -->
+  <div style="margin-bottom:16px;animation:fadeDown 0.5s ease-out;">
+    <img src="logo.webp" alt="อิ่มเอ๋ย"
+      style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #FFC107;box-shadow:0 4px 18px rgba(255,193,7,0.35);"
+      onerror="this.style.display='none'">
+  </div>
+
+  <h2 style="margin-top:0;">สั่งซื้อสำเร็จ! 🎉</h2>
+  <p>ขอบคุณที่อุดหนุนนะคะ 😊</p>
+
+  <div class="order-summary-card">
+    <div class="summary-row"><span class="key">เลขที่ออเดอร์</span><span class="val" id="s-id">-</span></div>
+    <div class="summary-row"><span class="key">ชื่อผู้สั่ง</span><span class="val" id="s-name">-</span></div>
+    <div class="summary-row"><span class="key">เวลารับอาหาร</span><span class="val" id="s-time">07:30 น.</span></div>
+    <div class="summary-row" id="s-location-row" style="display:none"><span class="key">📍 จุดรับอาหาร</span><span class="val" id="s-location" style="color:#1565C0;font-weight:800">-</span></div>
+    <div class="summary-row" id="s-date-row"><span class="key">วันที่สั่ง</span><span class="val" id="s-date">-</span></div>
+
+    <!-- รายการที่สั่ง -->
+    <div id="s-items-wrap" style="display:none;margin-top:12px;border-top:1.5px dashed #F0E8D8;padding-top:12px;">
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">รายการที่สั่ง</div>
+      <div id="s-items-list"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1.5px solid #F0E8D8;">
+        <span style="font-size:13px;font-weight:700;color:#888;">ยอดรวมทั้งหมด</span>
+        <span class="val orange" id="s-total" style="font-size:20px;">0 บาท</span>
+      </div>
+    </div>
+    <!-- fallback ถ้าไม่มีรายการ -->
+    <div id="s-total-row" class="summary-row"><span class="key">ยอดรวม</span><span class="val orange" id="s-total-simple">0 บาท</span></div>
+  </div>
+
+  <!-- STAMP EARN -->
+  <div id="stamp-msg-box" style="display:none;background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:14px;padding:14px 16px;margin:14px 0;color:#fff;font-weight:700;font-size:14px;text-align:center"></div>
+
+  <!-- PREORDER NOTICE -->
+  <div id="preorder-notice" style="display:none;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px;padding:12px 16px;margin:10px 0;color:#fff;font-size:13px;font-weight:700;text-align:center"></div>
+
+  <p class="success-note">เราจะเตรียมอาหารให้พร้อม<br>รอรับได้ตามเวลาที่เลือกไว้เลยค่ะ</p>
+
+  <div class="success-btns">
+    <a class="btn-primary" id="btn-status" href="orders.html">📋 ดูสถานะออเดอร์</a>
+    <a class="btn-secondary" href="index.html">🛒 สั่งเพิ่มอีก</a>
+  </div>
+  <div style="margin-top:10px;text-align:center">
+    <a href="index.html" style="font-size:12px;color:#aaa;text-decoration:none">← กลับหน้าหลัก</a>
+  </div>
+</div>
+
+
+  <script src="js/success.js"></script>
+</body>
+</html>

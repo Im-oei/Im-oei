@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>อิ่มเอ๋ย Im-Oei</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="back-btn" href="index.html">‹</a>
+  <h2>ตะกร้าของฉัน</h2>
+  <span class="clear-btn" onclick="clearCart()" title="ล้างตะกร้า">🗑️</span>
+</div>
+
+<!-- PREORDER INDICATOR -->
+<div class="preorder-indicator" id="preorder-indicator">
+  <span>📅</span>
+  <span id="preorder-date-text">สั่งล่วงหน้าวันพรุ่งนี้</span>
+  <button class="cancel-pre" onclick="cancelPreorder()">ยกเลิก</button>
+</div>
+
+<div id="cart-body" class="pb-footer"></div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<div id="cart-login-modal">
+  <div onclick="closeCartLogin()" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);animation:cartFadeIn .2s;"></div>
+  <div style="position:relative;z-index:1;background:#fff;border-radius:28px;width:100%;max-width:340px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:cartSlide .35s cubic-bezier(.34,1.56,.64,1);">
+    <div style="background:linear-gradient(135deg,#FFC107,#FF8C00);padding:28px 24px 22px;text-align:center;position:relative;">
+      <div style="width:64px;height:64px;background:rgba(255,255,255,0.25);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.45);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.2);">เข้าสู่ระบบก่อนสั่ง</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.88);margin-top:5px;font-weight:600;">เพื่อติดตามออเดอร์ของคุณ ⭐</div>
+      <button onclick="closeCartLogin()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.22);border:none;cursor:pointer;color:#fff;font-size:15px;font-weight:800;">✕</button>
+    </div>
+    <div style="padding:20px 20px 24px;">
+      <p style="font-size:13px;color:#888;text-align:center;margin-bottom:18px;line-height:1.7;">กรอกข้อมูลง่ายๆ ไม่ต้องสมัครสมาชิก<br>ใช้แค่ชื่อกับเบอร์โทรเท่านั้น 😊</p>
+      <label style="font-size:12px;font-weight:700;color:#999;margin-bottom:5px;display:block;">ชื่อของคุณ</label>
+      <input type="text" id="cl-name" placeholder="เช่น สมชาย, นิสา" maxlength="30"
+        style="width:100%;border:2px solid #EBEBEB;border-radius:12px;padding:12px 14px;font-family:'Sarabun',sans-serif;font-size:15px;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:12px;"
+        onfocus="this.style.borderColor='#FFC107'" onblur="this.style.borderColor='#EBEBEB'">
+      <label style="font-size:12px;font-weight:700;color:#999;margin-bottom:5px;display:block;">เบอร์โทรศัพท์</label>
+      <input type="tel" id="cl-phone" placeholder="0812345678" maxlength="10"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        style="width:100%;border:2px solid #EBEBEB;border-radius:12px;padding:12px 14px;font-family:'Sarabun',sans-serif;font-size:15px;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:12px;"
+        onfocus="this.style.borderColor='#FFC107'" onblur="this.style.borderColor='#EBEBEB'"
+        onkeydown="if(event.key==='Enter')submitCartLogin()">
+      <div id="cl-error" style="display:none;background:#FFF0F0;color:#C62828;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;margin-bottom:12px;text-align:center;"></div>
+      <button onclick="submitCartLogin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFC107,#F5A623);font-family:'Sarabun',sans-serif;font-size:16px;font-weight:800;color:#3E2000;cursor:pointer;box-shadow:0 4px 14px rgba(255,193,7,0.4);margin-bottom:10px;" onclick="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+        เข้าสู่ระบบ &amp; สั่งอาหาร
+      </button>
+      <a href="login.html" style="text-align:center;font-size:13px;color:#FF8C00;font-weight:700;text-decoration:none;display:block;">เข้าสู่ระบบแบบเต็ม →</a>
+    </div>
+  </div>
+</div>
+
+
+  <script src="js/cart.js"></script>
+  <script type="module" src="js/cart.module.js"></script>
+</body>
+</html>
