@@ -548,6 +548,13 @@ async function seedMenu() {
 
 function renderMenuAdmin() {
   const container = document.getElementById('menu-admin-list');
+
+  if (!container) {
+    console.error('menu-admin-list not found');
+    return;
+  }
+
+  console.log('Rendering menu items:', allMenuItems);
   const grouped = {};
   allMenuItems.forEach(item => {
     const k = item.catKey || 'other';
