@@ -472,7 +472,7 @@ window.closeSidebar=function(){document.body.classList.remove('sidebar-open');};
 window.setStatsPeriod=function(period){window.currentStatsPeriod=period;__safeToast('เปลี่ยนช่วงสถิติ: '+period);};
 window.exportOrdersCSV=function(){
   const rows=[['OrderID','Customer','Total']];
- const csv = rows.map(r => r.join(',')).join('\n');
+  const csv=rows.map(r=>r.join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='orders.csv';a.click();
   __safeToast('Export CSV สำเร็จ');
