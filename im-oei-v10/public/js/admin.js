@@ -490,3 +490,19 @@ window.addPickupLocation=function(){
 });
 window.openAddBanner=function(){__safeToast('เปิดเพิ่ม Banner');};
 window.openAddReward=function(){__safeToast('เปิดเพิ่ม Reward');};
+
+
+// Auto initialize dashboard + expose globals
+window.switchTab = switchTab;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const dashboardPanel = document.getElementById('panel-dashboard');
+  if (dashboardPanel && !dashboardPanel.classList.contains('active')) {
+    dashboardPanel.classList.add('active');
+  }
+
+  const firstNav = document.querySelector('.nav-item');
+  if (typeof switchTab === 'function') {
+    switchTab('dashboard', firstNav);
+  }
+});
