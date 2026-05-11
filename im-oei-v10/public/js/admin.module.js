@@ -1,6 +1,6 @@
 // admin.html — ES module (Firebase)
 
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, onSnapshot, query,
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
@@ -10,7 +10,7 @@ import { FIREBASE_CONFIG } from '../config.js'
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
-const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
+const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-northeast1');

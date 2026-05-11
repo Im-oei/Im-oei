@@ -330,10 +330,3 @@ html, body {
   animation:spin .75s linear infinite;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
-
-
-/* Production mobile safety fixes */
-.bottom-nav,.floating-nav,.floating-cta{padding-bottom:env(safe-area-inset-bottom);}
-.floating-cta,.fab,.cart-fab{bottom:calc(16px + env(safe-area-inset-bottom));}
-img{max-width:100%;height:auto;}
-.hero img{content-visibility:auto;}

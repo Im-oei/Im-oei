@@ -10,7 +10,7 @@ const firebaseConfig = {
 
 // index.html — ES module (Firebase + Firestore sync)
 
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { FIREBASE_CONFIG } from "../config.js";
 
@@ -40,7 +40,7 @@ function buildPromoSlider(banners) {
 
 async function syncFirestore(){
   try {
-    const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
+    const app=initializeApp(FIREBASE_CONFIG);
     const db=getFirestore(app);
     const sDoc=await getDoc(doc(db,'settings','store'));
     if(sDoc.exists()){

@@ -10,7 +10,7 @@ const firebaseConfig = {
 
 // orders.html — ES module
 
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { FIREBASE_CONFIG, VAPID_PUBLIC_KEY } from "../config.js";
@@ -24,7 +24,7 @@ if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
 }
 if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html'; throw new Error('wrong role'); }
 
-const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
+const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
