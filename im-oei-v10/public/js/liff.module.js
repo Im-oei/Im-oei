@@ -11,11 +11,11 @@ const firebaseConfig = {
 // liff.html — ES module (Firebase + LIFF logic)
 // ✅ ใช้ Firestore โดยตรง ไม่ต้องใช้ Firebase Functions
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { FIREBASE_CONFIG, LIFF_ID } from "../config.js";
 
-const app = initializeApp(FIREBASE_CONFIG);
+const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const ORDER_URL = "index.html";
 let lineProfile = null;

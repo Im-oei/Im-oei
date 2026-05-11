@@ -4,25 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>เข้าสู่ระบบ - อิ่มเอ๋ย</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Prompt:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800;900&family=Prompt:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
+<!-- ─── HERO ─── -->
 <div class="hero-top">
   <img src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
   <div class="hero-top-overlay"></div>
+
+  <!-- Brand on hero -->
+  <div class="hero-brand-overlay">
+    <img src="logo.webp" class="hero-logo-img" alt="logo"
+      onerror="this.outerHTML='<div style=&quot;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FF9F1C,#E8870A);border:3px solid #FF9F1C;display:flex;align-items:center;justify-content:center;font-size:32px;&quot;>🍱</div>'">
+    <div class="hero-brand-name">อิ่มเอ๋ย</div>
+    <div class="hero-brand-sub">อร่อยง่ายๆ ใกล้บ้านคุณ ✨</div>
+    <div class="hero-feature-chips">
+      <div class="hero-chip"><span>🍽️</span> เมนูหลากหลาย</div>
+      <div class="hero-chip"><span>⚡</span> จัดส่งไว</div>
+      <div class="hero-chip"><span>⭐</span> สะสมแต้ม</div>
+    </div>
+  </div>
 </div>
 
 <div class="card-wrap">
   <div class="login-card">
 
+    <!-- Header -->
+    <div class="login-card-header">
+      <div class="login-lock-icon">🔐</div>
+      <div class="login-card-title">เข้าสู่ระบบก่อนสั่งอาหาร</div>
+      <div class="login-card-sub">เพื่อความสะดวกและสิทธิพิเศษมากมาย ⭐</div>
+    </div>
+
     <!-- Error box -->
     <div class="error-box" id="error-box">
       <span id="error-msg">เกิดข้อผิดพลาด</span>
     </div>
-
-    <div class="section-label">เข้าสู่ระบบ</div>
 
     <!-- LINE primary -->
     <button class="line-btn" onclick="lineLogin()">
@@ -32,25 +51,41 @@
       </svg>
       <div class="line-btn-text">
         <span class="line-btn-main">เข้าสู่ระบบด้วย LINE</span>
-        <span class="line-btn-sub">กดครั้งเดียว ไม่ต้องกรอกอะไรเพิ่ม</span>
+        <span class="line-btn-sub">สะดวก รวดเร็ว ไม่ต้องกรอกอะไรเพิ่ม</span>
       </div>
     </button>
 
     <div class="line-benefits">
-      <span class="benefit-chip">✅ ได้ชื่อ+รูปโปรไฟล์อัตโนมัติ</span>
-      <span class="benefit-chip">🔔 แจ้งเตือนออเดอร์ผ่าน LINE</span>
-      <span class="benefit-chip">⭐ สะสมแต้มได้จริง</span>
+      <span class="benefit-chip">✅ ใช้ง่าย</span>
+      <span class="benefit-chip">🔔 แจ้งเตือนออเดอร์</span>
+      <span class="benefit-chip">⭐ สะสมแต้ม</span>
     </div>
 
-    <div class="or-divider"><span>หรือ ถ้าไม่อยากผูก LINE</span></div>
+    <div class="or-divider"><span>หรือ</span></div>
 
-    <!-- Guest fallback -->
+    <!-- Phone OTP -->
+    <button class="fallback-toggle" onclick="document.getElementById('otp-overlay').classList.add('show')">
+      <div class="fallback-toggle-left">
+        <div class="fallback-toggle-icon">📱</div>
+        <div>
+          <span class="fallback-toggle-text-main">เข้าสู่ระบบด้วยเบอร์มือถือ</span>
+          <span class="fallback-toggle-text-sub">รับรหัส OTP เพื่อเข้าสู่ระบบ</span>
+        </div>
+      </div>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+
+    <div style="height:10px;"></div>
+
+    <!-- Guest / no login -->
     <button class="fallback-toggle" onclick="toggleGuest()">
       <div class="fallback-toggle-left">
-        <div class="fallback-toggle-icon">📝</div>
+        <div class="fallback-toggle-icon">👤</div>
         <div>
-          <span class="fallback-toggle-text-main">เข้าแบบไม่ต้อง LINE</span>
-          <span class="fallback-toggle-text-sub">สำหรับสั่งแบบไม่ต้อง login LINE</span>
+          <span class="fallback-toggle-text-main">สั่งอาหารแบบไม่เข้าสู่ระบบ</span>
+          <span class="fallback-toggle-text-sub">สำหรับลูกค้าที่ต้องการสั่งอาหารเท่านั้น</span>
         </div>
       </div>
       <svg class="chevron" id="guest-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -65,7 +100,7 @@
           <input type="text" class="form-input" id="cust-name-1" placeholder="เช่น สมชาย, นิสา" maxlength="30"
             onkeydown="if(event.key==='Enter')customerLogin()">
         </div>
-        <p style="font-size:11.5px;color:#AAA;margin:2px 0 12px;text-align:center;">ไม่ต้องใส่เบอร์ — แต่จะไม่ได้แต้มสะสม</p>
+        <p style="font-size:11.5px;color:#9B9B9B;margin:2px 0 14px;text-align:center;">ไม่ต้องใส่เบอร์ — แต่จะไม่ได้แต้มสะสม</p>
         <button class="guest-btn" id="guest-btn" onclick="customerLogin()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           เริ่มสั่งอาหาร
@@ -73,7 +108,12 @@
       </div>
     </div>
 
-    <!-- Admin — ซ่อนล่างสุด -->
+    <!-- Privacy -->
+    <div class="privacy-note">
+      🔒 เราไม่เปิดเผยข้อมูลส่วนตัวของคุณ
+    </div>
+
+    <!-- Admin -->
     <div class="admin-link-wrap">
       <button class="admin-link" onclick="toggleAdmin()">🔑 เข้าระบบแอดมิน</button>
     </div>
@@ -117,7 +157,6 @@
     <div class="otp-title">📱 ยืนยันเบอร์โทรศัพท์</div>
     <div class="otp-sub" id="otp-sub">เพื่อดูออเดอร์และสะสมแต้มของคุณ</div>
 
-    <!-- Step 1: กรอกเบอร์ -->
     <div id="otp-step1">
       <div class="otp-field-wrap">
         <span class="otp-prefix">+66</span>
@@ -125,20 +164,15 @@
           placeholder="0812345678" inputmode="numeric">
       </div>
       <div id="recaptcha-container"></div>
-      <button class="otp-btn" id="otp-send-btn" onclick="otpSendCode()">
-        ส่ง OTP
-      </button>
+      <button class="otp-btn" id="otp-send-btn" onclick="otpSendCode()">ส่ง OTP</button>
       <button class="otp-skip" onclick="otpSkip()">ข้ามไปก่อน</button>
     </div>
 
-    <!-- Step 2: กรอก OTP -->
     <div id="otp-step2" style="display:none">
       <div class="otp-sent-hint" id="otp-sent-hint"></div>
       <input class="otp-code-input" id="otp-code" type="tel" maxlength="6"
         placeholder="_ _ _ _ _ _" inputmode="numeric">
-      <button class="otp-btn" id="otp-verify-btn" onclick="otpVerify()">
-        ยืนยัน OTP
-      </button>
+      <button class="otp-btn" id="otp-verify-btn" onclick="otpVerify()">ยืนยัน OTP</button>
       <button class="otp-skip" onclick="otpResend()">ส่งรหัสใหม่</button>
     </div>
 
@@ -147,9 +181,12 @@
 </div>
 
 <script>
-// Global stubs — ทำงานก่อน module โหลดเสร็จ ป้องกัน "not defined"
 function lineLogin(){ window._mod_lineLogin && window._mod_lineLogin(); }
-function toggleGuest(){ var f=document.getElementById('guest-form'),c=document.getElementById('guest-chevron'); if(!f)return; var o=f.classList.toggle('open'); c&&c.classList.toggle('open',o); }
+function toggleGuest(){
+  var f=document.getElementById('guest-form'), c=document.getElementById('guest-chevron');
+  if(!f)return;
+  var o=f.classList.toggle('open'); c&&c.classList.toggle('open',o);
+}
 function toggleAdmin(){ var f=document.getElementById('admin-form'); if(f) f.classList.toggle('open'); }
 function toggleAdminPwd(){ window._mod_toggleAdminPwd && window._mod_toggleAdminPwd(); }
 function adminLogin(){ window._mod_adminLogin && window._mod_adminLogin(); }

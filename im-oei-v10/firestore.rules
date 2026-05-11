@@ -57,6 +57,13 @@ service cloud.firestore {
     }
 
     // ─── SETTINGS ─────────────────────────────────────────────────────────────
+    // 🔐 FIX: แยก settings/auth (เก็บ hash) ออกจาก settings/store (ข้อมูลสาธารณะ)
+    // settings/auth → admin อ่านได้อย่างเดียว (adminPasswordHash, ownerPasswordHash)
+    // settings/store, stamps, tiers, pickupLocations → public read ได้ (ไม่มีข้อมูล sensitive)
+    match /settings/auth {
+      allow read: if isFirebaseAdmin();
+      allow create, update, delete: if isFirebaseAdmin();
+    }
     match /settings/{docId} {
       allow read: if true;
       allow create, update, delete: if isFirebaseAdmin();
@@ -121,10 +128,18 @@ service cloud.firestore {
         || (request.auth != null
           && request.auth.uid != null
           && resource.data.lineUserId == request.auth.uid);
-      allow create: if (request.resource.data.keys().hasAll(['phone','rewardId','createdAt'])
-            && isValidPhone(request.resource.data.phone))
+      // 🔐 FIX: เพิ่ม request.auth != null + ตรวจ ownership
+      // เดิม: ใครก็ได้สร้าง rewardRedemption โดยส่ง phone คนอื่นมา = แลกรางวัลแทนได้
+      // ใหม่: ต้อง login + phone ต้องตรงกับ token หรือ lineUserId ต้องตรงกับ uid
+      allow create: if request.auth != null
+        && (
+          (request.resource.data.keys().hasAll(['phone','rewardId','createdAt'])
+            && isValidPhone(request.resource.data.phone)
+            && request.auth.token.phone_number == request.resource.data.phone)
           || (request.resource.data.keys().hasAll(['lineUserId','rewardId','createdAt'])
-            && request.resource.data.lineUserId is string);
+            && request.resource.data.lineUserId is string
+            && request.resource.data.lineUserId == request.auth.uid)
+        );
       allow update: if isFirebaseAdmin();
       allow delete: if false;
     }

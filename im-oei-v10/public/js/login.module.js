@@ -2,14 +2,16 @@
 
 // login.html — ES module (Firebase Auth + LIFF)
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signInWithCustomToken, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { FIREBASE_CONFIG, LIFF_ID } from "../config.js";
 
-const app = initializeApp(FIREBASE_CONFIG);
+const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const functions = getFunctions(app, 'asia-northeast1');
 
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
@@ -87,6 +89,28 @@ async function handleLiffLogin() {
     sessionStorage.setItem('imkum_user', JSON.stringify(lineUser));
     if (resolvedRole === 'admin' || resolvedRole === 'owner') {
       sessionStorage.setItem('imkum_admin_auth', '1');
+
+      // 🔐 FIX: ออก Firebase Custom Token แล้ว signIn → Firestore rules ผ่าน
+      // เดิม: LINE admin ไม่มี Firebase Auth → request.auth = null
+      //       → isFirebaseAdmin() = false → อ่าน orders/customers ไม่ได้ → หน้าว่าง
+      // ใหม่: signInWithCustomToken(uid=lineUserId) → request.auth != null
+      //       → admins/{lineUserId} exists → isFirebaseAdmin() = true → ทุกอย่างทำงาน
+      // ออก Firebase Custom Token → signIn → แล้วค่อย redirect
+      // ต้อง await ให้เสร็จก่อน redirect ไม่งั้น admin.html จะไม่มี Firebase Auth session
+      try {
+        const issueAdminCustomToken = httpsCallable(functions, 'issueAdminCustomToken');
+        const tokenResult = await issueAdminCustomToken({
+          lineUserId: lineUser.lineUserId || lineUser.uid,
+          liffToken: liff.getIDToken(),
+        });
+        // 🔐 FIX: ตั้ง LOCAL persistence ก่อน signIn
+        // ทำให้ Firebase Auth session ถูกบันทึกลง IndexedDB
+        // และยังอยู่เมื่อ admin.html โหลดขึ้นมา → onAuthStateChanged ได้ user ทันที
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithCustomToken(auth, tokenResult.data.customToken);
+      } catch (tokenErr) {
+        console.warn('Custom token failed (จะโหลดข้อมูลช้าลงหน่อย):', tokenErr.message);
+      }
     }
     localStorage.setItem('imkum_name', lineUser.name);
     localStorage.setItem('imkum_line_picture', lineUser.picture || '');
@@ -98,9 +122,9 @@ async function handleLiffLogin() {
                        '✅ ยินดีต้อนรับ ' + lineUser.name + '!';
     showToast(welcomeMsg);
 
-    // ถ้าเป็น admin → ไปหน้า admin ทันที ไม่ต้องผูกเบอร์
+    // ถ้าเป็น admin → redirect หลัง custom token เสร็จแล้ว (await ข้างบน)
     if (resolvedRole === 'admin' || resolvedRole === 'owner') {
-      setTimeout(() => window.location.href = 'admin.html', 800);
+      setTimeout(() => window.location.href = 'admin.html', 500);
       return;
     }
 
@@ -178,6 +202,7 @@ window._mod_adminLogin = window.adminLogin = async function(){
   btn.innerHTML = '<span class="checking-ring"></span> กำลังเข้าสู่ระบบ…';
   showLoading(true);
   try {
+    await setPersistence(auth, browserLocalPersistence);
     const userCred = await signInWithEmailAndPassword(auth, email, password);
     const uid = userCred.user.uid;
     let role = 'admin';

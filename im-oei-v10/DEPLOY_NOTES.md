@@ -1,4 +1,4 @@
-# Im-Oei v10 — Deploy Notes
+# Im-Oei v12 — Deploy Notes
 
 ## ⚡ สิ่งที่ต้องทำก่อน deploy ครั้งแรก
 
@@ -86,7 +86,23 @@ https://console.cloud.google.com/apis/library/cloudscheduler.googleapis.com?proj
 
 ---
 
-## 🟡 v10 — Admin เห็นสถานะ LINE ใน Order Card
+## 🔐 v12 — Security Fixes
+
+| # | จุดที่แก้ | ไฟล์ |
+|---|---|---|
+| 1 | `issueAdminCustomToken`: LINE verify เปลี่ยน GET→POST + เพิ่ม fetch import | `functions/index.js` |
+| 2 | `verifyAdminPassword`: ลบ `data.clientKey` ออกจาก rate limit key | `functions/index.js` |
+| 3 | `rewardRedemptions` create: บังคับ `request.auth != null` + ตรวจ ownership | `firestore.rules` |
+| 4 | แยก `settings/auth` (hash-only, admin read) ออกจาก `settings/store` (public read) | `firestore.rules` + `functions/index.js` |
+
+### ⚠️ Migration ที่ต้องทำหลัง deploy v12
+
+**hash ใน Firestore ยังอยู่ที่ `settings/store`** (ถ้า deploy มาจาก v11)
+→ ระบบจะ auto-migrate ให้เองเมื่อ owner login ครั้งแรก (verifyAdminPassword จะย้าย hash → settings/auth อัตโนมัติ)
+→ หรือ owner เข้าหน้า admin → ตั้งค่า → บันทึกรหัสผ่านใหม่ → จะเขียนใน settings/auth ทันที
+
+**settings/auth doc** จะถูกสร้างอัตโนมัติครั้งแรกที่เรียก `hashAndSavePassword` หรือ auto-migrate
+
 
 - `listenLineQueue()` — onSnapshot realtime จาก Firestore `lineQueue/`
 - Badge ใต้ปุ่ม "แจ้งลูกค้า" แสดง 3 สถานะ:

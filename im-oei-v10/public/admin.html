@@ -62,29 +62,6 @@
     font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 700;
   }
   .nav-item.active .badge-count { background: rgba(255,255,255,0.3); }
-  .sidebar-footer {
-    padding: 12px; border-top: 1px solid var(--border);
-  }
-  .plan-box {
-    background: linear-gradient(135deg, #fff7ed, #fed7aa);
-    border: 1px solid #fdba74; border-radius: 10px; padding: 12px;
-    margin-bottom: 10px;
-  }
-  .plan-box .plan-label { font-size: 12px; color: var(--text-sub); }
-  .plan-box .plan-name { font-weight: 700; font-size: 13px; color: var(--primary-dark); }
-  .plan-box .plan-name span { color: #eab308; }
-  .plan-box .plan-expire { font-size: 11px; color: var(--text-sub); margin: 2px 0 6px; }
-  .plan-progress { background: #fde68a; height: 4px; border-radius: 2px; }
-  .plan-progress-bar { background: var(--primary); height: 4px; border-radius: 2px; width: 75%; }
-  .plan-detail-btn {
-    display: block; text-align: center; background: var(--primary); color: #fff;
-    border-radius: 6px; padding: 5px; font-size: 12px; font-weight: 600;
-    cursor: pointer; margin-top: 8px; text-decoration: none;
-  }
-  .logout-btn {
-    display: flex; align-items: center; gap: 8px; color: var(--text-sub);
-    font-size: 13px; cursor: pointer; padding: 6px 4px;
-  }
   .logout-btn:hover { color: var(--red); }
 
   /* MAIN */
@@ -440,13 +417,7 @@
   .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 
   /* ===== NOTIFICATIONS PANEL ===== */
-  .notif-panel { position: fixed; top: 0; right: -360px; width: 340px; height: 100vh; background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,.12); z-index: 1500; transition: right .28s ease; display: flex; flex-direction: column; }
-  .notif-panel.open { right: 0; }
-  .notif-panel-header { padding: 18px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .notif-panel-header h3 { font-size: 15px; font-weight: 800; margin: 0; }
-  .notif-panel-body { flex: 1; overflow-y: auto; }
-  .notif-overlay { display: none; position: fixed; inset: 0; z-index: 1499; }
-  .notif-overlay.open { display: block; }
+  /* notif-panel styles handled by admin.css (transform transition) */
 
   /* ===== LOADING ===== */
   #loading { display: none; position: fixed; inset: 0; background: rgba(255,255,255,.7); z-index: 3000; align-items: center; justify-content: center; font-size: 32px; }
@@ -454,7 +425,7 @@
 
   /* ===== CONFIRM DIALOG ===== */
   .confirm-dialog-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 4000; align-items: center; justify-content: center; padding: 16px; }
-  .confirm-dialog-overlay.open { display: flex; }
+  .confirm-dialog-overlay.show { display: flex; }
   .confirm-dialog-box { background: #fff; border-radius: 20px; width: 100%; max-width: 360px; padding: 28px 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
   .cd-icon-wrap { width: 64px; height: 64px; border-radius: 50%; border: 3px solid; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
   .cd-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
@@ -464,8 +435,7 @@
   .cd-cancel { background: #f3f4f6; color: var(--text-main); }
 
   /* ===== DANGER DIALOG ===== */
-  .danger-dialog-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 4500; align-items: center; justify-content: center; padding: 16px; }
-  .danger-dialog-overlay.open { display: flex; }
+  /* danger-dialog-overlay: ใช้ admin.css opacity transition (ไม่ใช้ display:none) */
   .danger-dialog-box { background: #fff; border-radius: 20px; width: 100%; max-width: 400px; padding: 28px 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
   .dd-icon-wrap { width: 64px; height: 64px; border-radius: 50%; border: 3px solid #ef4444; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; background: #fee2e2; }
   .dd-title { font-size: 17px; font-weight: 800; color: #b91c1c; margin-bottom: 6px; }
@@ -534,18 +504,7 @@
       <span class="icon">⚙️</span> ตั้งค่า
     </a>
   </nav>
-  <div class="sidebar-footer">
-    <div class="plan-box">
-      <div class="plan-label">แพ็กเกจ:</div>
-      <div class="plan-name"><span>👑</span> Premium</div>
-      <div class="plan-expire">ใช้งานได้ถึง 31/12/2567</div>
-      <div class="plan-progress"><div class="plan-progress-bar"></div></div>
-      <a class="plan-detail-btn" href="#">ดูรายละเอียดแพ็กเกจ</a>
-    </div>
-    <div class="logout-btn">
-      <span>↩</span> ออกจากระบบ
-    </div>
-  </div>
+
 </aside>
 
 <!-- Sidebar overlay for mobile -->
@@ -558,17 +517,26 @@
     <button class="hamburger" onclick="toggleSidebar()" aria-label="เมนู">☰</button>
     <div class="search-box">
       <span>🔍</span>
-      <input type="text" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า...">
+      <input type="text" id="global-search" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า..." oninput="globalSearch(this.value)">
     </div>
     <div class="topbar-right">
       <div class="notif-btn" onclick="toggleNotifications()" style="cursor:pointer">🔔<div class="dot" id="notif-badge" style="display:none">0</div></div>
-      <div class="user-chip">
+      <div class="user-chip" onclick="toggleUserMenu()" style="cursor:pointer;position:relative;">
         <div class="user-avatar" style="background:#fed7aa;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
         <div class="user-info">
-          <div class="uname">Anya (Admin)</div>
-          <div class="ustatus">ออนไลน์</div>
+          <div class="uname" id="admin-display-name">Admin</div>
+          <div class="ustatus" id="admin-display-status">● ออนไลน์</div>
         </div>
         <span style="color:#9ca3af;font-size:11px;">▼</span>
+        <div id="user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);min-width:160px;z-index:2000;overflow:hidden;">
+          <div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;">
+            <div style="font-size:12px;color:#6b7280;">เข้าสู่ระบบในฐานะ</div>
+            <div style="font-size:13px;font-weight:700;color:#1f2937;" id="user-dropdown-name">Admin</div>
+          </div>
+          <button onclick="event.stopPropagation();adminLogout()" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:#ef4444;cursor:pointer;display:flex;align-items:center;gap:8px;">
+            🚪 ออกจากระบบ
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -728,7 +696,6 @@
       <div class="page-header-row">
         <div><h1>📋 ออเดอร์</h1><p>จัดการออเดอร์ทั้งหมดแบบ Realtime</p></div>
       </div>
-    </div>
     <div id="notif-permission-bar" style="display:none">
       🔔 อนุญาตการแจ้งเตือนเพื่อรับแจ้งออเดอร์ใหม่
       <button onclick="requestNotifPermission()">อนุญาต</button>
@@ -748,10 +715,11 @@
       <button class="filter-chip" onclick="filterOrders('cancelled',this)">❌ ยกเลิก</button>
     </div>
     <div id="orders-list"></div>
+  </div><!-- /panel-orders -->
   </div>
 
   <!-- ======== PANEL: MENU ======== -->
-  <div id="panel-menu" class="panel active">
+  <div id="panel-menu" class="panel">
     <div class="page-header">
       <div class="page-header-row">
         <div><h1>🍽️ เมนูอาหาร</h1><p>จัดการรายการเมนูและหมวดหมู่</p></div>
@@ -852,7 +820,6 @@
         <div><h1>📢 แบนเนอร์</h1><p>จัดการแบนเนอร์และโปรโมชัน</p></div>
         <button class="btn-primary" onclick="openAddBanner()">+ เพิ่มแบนเนอร์</button>
       </div>
-    </div>
     <div class="section-card">
       <div id="banners-list"><div style="text-align:center;padding:20px;color:var(--text-sub)">กำลังโหลด...</div></div>
     </div>
@@ -918,6 +885,7 @@
           <button class="btn-primary" onclick="saveBannerItem()">💾 บันทึก</button>
         </div>
       </div>
+    </div><!-- /panel-banners -->
     </div>
   </div>
 
@@ -928,7 +896,6 @@
         <div><h1>👥 ลูกค้า</h1><p>ข้อมูลลูกค้าและประวัติการสั่ง</p></div>
         <button class="btn-primary" onclick="openAddCustomer()">+ เพิ่มลูกค้า</button>
       </div>
-    </div>
     <div class="section-card">
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <button class="ltab-btn active" id="tab-line-btn" onclick="switchCustTab('line')">LINE ลูกค้า</button>
@@ -961,6 +928,7 @@
           <button class="btn-primary" onclick="saveCustomer()">💾 บันทึก</button>
         </div>
       </div>
+    </div><!-- /panel-customers -->
     </div>
   </div>
 
@@ -970,7 +938,6 @@
       <div class="page-header-row">
         <div><h1>🎁 แต้มสะสม & Loyalty</h1><p>ระบบแต้มและรางวัลสำหรับลูกค้า</p></div>
       </div>
-    </div>
     <div style="margin-bottom:14px">
       <button class="ltab-btn active" id="ltab-config" onclick="switchLoyaltyTab('config')">⚙️ ตั้งค่าแต้ม</button>
       <button class="ltab-btn" id="ltab-rewards" onclick="switchLoyaltyTab('rewards')">🎁 รางวัล</button>
@@ -1056,6 +1023,7 @@
           <button class="btn-primary" onclick="saveReward()">💾 บันทึก</button>
         </div>
       </div>
+    </div><!-- /panel-loyalty -->
     </div>
   </div>
 
@@ -1068,7 +1036,6 @@
           <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="exportOrdersCSV()">📥 Export CSV</button>
         </div>
       </div>
-    </div>
     <div class="period-tabs">
       <button class="period-btn active" id="period-today" onclick="setStatsPeriod('today')">วันนี้</button>
       <button class="period-btn" id="period-week" onclick="setStatsPeriod('week')">7 วัน</button>
@@ -1108,6 +1075,7 @@
       <div class="section-title">⭐ คะแนนรีวิว</div>
       <div id="stats-ratings"></div>
     </div>
+  </div><!-- /panel-stats -->
   </div>
 
   <!-- ======== PANEL: STORE MANAGEMENT ======== -->
@@ -1116,7 +1084,6 @@
       <div class="page-header-row">
         <div><h1>🏪 จัดการร้านค้า</h1><p>ตั้งค่าการรับออเดอร์และจุดรับอาหาร</p></div>
       </div>
-    </div>
     <div class="section-card">
       <div class="section-title">🚦 สถานะร้าน</div>
       <div class="store-toggle-row">
@@ -1155,6 +1122,7 @@
       </label>
       <button class="btn-primary" onclick="savePreorderSetting()">💾 บันทึก</button>
     </div>
+  </div><!-- /panel-store -->
   </div>
 
   <!-- ======== PANEL: SETTINGS ======== -->
@@ -1163,7 +1131,6 @@
       <div class="page-header-row">
         <div><h1>⚙️ ตั้งค่า</h1><p>ข้อมูลร้านและการตั้งค่าระบบ</p></div>
       </div>
-    </div>
     <div class="section-card">
       <div class="section-title">🏷️ ข้อมูลร้าน</div>
       <div class="form-row">
@@ -1213,10 +1180,11 @@
         <button class="btn-danger" onclick="openDangerDialog('resetAll')">🔥 รีเซ็ตข้อมูลทั้งหมด</button>
       </div>
     </div>
+  </div><!-- /panel-settings -->
   </div>
 
   <!-- ======== NOTIFICATIONS SLIDE PANEL ======== -->
-  <div class="notif-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
+  <div class="notif-panel-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
   <div class="notif-panel" id="notif-panel">
     <div class="notif-panel-header">
       <h3>🔔 การแจ้งเตือน</h3>
@@ -1249,7 +1217,7 @@
   <!-- ======== GLOBAL: DANGER DIALOG ======== -->
   <div class="danger-dialog-overlay" id="danger-dialog-overlay">
     <div class="danger-dialog-box">
-      <div class="dd-icon-wrap"><span id="dd-icon">⚠️</span></div>
+      <div class="dd-icon-wrap" id="dd-icon-wrap"><span id="dd-icon">⚠️</span></div>
       <div class="dd-title" id="dd-title">การกระทำนี้ไม่สามารถย้อนกลับได้</div>
       <div class="dd-desc" id="dd-desc"></div>
       <div class="dd-input-wrap" id="dd-input-wrap" style="display:none">
@@ -1267,7 +1235,6 @@
 
   <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
   </div>
-</div>
 
 <script>
 // Sales Line Chart — initialized with empty data, updated by admin.module.js
@@ -1321,21 +1288,6 @@ window.donutChart = new Chart(ctx2, {
 });
 </script>
 <div id="toast"></div>
-<div id="realtime-status"></div>
-
-<script>
-function toggleSidebar() {
-  document.querySelector('.sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('open');
-}
-function closeSidebar() {
-  document.querySelector('.sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-}
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.addEventListener('click', () => { if (window.innerWidth <= 767) closeSidebar(); });
-});
-</script>
   <script src="js/admin.js"></script>
   <script type="module" src="js/admin.module.js"></script>
 </body>

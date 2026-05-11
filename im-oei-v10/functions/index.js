@@ -124,7 +124,27 @@ exports.validateAndCreateOrder = functions
 // ─── 1. onOrderCreate: stats + stamps (ปลอดภัย — Admin SDK bypass rules) ───
 exports.onOrderCreate = functions.region("asia-northeast1").firestore
   .document("orders/{orderId}")
-  .onCreate(async (snap) => {
+  .onCreate(async (snap, context) => {
+    // ─── Idempotency guard ────────────────────────────────────────────────────
+    // Firestore triggers อาจ retry ได้ → stats/stamps จะ increment ซ้ำถ้าไม่ป้องกัน
+    // ใช้ eventId (unique ต่อ trigger invocation) เป็น lock ใน rateLimits collection
+    const eventId = context.eventId;
+    const lockRef = db.collection("rateLimits").doc(`onOrderCreate_${eventId}`);
+    try {
+      await db.runTransaction(async (tx) => {
+        const lockDoc = await tx.get(lockRef);
+        if (lockDoc.exists) throw new Error("ALREADY_PROCESSED");
+        tx.set(lockRef, { processedAt: admin.firestore.FieldValue.serverTimestamp() });
+      });
+    } catch (err) {
+      if (err.message === "ALREADY_PROCESSED") {
+        console.log(`onOrderCreate: skipped duplicate eventId=${eventId}`);
+        return;
+      }
+      // lock เองมีปัญหา — log แล้วดำเนินการต่อ (ดีกว่าทำให้ stats หาย)
+      console.error("onOrderCreate: idempotency lock error:", err.message);
+    }
+
     const data = snap.data();
     const date = new Date().toISOString().slice(0, 10);
     const batch = db.batch();
@@ -305,6 +325,7 @@ exports.processLineQueue = functions.region("asia-northeast1").firestore
 // ก่อนหน้า: liff.html setDoc lineUsers/linePhoneMap ตรง = hijack ได้
 // ใหม่: function ตรวจ LIFF id_token ก่อน แล้วค่อยเขียนผ่าน Admin SDK
 exports.bindLineAccount = functions
+  .runWith({ enforceAppCheck: true })
   .https.onCall(async (data, context) => {
   const { lineUserId, displayName, phone, liffIdToken } = data;
 
@@ -428,7 +449,16 @@ exports.hashAndSavePassword = functions
       updates.ownerPassword = admin.firestore.FieldValue.delete();
     }
 
-    await db.collection("settings").doc("store").set(updates, { merge: true });
+    // 🔐 FIX: เขียน hash ไปที่ settings/auth (admin-only read) แทน settings/store (public read)
+    // ลบ plaintext เก่าที่อาจยังค้างอยู่ใน settings/store ด้วย
+    await db.collection("settings").doc("auth").set(updates, { merge: true });
+
+    // ลบ plaintext field เก่าออกจาก settings/store ถ้ามี (migration cleanup)
+    const storeCleanup = {};
+    if (adminPassword) storeCleanup.adminPassword = admin.firestore.FieldValue.delete();
+    if (ownerPassword) storeCleanup.ownerPassword = admin.firestore.FieldValue.delete();
+    await db.collection("settings").doc("store").set(storeCleanup, { merge: true }).catch(() => {});
+
     console.log(`hashAndSavePassword: updated by owner ${context.auth.uid}`);
     return { success: true };
   });
@@ -436,6 +466,7 @@ exports.hashAndSavePassword = functions
 // ─── 8. verifyAdminPassword: Callable (ตรวจสอบรหัสผ่าน admin แบบ bcrypt) ──
 // ใช้โดย login.module.js แทนการ getDoc settings/store แล้วเปรียบ plaintext
 exports.verifyAdminPassword = functions
+  .runWith({ enforceAppCheck: true })
   .https.onCall(async (data, context) => {
     const { password, role } = data;
 
@@ -446,38 +477,61 @@ exports.verifyAdminPassword = functions
       throw new functions.https.HttpsError("invalid-argument", "role must be admin or owner.");
     }
 
-    // Rate limit ป้องกัน brute-force: 10 ครั้ง/5 นาที ต่อ IP-ish key
-    // ใช้ uid ถ้า login แล้ว, หรือ random key จาก client
-    const rateLimitKey = context.auth?.uid || data.clientKey || "anon";
+    // Rate limit ป้องกัน brute-force: 10 ครั้ง/5 นาที
+    // 🔐 FIX: ลบ data.clientKey ออก — client ส่ง key อะไรก็ได้ = bypass rate limit ได้
+    // ใช้ uid ถ้า login แล้ว, ถ้า unauthenticated ใช้ "anon_global" (shared bucket)
+    // anon_global = throttle รวมทุก unauthenticated request → กัน brute-force ได้จริง
+    const rateLimitKey = context.auth?.uid || "anon_global";
     await checkRateLimit(`verifyPwd_${rateLimitKey}`, 10, 300_000);
 
     const bcrypt = require("bcrypt");
-    const settingsDoc = await db.collection("settings").doc("store").get();
-    if (!settingsDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "Settings not found.");
-    }
 
-    const s = settingsDoc.data();
+    // 🔐 FIX: อ่าน hash จาก settings/auth (admin-only) แทน settings/store (public)
+    // รองรับ migration: ตรวจ settings/auth ก่อน ถ้าไม่มีค่อย fallback ไป settings/store (legacy)
+    const authDoc = await db.collection("settings").doc("auth").get();
+    const storeDoc = await db.collection("settings").doc("store").get();
+
     const hashField = role === "owner" ? "ownerPasswordHash" : "adminPasswordHash";
     const legacyField = role === "owner" ? "ownerPassword" : "adminPassword";
 
+    // ดึงค่าจากทั้งสอง doc เพื่อรองรับ migration period
+    const authData = authDoc.exists ? authDoc.data() : {};
+    const storeData = storeDoc.exists ? storeDoc.data() : {};
+
     // รองรับ migration period: ถ้ายังมี plaintext เก่า ให้เปรียบตรงก่อน
     // แล้วแจ้งให้ migrate ไป hash
-    if (s[hashField]) {
-      const match = await bcrypt.compare(password, s[hashField]);
+    if (authData[hashField]) {
+      // ✅ ใหม่: hash อยู่ใน settings/auth แล้ว
+      const match = await bcrypt.compare(password, authData[hashField]);
       return { match };
-    } else if (s[legacyField]) {
+    } else if (storeData[hashField]) {
+      // Migration path: hash ยังอยู่ใน settings/store เก่า → ย้ายมา settings/auth
+      console.warn(`verifyAdminPassword: hash still in settings/store, migrating to settings/auth`);
+      const match = await bcrypt.compare(password, storeData[hashField]);
+      if (match) {
+        await db.collection("settings").doc("auth").set(
+          { [hashField]: storeData[hashField] }, { merge: true }
+        );
+        await db.collection("settings").doc("store").update(
+          { [hashField]: admin.firestore.FieldValue.delete() }
+        );
+        console.log(`verifyAdminPassword: migrated ${hashField} to settings/auth`);
+      }
+      return { match };
+    } else if (storeData[legacyField]) {
       // Legacy plaintext — ยังใช้ได้แต่ log warning
       console.warn(`verifyAdminPassword: LEGACY plaintext password still in use for role=${role}. Please migrate!`);
-      const match = password === s[legacyField];
+      const match = password === storeData[legacyField];
       if (match) {
-        // Auto-migrate: hash แล้วเขียนทับทันที
-        const hash = await bcrypt.hash(s[legacyField], 12);
+        // Auto-migrate: hash แล้วเขียนไป settings/auth + ลบ plaintext จาก settings/store
+        const hash = await bcrypt.hash(storeData[legacyField], 12);
+        await db.collection("settings").doc("auth").set(
+          { [hashField]: hash }, { merge: true }
+        );
         await db.collection("settings").doc("store").update({
-          [hashField]: hash,
           [legacyField]: admin.firestore.FieldValue.delete(),
         });
-        console.log(`verifyAdminPassword: auto-migrated ${role} password to bcrypt hash`);
+        console.log(`verifyAdminPassword: auto-migrated ${role} password → bcrypt hash in settings/auth`);
       }
       return { match };
     }
@@ -510,6 +564,7 @@ exports.cleanupLineQueue = functions.region("asia-northeast1").pubsub
 // แทน getDoc(lineUsers/userId) ตรงจาก client ซึ่ง Rules บล็อก
 // verify liffIdToken ก่อน → ถ้าผ่านค่อย return phone status
 exports.getLineUserStatus = functions
+  .runWith({ enforceAppCheck: true })
   .https.onCall(async (data, context) => {
     const { lineUserId, liffIdToken } = data;
 
@@ -556,4 +611,77 @@ exports.getLineUserStatus = functions
       displayName: d.displayName || "",
       pictureUrl: d.pictureUrl || null,
     };
+  });
+
+// ─── issueAdminCustomToken: Callable ─────────────────────────────────────────
+// แก้ปัญหา: LINE admin login ไม่ได้ทำ Firebase Auth signIn
+// → request.auth = null → isFirebaseAdmin() = false
+// → อ่าน orders, customers, lineQueue ไม่ได้ → หน้าว่างทั้งหมด
+//
+// Flow:
+// 1. Client ส่ง lineUserId + liffToken
+// 2. Function verify LIFF token กับ LINE API
+// 3. ตรวจ admins/{lineUserId} ใน Firestore
+// 4. ออก Firebase Custom Token (uid = lineUserId)
+// 5. Client signInWithCustomToken → มี Firebase Auth → Firestore rules ผ่าน
+exports.issueAdminCustomToken = functions
+  .region("asia-northeast1")
+  .runWith({ enforceAppCheck: true })
+  .https.onCall(async (data, context) => {
+    const { lineUserId, liffToken } = data;
+
+    if (!lineUserId || typeof lineUserId !== "string") {
+      throw new functions.https.HttpsError("invalid-argument", "lineUserId required.");
+    }
+    if (!liffToken || typeof liffToken !== "string") {
+      throw new functions.https.HttpsError("invalid-argument", "liffToken required.");
+    }
+
+    // Rate limit: 10 ครั้ง / 5 นาที ต่อ LINE user
+    await checkRateLimit(`adminToken_${lineUserId}`, 10, 300_000);
+
+    // ── Verify LIFF token กับ LINE API ──────────────────────────────────────
+    // 🔐 FIX: เพิ่ม fetch import (node-fetch เหมือน function อื่น) +
+    //         เปลี่ยน GET→POST + body แบบ form-encoded
+    //         LINE /oauth2/v2.1/verify ต้องการ POST เท่านั้น
+    //         การใช้ GET ทำให้ได้ error response → verifyRes.ok = false → login พัง 100%
+    const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
+    let verifyBody;
+    try {
+      const liffId = functions.config().line?.liff_id || "";
+      const verifyRes = await fetch("https://api.line.me/oauth2/v2.1/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id_token=${encodeURIComponent(liffToken)}&client_id=${encodeURIComponent(liffId)}`,
+      });
+      verifyBody = await verifyRes.json();
+      if (!verifyRes.ok || verifyBody.sub !== lineUserId) {
+        throw new functions.https.HttpsError("unauthenticated", "LIFF token ไม่ถูกต้อง");
+      }
+    } catch (err) {
+      if (err.code) throw err; // HttpsError จาก code ข้างบน
+      console.error("LIFF verify error:", err.message);
+      throw new functions.https.HttpsError("internal", "LIFF verify ล้มเหลว");
+    }
+
+    // ── ตรวจ admin role ใน Firestore ─────────────────────────────────────────
+    const adminDoc = await db.collection("admins").doc(lineUserId).get();
+    if (!adminDoc.exists) {
+      throw new functions.https.HttpsError("permission-denied", "ไม่มีสิทธิ์ admin");
+    }
+    const role = adminDoc.data().role || "admin";
+    if (role !== "admin" && role !== "owner") {
+      throw new functions.https.HttpsError("permission-denied", "Role ไม่ถูกต้อง");
+    }
+
+    // ── ออก Custom Token ─────────────────────────────────────────────────────
+    // uid = lineUserId เพื่อให้ admins/{uid} exists → isFirebaseAdmin() = true
+    const customToken = await admin.auth().createCustomToken(lineUserId, {
+      role,
+      lineUserId,
+      isAdmin: true,
+    });
+
+    console.log(`issueAdminCustomToken: issued for ${lineUserId} role=${role}`);
+    return { customToken, role };
   });

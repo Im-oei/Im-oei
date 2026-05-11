@@ -46,3 +46,10 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.28s;z-index:600;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== LIFF PAGE — Premium Redesign Overrides ===== */
+:root {
+  --primary: #FF9F1C; --primary-dark: #E8870A;
+  --primary-light: #FFF3E0; --primary-glow: rgba(255,159,28,0.28);
+  --bg: #FFF9F2; --bg-card: #FFFFFF; --text: #2B2B2B;
+}

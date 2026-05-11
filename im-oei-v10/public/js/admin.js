@@ -142,7 +142,7 @@ function saveMenuItem() {
 function openAddCustomer() {
   if (typeof window._openAddCustomer === 'function') { window._openAddCustomer(); return; }
   const modal = document.getElementById('modal-customer');
-  if (modal) modal.style.display = 'flex';
+  if (modal) modal.classList.add('show');
 }
 function saveCustomer() {
   if (typeof window._saveCustomer === 'function') { window._saveCustomer(); }
@@ -157,6 +157,7 @@ function toggleNotifications() {
   const overlay = document.getElementById('notif-overlay');
   const isOpen = panel.classList.contains('open');
   panel.classList.toggle('open', !isOpen);
+  // notif-panel-overlay ใช้ opacity transition (admin.css)
   overlay.classList.toggle('open', !isOpen);
 }
 
@@ -399,6 +400,7 @@ window.notifyCustomer = async function(orderId, customerName, pickupTime) {
 
 // 3. quickUploadPhoto — อัพโหลดรูปจากเครื่องสำหรับ menu item (modal รูป)
 window.quickUploadPhoto = function(input) {
+  if (input.files[0] && input.files[0].size > 3*1024*1024) { showToast && showToast('❌ รูปใหญ่เกินไป (สูงสุด 3MB)'); input.value=''; return; }
   const file = input.files?.[0];
   if (!file) return;
   const reader = new FileReader();
@@ -422,6 +424,7 @@ window.updateRewardTypeUI = function() {
 
 // 5. uploadBrandLogo — อัพโหลดโลโก้ร้านจากเครื่อง (base64)
 window.uploadBrandLogo = function(input) {
+  if (input.files[0] && input.files[0].size > 2*1024*1024) { showToast && showToast('❌ โลโก้ใหญ่เกินไป (สูงสุด 2MB)'); input.value=''; return; }
   const file = input.files?.[0];
   if (!file) return;
   const reader = new FileReader();
@@ -440,6 +443,7 @@ window.uploadBrandLogo = function(input) {
 
 // 6. uploadBrandHero — อัพโหลดรูป Hero banner จากเครื่อง (base64)
 window.uploadBrandHero = function(input) {
+  if (input.files[0] && input.files[0].size > 5*1024*1024) { showToast && showToast('❌ รูป Hero ใหญ่เกินไป (สูงสุด 5MB)'); input.value=''; return; }
   const file = input.files?.[0];
   if (!file) return;
   const reader = new FileReader();
@@ -455,29 +459,15 @@ window.uploadBrandHero = function(input) {
 
 
 
-// ===== Auto-added fallback admin functions =====
-const __safeToast=(m)=>{try{showToast(m)}catch(e){alert(m)}};
-window.closeModal=function(id){
-  const modal=id?document.getElementById(id):document.querySelector('.modal.show,.modal.active');
-  if(modal){modal.classList.remove('show','active');modal.style.display='none';}
+// sidebar controls (not in module)
+window.toggleSidebar = function() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
 };
-window.openDangerDialog=function(msg='ยืนยันการทำรายการ?',cb){
-  if(confirm(msg)){ if(typeof cb==='function') cb(); }
+window.closeSidebar = function() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
 };
-window.closeDangerDialog=function(){};
-window.confirmDangerAction=function(){return true;};
-window.closeConfirmDialog=function(){};
-window.toggleSidebar=function(){document.body.classList.toggle('sidebar-open');};
-window.closeSidebar=function(){document.body.classList.remove('sidebar-open');};
-window.setStatsPeriod=function(period){window.currentStatsPeriod=period;__safeToast('เปลี่ยนช่วงสถิติ: '+period);};
-window.exportOrdersCSV=function(){
-  const rows=[['OrderID','Customer','Total']];
-  const csv=rows.map(r=>r.join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='orders.csv';a.click();
-  __safeToast('Export CSV สำเร็จ');
-};
-window.lookupStamp=function(){__safeToast('ค้นหาแสตมป์สำเร็จ');};
 window.addPickupLocation=function(){
  const wrap=document.getElementById('pickup-locations');
  if(!wrap)return;
@@ -495,62 +485,65 @@ window.openAddReward=function(){__safeToast('เปิดเพิ่ม Reward'
 // Auto initialize dashboard + expose globals
 window.switchTab = switchTab;
 
-window.addEventListener('DOMContentLoaded', () => {
-  const dashboardPanel = document.getElementById('panel-dashboard');
-  if (dashboardPanel && !dashboardPanel.classList.contains('active')) {
-    dashboardPanel.classList.add('active');
+// duplicate DOMContentLoaded removed
+// duplicate switchTab removed
+
+
+// ====== USER MENU DROPDOWN ======
+window.toggleUserMenu = function() {
+  const dd = document.getElementById('user-dropdown');
+  if (!dd) return;
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // ปิดเมื่อกดนอก
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!e.target.closest('.user-chip')) {
+          dd.style.display = 'none';
+        }
+        document.removeEventListener('click', closeMenu);
+      });
+    }, 10);
   }
-
-  const firstNav = document.querySelector('.nav-item');
-  if (typeof switchTab === 'function') {
-    switchTab('dashboard', firstNav);
-  }
-});
-window.switchTab = function(tab, el) {
-
-  document.querySelectorAll('.panel').forEach(p => {
-    p.classList.remove('active');
-  });
-
-  document.querySelectorAll('.nav-item').forEach(n => {
-    n.classList.remove('active');
-  });
-
-  const panel = document.getElementById('panel-' + tab);
-
-  if (panel) {
-    panel.classList.add('active');
-  }
-
-  if (el) {
-    el.classList.add('active');
-  }
-if (tab === 'menu' && typeof loadMenu === 'function')
-  loadMenu();
-
-if (tab === 'banners' && typeof loadBanners === 'function')
-  loadBanners();
-
-if (tab === 'customers' && typeof loadCustomers === 'function')
-  loadCustomers();
-
-if (tab === 'loyalty' && typeof loadStampConfig === 'function') {
-  loadStampConfig();
-
-  if (typeof loadRewards === 'function')
-    loadRewards();
-}
-
-if (tab === 'orders' && typeof listenOrders === 'function')
-  listenOrders();
-
-if (tab === 'settings' && typeof loadSettings === 'function')
-  loadSettings();
-
-if (tab === 'stats' && typeof renderStats === 'function')
-  renderStats();
 };
-document.addEventListener('DOMContentLoaded', () => {
-  window.switchTab('dashboard');
-});
 
+window.adminLogout = async function() {
+  sessionStorage.removeItem('imkum_admin_auth');
+  sessionStorage.removeItem('imkum_user');
+  localStorage.removeItem('imkum_name');
+  try {
+    const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await signOut(getAuth()); // await ก่อน redirect — ล้าง IndexedDB session ให้เสร็จก่อน
+  } catch(e) {}
+  window.location.href = 'login.html';
+};
+
+// ====== GLOBAL SEARCH ======
+window.globalSearch = function(q) {
+  const query = (q || '').trim().toLowerCase();
+  if (!query) return;
+
+  // ค้นหาใน allOrders
+  if (window.allOrders && window.allOrders.length > 0) {
+    const matched = window.allOrders.filter(o =>
+      (o.customerName || '').toLowerCase().includes(query) ||
+      (o.customerPhone || '').includes(query) ||
+      (o.id || '').toLowerCase().includes(query) ||
+      (o.items || []).some(i => (i.name || '').toLowerCase().includes(query))
+    );
+    if (matched.length > 0) {
+      window.switchTab('orders');
+      window._renderFilteredOrders && window._renderFilteredOrders(matched);
+      return;
+    }
+  }
+
+  // ค้นหาใน menu — switch ไปหน้า menu + highlight
+  window.switchTab('menu');
+  const menuItems = document.querySelectorAll('.menu-item-card, .menu-card');
+  menuItems.forEach(el => {
+    const text = el.textContent.toLowerCase();
+    el.style.opacity = text.includes(query) ? '1' : '0.3';
+  });
+};

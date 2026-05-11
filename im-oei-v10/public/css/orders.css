@@ -245,3 +245,11 @@
   margin:8px 0 22px;
 }
 /* ===== End Stream Orders Redesign ===== */
+
+/* ===== ORDERS PAGE — Premium Redesign Overrides ===== */
+:root {
+  --primary: #FF9F1C; --primary-dark: #E8870A;
+  --primary-light: #FFF3E0; --primary-glow: rgba(255,159,28,0.28);
+  --bg: #FFF9F2; --bg-card: #FFFFFF; --text: #2B2B2B;
+  --text-sub: #9B9B9B; --border: rgba(255,159,28,0.14); --border-soft: #F0EBE3;
+}

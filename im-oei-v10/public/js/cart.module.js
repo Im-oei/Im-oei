@@ -10,7 +10,7 @@ const firebaseConfig = {
 
 // cart.html — ES module (Firebase)
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
@@ -18,7 +18,7 @@ import { FIREBASE_CONFIG } from "../config.js";
 window._onSnapshot = onSnapshot;
 window._collection = collection;
 
-const app = initializeApp(FIREBASE_CONFIG);
+const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-northeast1');
@@ -113,6 +113,10 @@ window.checkout = async function() {
   var isNextDay = pickupRaw.startsWith('next:');
   var pickupTime = pickupRaw.replace('next:', '');
   const phone = userObj.phone || '';
+  if (phone && !/^0[0-9]{9}$/.test(phone.replace(/[-\s]/g,''))) {
+    showToast('⚠️ เบอร์โทรศัพท์ไม่ถูกต้อง กรุณาแก้ไขในโปรไฟล์');
+    return;
+  }
   const lineUserId = userObj.lineUserId || '';
   const guestId = userObj.guestId || '';
 

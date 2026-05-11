@@ -1,6 +1,6 @@
 // admin.html — ES module (Firebase)
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, onSnapshot, query,
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
@@ -10,7 +10,7 @@ import { FIREBASE_CONFIG } from '../config.js'
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
-const app = initializeApp(FIREBASE_CONFIG);
+const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-northeast1');
@@ -78,33 +78,60 @@ let currentFeaturedIds = [];
 
 // ====== INIT ======
 if (checkAuth()) {
-applyRoleUI();
-loadSettings();
-loadMenu();
-loadBanners();
-loadCategories();
-loadStampConfig();
-loadPreorderSetting();
-// โหลดข้อมูลทันที ไม่รอ Firebase Auth
-// (LINE admin ไม่มี Firebase Auth token แต่ตรวจ role ผ่าน session แล้ว)
-listenOrders();
-listenLineQueue();
-loadCustomers();
-loadRewards();
+  applyRoleUI();
 
-// Firebase Auth เปิดไว้สำหรับ email admin (ไม่บล็อก LINE admin)
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log('Firebase Auth admin:', user.email);
+  // โหลดชื่อ admin จาก session
+  (function() {
+    try {
+      const u = JSON.parse(sessionStorage.getItem('imkum_user') || '{}');
+      const name = u.name || u.email || 'Admin';
+      const role = u.role || 'admin';
+      const label = role === 'owner' ? '👑 ' + name : name;
+      const el = document.getElementById('admin-display-name');
+      const el2 = document.getElementById('user-dropdown-name');
+      if (el) el.textContent = label;
+      if (el2) el2.textContent = label + ' (' + role + ')';
+    } catch(e) {}
+  })();
+
+  let _adminInitDone = false;
+  function _runAdminInit() {
+    if (_adminInitDone) return;
+    _adminInitDone = true;
+    loadSettings();
+    loadMenu();
+    loadBanners();
+    loadCategories();
+    loadStampConfig();
+    loadPreorderSetting();
+    listenOrders();
+    listenLineQueue();
+    loadCustomers();
+    loadRewards();
   }
-});
-// initAdminNotifications - handled by second script tag
+
+  // รอ Firebase Auth restore ก่อน (custom token จาก login.module.js)
+  // onAuthStateChanged fire ครั้งแรกเสมอ (user หรือ null) — ใช้เป็น signal ว่า SDK พร้อมแล้ว
+  let _authResolved = false;
+  onAuthStateChanged(auth, (user) => {
+    if (!_authResolved) {
+      _authResolved = true;
+      // user != null  → มี Firebase Auth session (LINE custom token หรือ email login)
+      // user == null  → ไม่มี session แต่ SDK ตอบแล้ว (เช่น email admin ที่ session หมดอายุ)
+      //                 → โหลดข้อมูลได้แต่ Firestore rules อาจบล็อก collections ที่ต้อง auth
+      _runAdminInit();
+    }
+  });
+
+  // Safety fallback: ถ้า onAuthStateChanged ไม่ fire ภายใน 3 วิ (เช่น Firebase SDK โหลดช้า)
+  setTimeout(() => { if (!_adminInitDone) _runAdminInit(); }, 3000);
+
+  // initAdminNotifications - handled by second script tag
 }
 
 // ====== REALTIME ORDERS ======
 function listenOrders() {
-  // ไม่ใช้ orderBy ใน query → ไม่ต้องการ Firestore Index
-  // เรียงลำดับ client-side แทน
+  if (unsubOrders) { unsubOrders(); unsubOrders = null; } // cleanup ก่อน re-subscribe
   const q = collection(db, 'orders');
   unsubOrders = onSnapshot(q,
     snap => {
@@ -502,6 +529,26 @@ function renderOrderCard(o) {
     </div>`;
 }
 
+// ====== DELETE ORDER ======
+window.deleteOrder = async function(id) {
+  const ok = await showConfirmDialog({
+    icon: '🗑️', iconBg: '#FFEBEE', iconBorder: '#FFCDD2',
+    title: 'ลบออเดอร์นี้?',
+    desc: 'ออเดอร์จะถูกลบถาวร ไม่สามารถย้อนกลับได้',
+    confirmText: 'ลบเลย', confirmColor: 'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor: '#fff',
+  });
+  if (!ok) return;
+  try {
+    showLoading(true);
+    await deleteDoc(doc(db, 'orders', id));
+    showToast('🗑️ ลบออเดอร์แล้ว');
+  } catch(e) {
+    showToast('❌ ลบไม่ได้: ' + e.message);
+  } finally {
+    showLoading(false);
+  }
+};
+
 // ====== LOAD MENU ======
 async function loadMenu() {
   try {
@@ -553,8 +600,6 @@ function renderMenuAdmin() {
     console.error('menu-admin-list not found');
     return;
   }
-
-  console.log('Rendering menu items:', allMenuItems);
   const grouped = {};
   allMenuItems.forEach(item => {
     const k = item.catKey || 'other';
@@ -563,13 +608,13 @@ function renderMenuAdmin() {
   });
   let html = '';
   Object.entries(grouped).forEach(([k, g]) => {
-    html += `<div class="cat-header-admin" style="font-size:15px;font-weight:800;padding:10px 0 6px;color:var(--text)">${g.label}</div>`;
+    html += `<div class="cat-header-admin" style="font-size:15px;font-weight:800;padding:10px 0 6px;color:var(--text)">${esc(g.label)}</div>`;
     g.items.forEach(item => {
       html += `
         <div class="menu-item-admin" style="${item.hidden?'opacity:0.5':''}">
-          <div class="food-emoji">${item.imageUrl ? `<img src="${item.imageUrl}" alt="">` : (item.emoji||'🍽️')}</div>
+          <div class="food-emoji">${item.imageUrl ? `<img src="${esc(item.imageUrl)}" alt="">` : (item.emoji||'🍽️')}</div>
           <div class="info">
-            <div class="name">${item.name} ${item.hidden?'<span class="hidden-badge">ซ่อน</span>':''}</div>
+            <div class="name">${esc(item.name)} ${item.hidden?'<span class="hidden-badge">ซ่อน</span>':''}</div>
             <div class="price">${item.price} บาท</div>
           </div>
           <div class="actions">
@@ -605,16 +650,17 @@ function renderCategoryAdmin() {
     <div class="cat-admin-card">
       <div class="cat-emoji">${c.emoji||'🍽️'}</div>
       <div class="info">
-        <div class="c-name">${c.name}</div>
-        <div class="c-key">key: ${c.key} | ลำดับ: ${c.sortOrder||0}</div>
+        <div class="c-name">${esc(c.name)}</div>
+        <div class="c-key">key: ${esc(c.key)} | ลำดับ: ${c.sortOrder||0}</div>
       </div>
-      <button class="icon-btn btn-edit" onclick="openEditCategory('${c.key}')" title="แก้ไข">✏️</button>
-      <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCategoryItem('${c.key}')" title="ลบ">🗑️</button>
+      <button class="icon-btn btn-edit" onclick="openEditCategory('${esc(c.key)}')" title="แก้ไข">✏️</button>
+      <button class="icon-btn" style="background:#FFEBEE" onclick="deleteCategoryItem('${esc(c.key)}')" title="ลบ">🗑️</button>
     </div>`).join('');
 }
 
 // ====== DELETE MENU ITEM ======
 window.deleteMenuItem = async function(id) {
+  showLoading(true);
   var ok = await showConfirmDialog({ icon:'🗑️', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบเมนูนี้?', desc:'เมนูจะถูกลบออกจากระบบถาวร\nไม่สามารถย้อนกลับได้', confirmText:'ลบเมนู', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
   if (!ok) return;
   // ลบจาก local state ก่อนเสมอ
@@ -756,6 +802,9 @@ window.previewBannerModal = function() {
 };
 
 window.uploadBannerModal = function(input) {
+  if (input.files[0] && input.files[0].size > 5 * 1024 * 1024) {
+    showToast('❌ ไฟล์ใหญ่เกินไป (สูงสุด 5MB)'); input.value = ''; return;
+  }
   const file = input.files[0]; if (!file) return;
   showLoading(true);
   // compress ลงให้เล็กที่สุด (max 400px wide) เพื่อให้ Firestore รับได้
@@ -808,6 +857,7 @@ window.saveBannerItem = async function() {
 };
 
 window.deleteBannerItem = async function(id) {
+  showLoading(true);
   var ok = await showConfirmDialog({ icon:'🖼️', iconBg:'#FFF3E0', iconBorder:'#FFE0B2', title:'ลบแบนเนอร์?', desc:'แบนเนอร์นี้จะถูกลบออกถาวร', confirmText:'ลบแบนเนอร์', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
   if (!ok) return;
   // Optimistic local remove first
@@ -892,6 +942,7 @@ window.saveCategoryItem = async function() {
 };
 
 window.deleteCategoryItem = async function(key) {
+  showLoading(true);
   const inUse = allMenuItems.some(i => i.catKey === key);
   var desc = inUse
     ? 'หมวดหมู่นี้ยังมีเมนูอยู่\nเมนูจะถูกย้ายไปหมวด "other" โดยอัตโนมัติ'
@@ -1601,11 +1652,32 @@ window.deleteCustomer = async function(id) {
 window._saveCustomer = async function() {
   const id = document.getElementById('cust-edit-id').value.trim();
   const name = document.getElementById('cust-name').value.trim();
+  const phone = document.getElementById('cust-phone').value.trim();
   if (!name) { showToast('❌ กรุณาใส่ชื่อลูกค้า'); return; }
+
+  // ===== ตรวจ duplicate (เฉพาะ add ใหม่ หรือ edit แต่ไม่ใช่ตัวเอง) =====
+  const others = _allCustomers.filter(c => c.id !== id);
+
+  // ตรวจชื่อซ้ำ (case-insensitive)
+  const dupName = others.find(c => (c.name||'').trim().toLowerCase() === name.toLowerCase());
+  if (dupName) {
+    showToast('❌ มีลูกค้าชื่อ "' + dupName.name + '" อยู่แล้ว');
+    return;
+  }
+
+  // ตรวจเบอร์ซ้ำ (ถ้ากรอกเบอร์)
+  if (phone) {
+    const dupPhone = others.find(c => (c.phone||'').replace(/\D/g,'') === phone.replace(/\D/g,''));
+    if (dupPhone) {
+      showToast('❌ เบอร์ ' + phone + ' ใช้แล้ว (ลูกค้า: ' + dupPhone.name + ')');
+      return;
+    }
+  }
+
   const data = {
     name,
     userId: document.getElementById('cust-userid').value.trim(),
-    phone: document.getElementById('cust-phone').value.trim(),
+    phone,
     address: document.getElementById('cust-address').value.trim(),
     points: parseInt(document.getElementById('cust-points').value)||0,
     note: document.getElementById('cust-note').value.trim(),
@@ -1972,12 +2044,12 @@ window.openDangerDialog = function(type) {
     document.getElementById('dd-input-label').textContent = cfg.inputLabel;
     inputEl.placeholder = cfg.placeholder;
     inputEl.value = '';
-    inputEl.className = 'danger-dialog-input';
+    inputEl.className = 'dd-input';
     confirmBtn.disabled = true;
     inputEl.oninput = function() {
       var matched = inputEl.value === _dangerKeyword;
       confirmBtn.disabled = !matched;
-      inputEl.className = 'danger-dialog-input' + (inputEl.value.length > 0 ? (matched ? ' matched' : '') : '');
+      inputEl.className = 'dd-input' + (inputEl.value.length > 0 ? (matched ? ' matched' : '') : '');
     };
   } else {
     inputWrap.style.display = 'none';
