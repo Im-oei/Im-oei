@@ -2,152 +2,312 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>เข้าสู่ระบบ - อิ่มเอ๋ย</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800;900&family=Prompt:wght@700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/login.css">
+<style>
+/* ===== RESET ===== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:#FFF9F0;font-family:'Sarabun',sans-serif;color:#2B2B2B;-webkit-font-smoothing:antialiased;}
+
+/* ===== PAGE LAYOUT ===== */
+.page{min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:#FFF9F0;position:relative;overflow:hidden;}
+
+/* ===== HERO SECTION ===== */
+.hero-section{position:relative;width:100%;height:300px;overflow:hidden;background:linear-gradient(135deg,#FFB347,#FF9F1C);}
+.hero-section img.hero-bg{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
+/* hero overlay gradient ด้านล่าง */
+.hero-section::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,#FFF9F0);pointer-events:none;}
+
+/* brand overlay บน hero */
+.hero-brand{position:absolute;top:0;left:0;right:0;padding:32px 24px 0;z-index:2;display:flex;align-items:flex-start;gap:14px;}
+.hero-logo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.8);box-shadow:0 4px 16px rgba(0,0,0,0.15);flex-shrink:0;}
+.hero-logo-fallback{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FF9F1C,#E8870A);border:3px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;}
+.hero-brand-text{padding-top:6px;}
+.hero-brand-name{font-family:'Prompt',sans-serif;font-size:32px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.3);line-height:1;}
+.hero-brand-sub{font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;margin-top:4px;}
+/* feature chips */
+.hero-chips{position:absolute;bottom:28px;left:24px;right:24px;z-index:2;display:flex;gap:12px;}
+.hero-chip{background:rgba(255,255,255,0.22);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:6px 14px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hero-chip-icon{font-size:20px;}
+.hero-chip-label{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;}
+
+/* ===== LOGIN CARD ===== */
+.login-card{background:#fff;border-radius:32px 32px 0 0;margin-top:-24px;position:relative;z-index:3;padding:28px 22px 40px;box-shadow:0 -4px 30px rgba(0,0,0,0.08);flex:1;}
+
+/* Lock icon */
+.lock-wrap{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#FFF3E0,#FFE0B0);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px;box-shadow:0 4px 16px rgba(255,159,28,0.25);}
+.card-title{font-family:'Prompt',sans-serif;font-size:20px;font-weight:800;text-align:center;color:#2B2B2B;margin-bottom:4px;}
+.card-sub{font-size:13px;color:#9B9B9B;text-align:center;margin-bottom:22px;}
+
+/* Error */
+.error-box{background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:12px 16px;font-size:13px;color:#DC2626;margin-bottom:16px;display:none;}
+
+/* ===== LINE BUTTON ===== */
+.line-btn{width:100%;padding:18px 20px;border-radius:18px;border:none;background:#06C755;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 6px 24px rgba(6,199,85,0.35);transition:transform .15s;position:relative;overflow:hidden;margin-bottom:14px;}
+.line-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 60%);pointer-events:none;}
+.line-btn:active{transform:scale(0.97);}
+.line-btn-icon{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.line-btn-text{display:flex;flex-direction:column;align-items:flex-start;flex:1;}
+.line-btn-main{font-family:'Prompt',sans-serif;font-size:16px;font-weight:800;color:#fff;line-height:1;}
+.line-btn-sub{font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:3px;}
+.line-btn-arrow{color:rgba(255,255,255,0.8);font-size:18px;flex-shrink:0;}
+
+/* Benefits chips */
+.benefits-row{background:#F8FFF8;border:1px solid #D1FAE5;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-around;margin-bottom:20px;}
+.benefit-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.benefit-icon{font-size:18px;}
+.benefit-title{font-size:11px;font-weight:800;color:#166534;}
+.benefit-desc{font-size:10px;color:#6B7280;}
+
+/* Divider */
+.divider{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#F0EBE3;}
+.divider span{font-size:12px;font-weight:700;color:#C4C4C4;}
+
+/* ===== OPTION ROWS ===== */
+.option-row{width:100%;background:#fff;border:1.5px solid #F0EBE3;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;margin-bottom:10px;text-align:left;}
+.option-row:active{background:#FFF8EE;border-color:#FF9F1C;}
+.option-icon-wrap{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FFF3E0,#FFE4B0);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.option-text{flex:1;}
+.option-title{font-size:14px;font-weight:700;color:#2B2B2B;}
+.option-desc{font-size:11px;color:#9B9B9B;margin-top:2px;}
+.option-arrow{color:#C4C4C4;font-size:16px;flex-shrink:0;}
+
+/* Guest collapse */
+.guest-collapse{overflow:hidden;max-height:0;opacity:0;transition:max-height .3s ease,opacity .25s ease;}
+.guest-collapse.open{max-height:300px;opacity:1;}
+.guest-inner{padding:4px 0 8px;}
+.guest-label{font-size:12px;font-weight:700;color:#9B9B9B;margin-bottom:8px;display:block;}
+.guest-input{width:100%;border:2px solid #F0EBE3;border-radius:14px;padding:14px 16px;font-family:'Sarabun',sans-serif;font-size:15px;color:#2B2B2B;outline:none;transition:all .2s;background:#FAFAF8;}
+.guest-input:focus{border-color:#FF9F1C;box-shadow:0 0 0 4px rgba(255,159,28,0.12);background:#fff;}
+.guest-input::placeholder{color:#C4C4C4;}
+.guest-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#FF9F1C,#E8870A);font-family:'Sarabun',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;margin-top:10px;box-shadow:0 4px 16px rgba(255,159,28,0.4);transition:transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.guest-btn:active{transform:scale(0.97);}
+.guest-btn:disabled{opacity:.6;cursor:not-allowed;}
+
+/* Admin collapse */
+.admin-collapse{overflow:hidden;max-height:0;opacity:0;transition:max-height .3s ease,opacity .25s ease;}
+.admin-collapse.open{max-height:400px;opacity:1;}
+.admin-inner{padding:12px 0 4px;}
+.admin-input-wrap{margin-bottom:12px;position:relative;}
+.admin-label{font-size:12px;font-weight:700;color:#9B9B9B;margin-bottom:7px;display:block;}
+.admin-input{width:100%;border:2px solid #F0EBE3;border-radius:14px;padding:14px 16px;font-family:'Sarabun',sans-serif;font-size:15px;color:#2B2B2B;outline:none;transition:all .2s;background:#FAFAF8;}
+.admin-input:focus{border-color:#FF9F1C;box-shadow:0 0 0 4px rgba(255,159,28,0.12);background:#fff;}
+.admin-input::placeholder{color:#C4C4C4;}
+.pwd-toggle{position:absolute;right:14px;bottom:14px;background:none;border:none;cursor:pointer;padding:4px;}
+.admin-submit{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#FF9F1C,#E8870A);font-family:'Prompt',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(255,159,28,0.4);transition:transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.admin-submit:active{transform:scale(0.97);}
+.admin-submit:disabled{opacity:.6;cursor:not-allowed;}
+
+/* Privacy */
+.privacy-note{text-align:center;font-size:11px;color:#C4C4C4;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:5px;}
+
+/* Admin link */
+.admin-link-wrap{margin-top:14px;padding-top:14px;border-top:1px solid #F5F0EC;text-align:center;}
+.admin-link-btn{background:none;border:none;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#C4C4C4;cursor:pointer;padding:4px 8px;}
+
+/* Back button */
+.back-btn-wrap{padding:0 22px 32px;margin-top:-4px;}
+.back-btn{width:100%;padding:15px;border-radius:16px;border:2px solid #F0EBE3;background:#FAFAFA;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:#9B9B9B;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+.back-btn:active{border-color:#FF9F1C;color:#FF9F1C;}
+
+/* Loading / Toast */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,249,242,0.85);display:none;align-items:center;justify-content:center;z-index:999;}
+.loading-overlay.show{display:flex;}
+.spinner{width:48px;height:48px;border-radius:50%;border:4px solid #FFE4B0;border-top-color:#FF9F1C;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(36,36,36,0.94);color:#fff;padding:12px 26px;border-radius:9999px;font-size:13px;font-weight:700;opacity:0;transition:all .28s;z-index:1000;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.checking-ring{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:spin .7s linear infinite;}
+
+/* OTP Modal */
+.otp-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:700;display:none;align-items:flex-end;justify-content:center;}
+.otp-overlay.show{display:flex;}
+.otp-sheet{width:100%;max-width:480px;background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 44px;box-shadow:0 -8px 40px rgba(0,0,0,0.18);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.otp-title{font-family:'Prompt',sans-serif;font-size:20px;font-weight:800;color:#2B2B2B;text-align:center;margin-bottom:6px;}
+.otp-sub{font-size:13px;color:#9B9B9B;text-align:center;margin-bottom:22px;}
+.otp-field-wrap{display:flex;align-items:center;gap:10px;border:2px solid #F0EBE3;border-radius:14px;padding:4px 14px;margin-bottom:14px;background:#FAFAF8;}
+.otp-prefix{font-size:15px;font-weight:700;color:#9B9B9B;flex-shrink:0;}
+.otp-input{flex:1;border:none;background:transparent;outline:none;font-family:'Sarabun',sans-serif;font-size:16px;font-weight:700;color:#2B2B2B;padding:12px 0;}
+.otp-code-input{width:100%;border:2px solid #F0EBE3;border-radius:14px;padding:16px;font-family:'Prompt',sans-serif;font-size:28px;font-weight:800;color:#2B2B2B;text-align:center;letter-spacing:12px;outline:none;background:#FAFAF8;margin-bottom:14px;box-sizing:border-box;}
+.otp-code-input:focus{border-color:#FF9F1C;}
+.otp-btn{width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#FF9F1C,#E8870A);font-family:'Prompt',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(255,159,28,0.35);transition:transform .15s;}
+.otp-btn:active{transform:scale(0.97);}
+.otp-btn:disabled{opacity:.55;cursor:not-allowed;}
+.otp-skip{width:100%;background:none;border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#C4C4C4;cursor:pointer;padding:8px;text-decoration:underline;}
+.otp-sent-hint{font-size:13px;color:#666;text-align:center;margin-bottom:14px;line-height:1.5;}
+.otp-error{font-size:13px;font-weight:700;color:#EF4444;text-align:center;margin-top:8px;min-height:20px;}
+#recaptcha-container{margin-bottom:10px;}
+
+/* Decoration blobs */
+.blob-br{position:fixed;bottom:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,rgba(255,159,28,0.15),rgba(255,193,7,0.08));pointer-events:none;z-index:0;}
+.blob-bl{position:fixed;bottom:-40px;left:-50px;width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,rgba(255,159,28,0.12),transparent);pointer-events:none;z-index:0;}
+</style>
 </head>
 <body>
 
-<!-- ─── HERO ─── -->
-<div class="hero-top">
-  <img src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
-  <div class="hero-top-overlay"></div>
+<div class="blob-br"></div>
+<div class="blob-bl"></div>
 
-  <!-- Brand on hero -->
-  <div class="hero-brand-overlay">
-    <img src="logo.webp" class="hero-logo-img" alt="logo"
-      onerror="this.outerHTML='<div style=&quot;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FF9F1C,#E8870A);border:3px solid #FF9F1C;display:flex;align-items:center;justify-content:center;font-size:32px;&quot;>🍱</div>'">
-    <div class="hero-brand-name">อิ่มเอ๋ย</div>
-    <div class="hero-brand-sub">อร่อยง่ายๆ ใกล้บ้านคุณ ✨</div>
-    <div class="hero-feature-chips">
-      <div class="hero-chip"><span>🍽️</span> เมนูหลากหลาย</div>
-      <div class="hero-chip"><span>⚡</span> จัดส่งไว</div>
-      <div class="hero-chip"><span>⭐</span> สะสมแต้ม</div>
+<div class="page">
+
+  <!-- ─── HERO ─── -->
+  <div class="hero-section">
+    <img class="hero-bg" src="hero.webp" alt="อิ่มเอ๋ย food" onerror="this.style.display='none'">
+
+    <!-- Brand -->
+    <div class="hero-brand">
+      <img src="logo.webp" class="hero-logo" alt="logo"
+        onerror="this.outerHTML='<div class=&quot;hero-logo-fallback&quot;>🍱</div>'">
+      <div class="hero-brand-text">
+        <div class="hero-brand-name">อิ่มเอ๋ย</div>
+        <div class="hero-brand-sub">อร่อยง่ายๆ <span style="color:#FFE082;font-weight:800;">ใกล้บ้านคุณ</span></div>
+      </div>
+    </div>
+
+    <!-- Feature chips -->
+    <div class="hero-chips">
+      <div class="hero-chip">
+        <span class="hero-chip-icon">🍱</span>
+        <span class="hero-chip-label">เมนูหลากหลาย</span>
+      </div>
+      <div class="hero-chip">
+        <span class="hero-chip-icon">😋</span>
+        <span class="hero-chip-label">อร่อยทุกเมนู</span>
+      </div>
+      <div class="hero-chip">
+        <span class="hero-chip-icon">⚡</span>
+        <span class="hero-chip-label">จัดส่งไว</span>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="card-wrap">
+  <!-- ─── LOGIN CARD ─── -->
   <div class="login-card">
 
-    <!-- Header -->
-    <div class="login-card-header">
-      <div class="login-lock-icon">🔐</div>
-      <div class="login-card-title">เข้าสู่ระบบก่อนสั่งอาหาร</div>
-      <div class="login-card-sub">เพื่อความสะดวกและสิทธิพิเศษมากมาย ⭐</div>
-    </div>
+    <div class="lock-wrap">🔐</div>
+    <div class="card-title">เข้าสู่ระบบก่อนสั่งอาหาร</div>
+    <div class="card-sub">เพื่อความสะดวกและสิทธิพิเศษมากมาย ⭐</div>
 
-    <!-- Error box -->
-    <div class="error-box" id="error-box">
-      <span id="error-msg">เกิดข้อผิดพลาด</span>
-    </div>
+    <!-- Error -->
+    <div class="error-box" id="error-box"><span id="error-msg"></span></div>
 
-    <!-- LINE primary -->
+    <!-- LINE Button -->
     <button class="line-btn" onclick="lineLogin()">
-      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
-        <rect width="40" height="40" rx="12" fill="white" fill-opacity="0.2"/>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M20 8C13.373 8 8 12.477 8 18c0 3.674 2.387 6.896 5.996 8.787-.247.899-.895 3.25-.976 3.636-.1.449.165.443.347.322.143-.096 2.276-1.546 3.196-2.17.787.112 1.607.17 2.437.17C26.627 28.745 32 24.27 32 18c0-5.523-5.373-10-12-10zm-5.5 13.25h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 1 0V20.25H14.5a.5.5 0 0 1 0 1zm2 0a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 1 0v5.5zm5.25 0a.5.5 0 0 1-.867.34l-2.633-3.59v3.25a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 .867-.34l2.633 3.59V15.75a.5.5 0 0 1 1 0v5.5zm3.75 0h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 .5-.5H25.5a.5.5 0 0 1 0 1H23.5V17.5H25.5a.5.5 0 0 1 0 1H23.5V20.25H25.5a.5.5 0 0 1 0 1z" fill="white"/>
-      </svg>
+      <div class="line-btn-icon">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M20 8C13.373 8 8 12.477 8 18c0 3.674 2.387 6.896 5.996 8.787-.247.899-.895 3.25-.976 3.636-.1.449.165.443.347.322.143-.096 2.276-1.546 3.196-2.17.787.112 1.607.17 2.437.17C26.627 28.745 32 24.27 32 18c0-5.523-5.373-10-12-10zm-5.5 13.25h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 1 0V20.25H14.5a.5.5 0 0 1 0 1zm2 0a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 1 0v5.5zm5.25 0a.5.5 0 0 1-.867.34l-2.633-3.59v3.25a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 .867-.34l2.633 3.59V15.75a.5.5 0 0 1 1 0v5.5zm3.75 0h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 .5-.5H25.5a.5.5 0 0 1 0 1H23.5V17.5H25.5a.5.5 0 0 1 0 1H23.5V20.25H25.5a.5.5 0 0 1 0 1z" fill="white"/>
+        </svg>
+      </div>
       <div class="line-btn-text">
         <span class="line-btn-main">เข้าสู่ระบบด้วย LINE</span>
         <span class="line-btn-sub">สะดวก รวดเร็ว ไม่ต้องกรอกอะไรเพิ่ม</span>
       </div>
+      <span class="line-btn-arrow">›</span>
     </button>
 
-    <div class="line-benefits">
-      <span class="benefit-chip">✅ ใช้ง่าย</span>
-      <span class="benefit-chip">🔔 แจ้งเตือนออเดอร์</span>
-      <span class="benefit-chip">⭐ สะสมแต้ม</span>
+    <!-- Benefits -->
+    <div class="benefits-row">
+      <div class="benefit-item">
+        <span class="benefit-icon">✅</span>
+        <span class="benefit-title">ใช้ง่าย</span>
+        <span class="benefit-desc">เข้าใช้งานปลอดภัย</span>
+      </div>
+      <div class="benefit-item">
+        <span class="benefit-icon">🔔</span>
+        <span class="benefit-title">แจ้งเตือนออเดอร์</span>
+        <span class="benefit-desc">ไม่พลาดทุกสถานะ</span>
+      </div>
+      <div class="benefit-item">
+        <span class="benefit-icon">⭐</span>
+        <span class="benefit-title">สะสมแต้ม</span>
+        <span class="benefit-desc">แลกรางวัลสุดพิเศษ</span>
+      </div>
     </div>
 
-    <div class="or-divider"><span>หรือ</span></div>
+    <div class="divider"><span>หรือ</span></div>
 
-    <!-- Phone OTP -->
-    <button class="fallback-toggle" onclick="document.getElementById('otp-overlay').classList.add('show')">
-      <div class="fallback-toggle-left">
-        <div class="fallback-toggle-icon">📱</div>
-        <div>
-          <span class="fallback-toggle-text-main">เข้าสู่ระบบด้วยเบอร์มือถือ</span>
-          <span class="fallback-toggle-text-sub">รับรหัส OTP เพื่อเข้าสู่ระบบ</span>
-        </div>
+    <!-- Phone OTP option -->
+    <div class="option-row" onclick="document.getElementById('otp-overlay').classList.add('show')">
+      <div class="option-icon-wrap">📱</div>
+      <div class="option-text">
+        <div class="option-title">เข้าสู่ระบบด้วยเบอร์มือถือ</div>
+        <div class="option-desc">รับรหัส OTP เพื่อเข้าสู่ระบบ</div>
       </div>
-      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    </button>
+      <span class="option-arrow">›</span>
+    </div>
 
-    <div style="height:10px;"></div>
-
-    <!-- Guest / no login -->
-    <button class="fallback-toggle" onclick="toggleGuest()">
-      <div class="fallback-toggle-left">
-        <div class="fallback-toggle-icon">👤</div>
-        <div>
-          <span class="fallback-toggle-text-main">สั่งอาหารแบบไม่เข้าสู่ระบบ</span>
-          <span class="fallback-toggle-text-sub">สำหรับลูกค้าที่ต้องการสั่งอาหารเท่านั้น</span>
-        </div>
+    <!-- Guest option -->
+    <div class="option-row" id="guest-toggle-row" onclick="toggleGuest()">
+      <div class="option-icon-wrap">👤</div>
+      <div class="option-text">
+        <div class="option-title">สั่งอาหารแบบไม่เข้าสู่ระบบ</div>
+        <div class="option-desc">สำหรับลูกค้าที่ต้องการสั่งอาหารเท่านั้น</div>
       </div>
-      <svg class="chevron" id="guest-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"/>
-      </svg>
-    </button>
+      <span class="option-arrow" id="guest-arrow">›</span>
+    </div>
 
-    <div class="collapse-form" id="guest-form">
-      <div class="collapse-inner">
-        <div class="form-group">
-          <label class="form-label">👤 ชื่อของคุณ</label>
-          <input type="text" class="form-input" id="cust-name-1" placeholder="เช่น สมชาย, นิสา" maxlength="30"
-            onkeydown="if(event.key==='Enter')customerLogin()">
-        </div>
-        <p style="font-size:11.5px;color:#9B9B9B;margin:2px 0 14px;text-align:center;">ไม่ต้องใส่เบอร์ — แต่จะไม่ได้แต้มสะสม</p>
+    <!-- Guest form collapse -->
+    <div class="guest-collapse" id="guest-form">
+      <div class="guest-inner">
+        <label class="guest-label">👤 ชื่อของคุณ</label>
+        <input type="text" class="guest-input" id="cust-name-1"
+          placeholder="เช่น สมชาย, นิสา" maxlength="30"
+          onkeydown="if(event.key==='Enter')customerLogin()">
+        <p style="font-size:11px;color:#C4C4C4;margin-top:6px;text-align:center;">ไม่ต้องใส่เบอร์ — แต่จะไม่ได้แต้มสะสม</p>
         <button class="guest-btn" id="guest-btn" onclick="customerLogin()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           เริ่มสั่งอาหาร
         </button>
       </div>
     </div>
 
     <!-- Privacy -->
-    <div class="privacy-note">
-      🔒 เราไม่เปิดเผยข้อมูลส่วนตัวของคุณ
-    </div>
+    <div class="privacy-note">🔒 เราไม่เปิดเผยข้อมูลส่วนตัวของคุณ</div>
 
-    <!-- Admin -->
+    <!-- Admin link -->
     <div class="admin-link-wrap">
-      <button class="admin-link" onclick="toggleAdmin()">🔑 เข้าระบบแอดมิน</button>
+      <button class="admin-link-btn" onclick="toggleAdmin()">🔑 เข้าระบบแอดมิน</button>
     </div>
 
-    <div class="collapse-form" id="admin-form">
-      <div class="collapse-inner">
-        <div class="form-group">
-          <label class="form-label">📧 อีเมลผู้ดูแล</label>
+    <!-- Admin form collapse -->
+    <div class="admin-collapse" id="admin-form">
+      <div class="admin-inner">
+        <div class="admin-input-wrap">
+          <label class="admin-label">📧 อีเมลผู้ดูแล</label>
           <input type="email" class="admin-input" id="admin-email" placeholder="admin@example.com"
             onkeydown="if(event.key==='Enter')document.getElementById('admin-password').focus()">
         </div>
-        <div class="form-group" style="position:relative;">
-          <label class="form-label">🔒 รหัสผ่าน</label>
+        <div class="admin-input-wrap">
+          <label class="admin-label">🔒 รหัสผ่าน</label>
           <input type="password" class="admin-input" id="admin-password" placeholder="••••••••"
             onkeydown="if(event.key==='Enter')adminLogin()">
           <button class="pwd-toggle" id="admin-eye" onclick="toggleAdminPwd()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BBB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-        <button class="admin-btn" id="admin-btn" onclick="adminLogin()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <button class="admin-submit" id="admin-btn" onclick="adminLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           เข้าสู่ระบบแอดมิน
         </button>
       </div>
     </div>
 
+  </div><!-- /login-card -->
+
+  <!-- Back button -->
+  <div class="back-btn-wrap" style="background:#FFF9F0;">
+    <button class="back-btn" onclick="window.location.href='index.html'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      กลับหน้าหลัก
+    </button>
   </div>
 
-  <button class="back-btn" onclick="window.location.href='index.html'">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    กลับหน้าหลัก
-  </button>
-</div>
+</div><!-- /page -->
 
+<!-- Loading -->
 <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
@@ -156,38 +316,41 @@
   <div class="otp-sheet">
     <div class="otp-title">📱 ยืนยันเบอร์โทรศัพท์</div>
     <div class="otp-sub" id="otp-sub">เพื่อดูออเดอร์และสะสมแต้มของคุณ</div>
-
     <div id="otp-step1">
       <div class="otp-field-wrap">
         <span class="otp-prefix">+66</span>
-        <input class="otp-input" id="otp-phone" type="tel" maxlength="10"
-          placeholder="0812345678" inputmode="numeric">
+        <input class="otp-input" id="otp-phone" type="tel" maxlength="10" placeholder="0812345678" inputmode="numeric">
       </div>
       <div id="recaptcha-container"></div>
       <button class="otp-btn" id="otp-send-btn" onclick="otpSendCode()">ส่ง OTP</button>
       <button class="otp-skip" onclick="otpSkip()">ข้ามไปก่อน</button>
     </div>
-
     <div id="otp-step2" style="display:none">
       <div class="otp-sent-hint" id="otp-sent-hint"></div>
-      <input class="otp-code-input" id="otp-code" type="tel" maxlength="6"
-        placeholder="_ _ _ _ _ _" inputmode="numeric">
+      <input class="otp-code-input" id="otp-code" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" inputmode="numeric">
       <button class="otp-btn" id="otp-verify-btn" onclick="otpVerify()">ยืนยัน OTP</button>
       <button class="otp-skip" onclick="otpResend()">ส่งรหัสใหม่</button>
     </div>
-
     <div class="otp-error" id="otp-error"></div>
   </div>
 </div>
 
 <script>
+/* ── JS ── */
 function lineLogin(){ window._mod_lineLogin && window._mod_lineLogin(); }
+
 function toggleGuest(){
-  var f=document.getElementById('guest-form'), c=document.getElementById('guest-chevron');
-  if(!f)return;
-  var o=f.classList.toggle('open'); c&&c.classList.toggle('open',o);
+  var f = document.getElementById('guest-form');
+  var a = document.getElementById('guest-arrow');
+  var open = f.classList.toggle('open');
+  if(a) a.textContent = open ? '∨' : '›';
 }
-function toggleAdmin(){ var f=document.getElementById('admin-form'); if(f) f.classList.toggle('open'); }
+
+function toggleAdmin(){
+  var f = document.getElementById('admin-form');
+  f.classList.toggle('open');
+}
+
 function toggleAdminPwd(){ window._mod_toggleAdminPwd && window._mod_toggleAdminPwd(); }
 function adminLogin(){ window._mod_adminLogin && window._mod_adminLogin(); }
 function customerLogin(){ window._mod_customerLogin && window._mod_customerLogin(); }

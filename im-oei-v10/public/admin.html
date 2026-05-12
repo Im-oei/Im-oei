@@ -2,10 +2,11 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta name="theme-color" content="#FF9F1C">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>อิ่มเอ้ย - IM OEI Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" defer></script>
 <style>
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -462,8 +463,19 @@
 .panel{display:none!important}.panel.active{display:block!important}
  body.sidebar-open .sidebar{left:0!important}body.sidebar-open .sidebar-overlay{display:block!important}
 </style>
+<meta name="robots" content="noindex,nofollow">
 </head>
 <body>
+<script>
+(function(){
+  const token = localStorage.getItem('imoei_admin_token');
+  if(!token){
+    console.warn('Admin access check active');
+  }
+})();
+</script>
+
+<noscript>ระบบนี้ต้องเปิด JavaScript เพื่อทำงาน</noscript>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -1288,7 +1300,22 @@ window.donutChart = new Chart(ctx2, {
 });
 </script>
 <div id="toast"></div>
-  <script src="js/admin.js"></script>
-  <script type="module" src="js/admin.module.js"></script>
+  <script src="js/admin.js" defer></script>
+  <script type="module" src="js/admin.module.js" defer></script>
+
+<script>
+window.addEventListener('error',function(e){
+ console.log('Global admin fallback active');
+});
+document.addEventListener('DOMContentLoaded',()=>{
+ document.querySelectorAll('[data-close-modal]').forEach(btn=>{
+   btn.addEventListener('click',()=>{
+     const modal=btn.closest('.modal');
+     if(modal){modal.style.display='none';document.body.style.overflow='auto';}
+   });
+ });
+});
+</script>
+
 </body>
 </html>

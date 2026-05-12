@@ -1,12 +1,3 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyBJjzTASSDoezaH2lPTUP1Fn9jS6RR-OUo",
-  authDomain: "im-oei.firebaseapp.com",
-  projectId: "im-oei",
-  storageBucket: "im-oei.firebasestorage.app",
-  messagingSenderId: "392812205535",
-  appId: "1:392812205535:web:65f6ce114feb3ce035a06a",
-  measurementId: "G-0LGSELSP0D"
-};
 
 // admin.html — plain scripts (UI, tabs, forms)
 
@@ -547,3 +538,24 @@ window.globalSearch = function(q) {
     el.style.opacity = text.includes(query) ? '1' : '0.3';
   });
 };
+
+
+// Expose admin UI handlers globally for inline HTML buttons
+Object.assign(window,{
+  switchTab,
+  switchCustTab,
+  filterCustomers,
+  previewImgModal,
+  switchLoyaltyTab,
+  filterOrders,
+  openAddItem,
+  openEditItem,
+  saveMenuItem,
+  openAddCustomer,
+  saveCustomer,
+  toggleNotifications,
+  clearNotifications,
+  requestNotifPermission,
+  saveSoundPref,
+  doLogout
+});
