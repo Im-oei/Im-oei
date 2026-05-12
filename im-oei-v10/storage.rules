@@ -1,0 +1,32 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── รูปเมนูอาหาร: อ่านได้สาธารณะ, เขียนได้แค่ admin ────────────────
+    match /menu/{allPaths=**} {
+      allow read:  if true;
+      allow write: if request.auth != null
+                   && request.auth.token.admin == true;
+    }
+
+    // ─── รูปโปรโมชัน/แบนเนอร์: อ่านได้สาธารณะ ────────────────────────────
+    match /banners/{allPaths=**} {
+      allow read:  if true;
+      allow write: if request.auth != null
+                   && request.auth.token.admin == true;
+    }
+
+    // ─── รูปโปรไฟล์ลูกค้า: อ่านได้สาธารณะ ────────────────────────────────
+    match /profiles/{userId}/{allPaths=**} {
+      allow read:  if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId;
+    }
+
+    // ─── อื่นๆ: admin only ────────────────────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.token.admin == true;
+    }
+  }
+}

@@ -11,14 +11,17 @@ html,body{min-height:100%;background:#FEF3E2;font-family:'Sarabun',sans-serif;co
 .page{min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:#FEF3E2;position:relative;overflow-x:hidden;}
 
 /* ── HERO ── */
-.hero{position:relative;width:100%;height:310px;overflow:hidden;background:linear-gradient(135deg,#FBBF45 0%,#F59E0B 50%,#D97706 100%);}
-.hero-bg{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(251,191,36,0.15) 0%,rgba(254,243,226,0.0) 60%,rgba(254,243,226,1) 100%);}
+.hero{position:relative;width:100%;height:310px;overflow:hidden;background:linear-gradient(135deg,#FBBF45 0%,#F59E0B 40%,#D97706 100%);}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(251,191,36,0) 60%,rgba(254,243,226,1) 100%);z-index:2;}
+
+/* Food circle — top right (matches reference) */
+.hero-food-circle{position:absolute;top:-20px;right:-30px;width:210px;height:210px;border-radius:50%;overflow:hidden;border:6px solid rgba(255,255,255,0.35);box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:1;}
+.hero-food-circle img{width:100%;height:100%;object-fit:cover;display:block;}
 
 /* Brand top-left */
 .hero-brand{position:absolute;top:0;left:0;right:0;padding:22px 20px 0;z-index:3;display:flex;align-items:flex-start;gap:12px;}
-.hero-logo{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.9);box-shadow:0 4px 20px rgba(0,0,0,0.18);flex-shrink:0;}
-.hero-logo-fallback{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#FF9F1C,#E8870A);border:3px solid rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;}
+.hero-logo{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.9);box-shadow:0 4px 20px rgba(0,0,0,0.18);flex-shrink:0;}
+.hero-logo-fallback{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#FF9F1C,#E8870A);border:3px solid rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;}
 .hero-brand-text{padding-top:8px;}
 .hero-brand-name{font-family:'Prompt',sans-serif;font-size:34px;font-weight:900;color:#fff;text-shadow:0 2px 14px rgba(120,60,0,0.35);line-height:1.05;letter-spacing:-0.5px;}
 .hero-brand-sub{font-size:13px;font-weight:700;color:rgba(255,255,255,0.95);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,0.2);}
@@ -137,8 +140,12 @@ html,body{min-height:100%;background:#FEF3E2;font-family:'Sarabun',sans-serif;co
 
   <!-- ── HERO ── -->
   <div class="hero">
-    <img class="hero-bg" src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
     <div class="hero-overlay"></div>
+
+    <!-- Circular food photo — top right (like the reference) -->
+    <div class="hero-food-circle">
+      <img src="hero.webp" alt="อาหาร" onerror="this.parentElement.style.background='linear-gradient(135deg,#FBBF24,#F59E0B)'">
+    </div>
 
     <!-- Brand -->
     <div class="hero-brand">

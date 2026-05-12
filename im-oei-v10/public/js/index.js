@@ -221,7 +221,7 @@ function showToast(msg){
   setTimeout(function(){t.classList.remove('show');},2200);
 }
 function foodImg(item){
-  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy">';
+  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy" onerror="this.style.display=\'none\'">';
   return '<span style="font-size:32px">'+(item.emoji||'🍽️')+'</span>';
 }
 function buildTabs(){
