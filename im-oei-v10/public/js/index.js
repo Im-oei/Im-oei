@@ -81,7 +81,7 @@ window.toggleStoreFromIndex = async function() {
 };
 function goProfile(){
   var u=getUser();
-  if(!u){ showLoginModal(function(){ goProfile(); }); return; }
+  if(!u){ window.location.href='login.html'; return; }
   if(u.role==='admin'||u.role==='owner'){ window.location.href='admin.html'; return; }
   window.location.href='orders.html';
 }
@@ -181,9 +181,14 @@ function add(id){
   var item=ALL_ITEMS.filter(function(i){return i.id===id;})[0];
   if(!item) return;
   if(item.soldOut){ showToast('❌ '+item.name+' หมดแล้ว'); return; }
-  if(!getUser()){ showLoginModal(function(){ add(id); }); return; }
+  if(!getUser()){ window.location.href='login.html'; return; }
   cart[id]=(cart[id]||0)+1; saveCart(); render();
   showToast('เพิ่ม '+item.name+' ลงตะกร้า 🛒');
+  // ── Fly-to-cart animation ──
+  var btn = document.querySelector('[onclick="add(\''+id+'\')"]') ||
+            document.querySelector('button.plus[onclick*="'+id+'"]') ||
+            document.querySelector('button.fc-add[onclick*="'+id+'"]');
+  flyToCart(item, btn);
 }
 function remove(id){
   if((cart[id]||0)>0){cart[id]--;if(!cart[id])delete cart[id];saveCart();render();}
@@ -395,157 +400,92 @@ window.doAdminLogin=function(){window.location.href='login.html';};
 
 
 
-function showLoginModal(callback) {
-  window._loginModalCb = callback || null;
-  var m = document.getElementById('login-modal');
-  m.classList.add('open');
-  // Lock body scroll while modal is open
-  document.body.style.overflow = 'hidden';
-  document.body.style.position = 'fixed';
-  document.body.style.width = '100%';
-  var u = getUser();
-  if (u && u.name) document.getElementById('modal-name').value = u.name;
-  setTimeout(function(){
-    var box = document.getElementById('login-modal-box');
-    if (box) box.scrollTop = 0;
-    var inp = document.getElementById('modal-name');
-    if (inp) inp.focus();
-  }, 350);
+
+// ── FLY TO CART ──────────────────────────────────────────────────────────────
+function flyToCart(item, triggerEl) {
+  // หา target: ไอคอนตะกร้าใน nav
+  var cartEl = document.getElementById('cart-count') || document.querySelector('.nav-cart');
+  if (!cartEl) return;
+
+  // สร้าง flying element
+  var fly = document.createElement('div');
+  fly.className = 'fly-item';
+
+  // ใส่รูปหรือ emoji
+  if (item.imageUrl) {
+    var img = document.createElement('img');
+    img.src = item.imageUrl;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+    fly.appendChild(img);
+  } else {
+    fly.textContent = item.emoji || '🍽️';
+    fly.style.fontSize = '28px';
+    fly.style.display = 'flex';
+    fly.style.alignItems = 'center';
+    fly.style.justifyContent = 'center';
+  }
+
+  // หา start position: จากปุ่มที่กด หรือตำแหน่ง trigger
+  var startRect;
+  if (triggerEl) {
+    startRect = triggerEl.getBoundingClientRect();
+  } else {
+    // fallback: กลางหน้าจอ
+    startRect = { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+  }
+  var endRect = cartEl.getBoundingClientRect();
+
+  var startX = startRect.left + startRect.width / 2;
+  var startY = startRect.top + startRect.height / 2;
+  var endX   = endRect.left + endRect.width / 2;
+  var endY   = endRect.top  + endRect.height / 2;
+
+  fly.style.left = startX + 'px';
+  fly.style.top  = startY + 'px';
+  document.body.appendChild(fly);
+
+  // Force reflow
+  fly.getBoundingClientRect();
+
+  // Animate
+  var dx = endX - startX;
+  var dy = endY - startY;
+  // Arc control point (ลอยขึ้นก่อนแล้วค่อยวิ่งลงหาตะกร้า)
+  var duration = 620;
+  var startTime = null;
+
+  function easeInOutCubic(t){ return t<0.5?4*t*t*t:(t-1)*(2*t-2)*(2*t-2)+1; }
+  function easeIn(t){ return t*t*t; }
+
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var elapsed = ts - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+    var ease = easeInOutCubic(progress);
+
+    // Quadratic bezier arc: P0→P1(arc peak)→P2(cart)
+    var arcPeakX = startX + dx * 0.3;
+    var arcPeakY = startY - Math.abs(dy) * 0.5 - 80;
+    var cx = (1-ease)*(1-ease)*startX + 2*(1-ease)*ease*arcPeakX + ease*ease*endX;
+    var cy = (1-ease)*(1-ease)*startY + 2*(1-ease)*ease*arcPeakY + ease*ease*endY;
+
+    var scale = 1 - easeIn(progress) * 0.7; // หดจาก 1 → 0.3
+    fly.style.transform = 'translate(-50%,-50%) scale('+scale+')';
+    fly.style.left = cx + 'px';
+    fly.style.top  = cy + 'px';
+    fly.style.opacity = progress > 0.8 ? (1 - (progress-0.8)/0.2) : 1;
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      fly.remove();
+      // Bounce cart icon
+      cartEl.classList.add('cart-bounce');
+      setTimeout(function(){ cartEl.classList.remove('cart-bounce'); }, 400);
+    }
+  }
+  requestAnimationFrame(step);
 }
-function closeLoginModal() {
-  document.getElementById('login-modal').classList.remove('open');
-  document.getElementById('modal-error').style.display = 'none';
-  // Restore body scroll
-  document.body.style.overflow = '';
-  document.body.style.position = '';
-  document.body.style.width = '';
-}
-async function submitLoginModal() {
-  var name = document.getElementById('modal-name').value.trim();
-  var err = document.getElementById('modal-error');
-  if (!name) { err.textContent='กรุณากรอกชื่อของคุณ'; err.style.display='block'; return; }
-  err.style.display = 'none';
-  // Guest login — ใช้ชื่อ + guestId (random) เป็น ID
-  var guestId = localStorage.getItem('imkum_guest_id') || ('guest_' + Math.random().toString(36).slice(2,10));
-  localStorage.setItem('imkum_guest_id', guestId);
-  sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, guestId, loginAt: Date.now() }));
-  localStorage.setItem('imkum_name', name);
-  closeLoginModal();
-  updateUserBadge();
-  showToast('ยินดีต้อนรับ ' + name + ' 👋');
-  if (window._loginModalCb) window._loginModalCb();
-}
-
-// ============================================================
-// LINE LIFF Login — inline (Firestore-direct, no AppCheck required)
-// ============================================================
-(function() {
-  const LIFF_ID_LOCAL = "2009910221-ySbGklzJ";
-
-  // ─── ฟังก์ชัน init LIFF ครั้งเดียว ────────────────────────────────────
-  async function ensureLiff() {
-    if (!window.liff) throw new Error('LIFF SDK not loaded');
-    if (!window._liffInited) {
-      await liff.init({ liffId: LIFF_ID_LOCAL, withLoginOnExternalBrowser: true });
-      window._liffInited = true;
-    }
-  }
-
-  // ─── หลัง redirect กลับมา: ตรวจ LIFF login + บันทึก lineUser ──────────────
-  async function handleLiffReturn() {
-    try {
-      await ensureLiff();
-      if (!liff.isLoggedIn()) return;
-
-      const profile = await liff.getProfile();
-      const { userId, displayName, pictureUrl } = profile;
-
-      // โหลด Firebase
-      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-      const { getFirestore, doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      const { FIREBASE_CONFIG } = await import('../config.js');
-
-      const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-      const db = getFirestore(app);
-
-      // บันทึก lineUsers โดยใช้ userId เป็น key (ไม่ต้องการเบอร์)
-      try {
-        await setDoc(doc(db, 'lineUsers', userId), {
-          userId, displayName,
-          pictureUrl: pictureUrl || null,
-          lastLogin: Date.now(),
-          updatedAt: Date.now()
-        }, { merge: true });
-      } catch(e) {
-        console.warn('lineUsers write error:', e.message);
-      }
-
-      // บันทึก customers โดยใช้ line_userId เป็น ID
-      try {
-        await setDoc(doc(db, 'customers', 'line_' + userId), {
-          name: displayName, lineUserId: userId,
-          pictureUrl: pictureUrl || null,
-          lastLogin: Date.now(), updatedAt: Date.now()
-        }, { merge: true });
-      } catch(e) {
-        console.warn('customers write error:', e.message);
-      }
-
-      // save session → login สำเร็จเลย ไม่ต้องกรอกเบอร์
-      _saveLiffSession(displayName, userId, pictureUrl);
-      closeLoginModal();
-      if (typeof updateUserBadge === 'function') updateUserBadge();
-      if (typeof showToast === 'function') showToast('ยินดีต้อนรับ ' + displayName + ' 👋');
-    } catch(e) {
-      console.error('LIFF handleLiffReturn error:', e);
-    }
-  }
-
-  // เรียกตอนโหลดหน้า (กรณีกลับมาจาก liff.login redirect)
-  window.addEventListener('DOMContentLoaded', () => {
-    if (location.search.includes('liff.state') || location.search.includes('code=') || location.hash.includes('access_token')) {
-      handleLiffReturn();
-    }
-  });
-
-  // ─── ปุ่ม "เข้าสู่ระบบด้วย LINE" กด ──────────────────────────────────
-  window.loginWithLine = async function() {
-    const btn = document.querySelector('.im-line-btn');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
-    try {
-      await ensureLiff();
-      if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: window.location.href });
-        return;
-      }
-      await handleLiffReturn();
-    } catch(e) {
-      console.error('loginWithLine error:', e);
-      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    }
-  };
-
-  // ─── (ไม่ใช้แล้ว — ยกเลิก phone binding) ───────────────────────────
-  function _showPhoneBindModal(displayName, pictureUrl) {
-    // deprecated: ใช้ LINE userId แทนเบอร์แล้ว
-  }
-  window.submitLiffPhone = async function() {
-    // deprecated
-  };
-
-  function _saveLiffSession(name, userId, pictureUrl) {
-    sessionStorage.setItem('imkum_user', JSON.stringify({
-      role: 'customer', name, lineUserId: userId,
-      photoURL: pictureUrl || null, loginAt: Date.now()
-    }));
-    localStorage.setItem('imkum_name', name);
-    localStorage.setItem('imkum_userId', userId);
-    localStorage.setItem('imkum_line_linked', 'true');
-  }
-
-})();
-
-
 
 function openLightbox(src, name) {
   const lb = document.getElementById('img-lightbox');

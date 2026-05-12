@@ -280,36 +280,8 @@ renderCart();
 
 
 function showCartLoginPrompt(){
-  document.getElementById('cart-login-modal').classList.add('open');
-  var saved = localStorage.getItem('imkum_name') || '';
-  var savedPhone = localStorage.getItem('imkum_phone') || '';
-  if(saved) document.getElementById('cl-name').value = saved;
-  if(savedPhone) document.getElementById('cl-phone').value = savedPhone;
-  setTimeout(function(){ document.getElementById('cl-name').focus(); }, 300);
+  // modal ถูกลบออกแล้ว — redirect ไป login.html แทน
+  window.location.href = 'login.html';
 }
-function closeCartLogin(){
-  document.getElementById('cart-login-modal').classList.remove('open');
-  document.getElementById('cl-error').style.display='none';
-}
-function submitCartLogin(){
-  var name = document.getElementById('cl-name').value.trim();
-  var phone = document.getElementById('cl-phone').value.trim();
-  var err = document.getElementById('cl-error');
-  if(!name){ err.textContent='กรุณากรอกชื่อ'; err.style.display='block'; return; }
-  if(!phone || phone.length < 9){ err.textContent='กรุณากรอกเบอร์โทรให้ครบ'; err.style.display='block'; return; }
-  err.style.display='none';
-  // ตรวจสอบเบอร์ซ้ำจาก localStorage
-  var savedPhone = localStorage.getItem('imkum_phone');
-  var savedName = localStorage.getItem('imkum_name');
-  if (savedPhone && savedPhone === phone && savedName && savedName !== name) {
-    err.textContent = 'เบอร์ ' + phone + ' ถูกใช้โดย "' + savedName + '" แล้ว กรุณาตรวจสอบชื่อ';
-    err.style.display='block'; return;
-  }
-  sessionStorage.setItem('imkum_user', JSON.stringify({ role:'customer', name, phone, loginAt: Date.now() }));
-  localStorage.setItem('imkum_name', name);
-  localStorage.setItem('imkum_phone', phone);
-  closeCartLogin();
-  showToast('ยินดีต้อนรับ '+name+' 👋');
-  // Try place order again
-  setTimeout(function(){ window.placeOrder && window.placeOrder(); }, 800);
-}
+function closeCartLogin(){ /* deprecated */ }
+function submitCartLogin(){ /* deprecated */ }

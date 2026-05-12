@@ -684,3 +684,149 @@ exports.issueAdminCustomToken = functions
     console.log(`issueAdminCustomToken: issued for ${lineUserId} role=${role}`);
     return { customToken, role };
   });
+
+// ─── redeemReward: Callable — หักแต้ม + บันทึก redemption (server-side) ────
+// เดิม: orders.module.js updateDoc(stamps) + addDoc(rewardRedemptions) ตรง
+//       → stamps rules block client write → ฟีเจอร์แลกรางวัลพัง
+//       → rewardRedemptions ownership ไม่ตรง (ไม่มี lineUserId field)
+// ใหม่: callable ตรวจ ownership + atomic transaction หักแต้ม + บันทึก
+exports.redeemReward = functions
+  .runWith({ enforceAppCheck: true })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Login required.");
+    }
+
+    const { rewardId, rewardName, pointCost, emoji, phone, lineUserId } = data;
+
+    // Validate inputs
+    if (!rewardId || typeof rewardId !== "string") {
+      throw new functions.https.HttpsError("invalid-argument", "rewardId required.");
+    }
+    if (!pointCost || typeof pointCost !== "number" || pointCost < 1) {
+      throw new functions.https.HttpsError("invalid-argument", "pointCost must be a positive number.");
+    }
+    if (!phone && !lineUserId) {
+      throw new functions.https.HttpsError("invalid-argument", "phone or lineUserId required.");
+    }
+    if (phone && !/^0[0-9]{9}$/.test(phone)) {
+      throw new functions.https.HttpsError("invalid-argument", "phone format invalid.");
+    }
+
+    // Ownership check: phone ต้องตรงกับ token หรือ lineUserId ต้องตรงกับ uid
+    const validPhone  = phone     && context.auth.token.phone_number === phone;
+    const validLine   = lineUserId && context.auth.uid               === lineUserId;
+    if (!validPhone && !validLine) {
+      throw new functions.https.HttpsError("permission-denied", "Identity mismatch.");
+    }
+
+    // Rate limit: 10 redemptions / 10 นาที / user
+    const rlKey = phone || lineUserId;
+    await checkRateLimit(`redeem_${rlKey}`, 10, 600_000);
+
+    // Verify reward exists and is active
+    const rewardDoc = await db.collection("rewards").doc(rewardId).get();
+    if (!rewardDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Reward not found.");
+    }
+    const reward = rewardDoc.data();
+    if (reward.hidden === true) {
+      throw new functions.https.HttpsError("failed-precondition", "Reward is not available.");
+    }
+    // Verify pointCost from server (prevent client manipulation)
+    if (reward.pointCost !== pointCost) {
+      throw new functions.https.HttpsError("invalid-argument", "pointCost mismatch with server.");
+    }
+
+    // Check maxQty if set
+    if (reward.maxQty && typeof reward.maxQty === "number") {
+      const usedSnap = await db.collection("rewardRedemptions")
+        .where("rewardId", "==", rewardId)
+        .where("status", "!=", "rejected")
+        .get();
+      if (usedSnap.size >= reward.maxQty) {
+        throw new functions.https.HttpsError("resource-exhausted", "รางวัลนี้หมดแล้ว");
+      }
+    }
+
+    // Atomic: หักแต้ม + บันทึก redemption ใน transaction
+    const stampDocId = phone || lineUserId;
+    const stampRef   = db.collection("stamps").doc(stampDocId);
+    let newPoints;
+
+    await db.runTransaction(async (tx) => {
+      const stampSnap = await tx.get(stampRef);
+      const curPoints = stampSnap.exists()
+        ? (stampSnap.data().points || stampSnap.data().total || 0)
+        : 0;
+
+      if (curPoints < pointCost) {
+        throw new functions.https.HttpsError("failed-precondition", "แต้มไม่พอ");
+      }
+
+      newPoints = curPoints - pointCost;
+
+      // หักแต้ม
+      tx.update(stampRef, {
+        points: newPoints,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // บันทึก redemption
+      const redemptionRef = db.collection("rewardRedemptions").doc();
+      tx.set(redemptionRef, {
+        rewardId,
+        rewardName: reward.name || rewardName || "",
+        pointsUsed: pointCost,
+        emoji: reward.emoji || emoji || "🎁",
+        ...(phone      ? { phone }      : {}),
+        ...(lineUserId ? { lineUserId } : {}),
+        status: "pending",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+
+    console.log(`redeemReward: ${rewardId} by ${rlKey}, newPoints=${newPoints}`);
+    return { success: true, newPoints };
+  });
+
+// ─── expireMyStamps: Callable — รีเซ็ตแต้มหมดอายุ (server-side) ─────────────
+// เดิม: orders.module.js updateDoc(stamps) ตรง → rules บล็อก client write
+// ใหม่: callable ตรวจ ownership แล้วค่อยเขียนผ่าน Admin SDK
+exports.expireMyStamps = functions
+  .runWith({ enforceAppCheck: true })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Login required.");
+    }
+    const { phone } = data;
+    if (!phone || !/^0[0-9]{9}$/.test(phone)) {
+      throw new functions.https.HttpsError("invalid-argument", "valid phone required.");
+    }
+    // Ownership: phone ต้องตรงกับ Firebase Auth token
+    if (context.auth.token.phone_number !== phone) {
+      throw new functions.https.HttpsError("permission-denied", "Phone mismatch.");
+    }
+
+    // ตรวจ expiry settings + stamp ก่อนเสมอ (ไม่รีเซ็ตถ้าไม่หมดอายุจริง)
+    const [stSnap, stampSnap] = await Promise.all([
+      db.collection("settings").doc("stamps").get(),
+      db.collection("stamps").doc(phone).get(),
+    ]);
+    const expiryDays = stSnap.exists() ? (stSnap.data().expiryDays || 0) : 0;
+    if (expiryDays === 0 || !stampSnap.exists()) return { expired: false };
+
+    const d = stampSnap.data();
+    const lastUpdate = d.updatedAt?.toDate ? d.updatedAt.toDate() : new Date(d.updatedAt || 0);
+    const daysSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (daysSince <= expiryDays || (d.points || 0) === 0) return { expired: false };
+
+    await db.collection("stamps").doc(phone).update({
+      points: 0,
+      expiredAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    console.log(`expireMyStamps: reset points for ${phone}`);
+    return { expired: true };
+  });

@@ -4,6 +4,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { FIREBASE_CONFIG, VAPID_PUBLIC_KEY } from "../config.js";
 
 const sess = sessionStorage.getItem('imkum_user');
@@ -18,6 +19,7 @@ if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html';
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const functions = getFunctions(app, 'asia-northeast1');
 
 // ─── Phone Verify Banner (สำหรับคนที่ยังไม่ได้ผูกเบอร์) ──────────────────
 function injectPhoneBanner() {
@@ -603,9 +605,10 @@ async function loadStamps(){
       const lastUpdate = d.updatedAt.toDate ? d.updatedAt.toDate() : new Date(d.updatedAt);
       const daysSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
       if (daysSince > expiryDays && points > 0) {
-        // แต้มหมดอายุ — รีเซ็ตเงียบๆ
+        // แต้มหมดอายุ — รีเซ็ตผ่าน callable (rules บล็อก client write stamps)
         try {
-          await updateDoc(doc(db,'stamps',user.phone), { points: 0, expiredAt: serverTimestamp() });
+          const expireFn = httpsCallable(functions, 'expireMyStamps');
+          await expireFn({ phone: user.phone });
           points = 0;
           showToast('⚠️ แต้มของคุณหมดอายุแล้ว (เกิน ' + expiryDays + ' วัน)');
         } catch(e) { console.warn('expiry reset failed:', e.message); }
@@ -684,11 +687,13 @@ async function subscribeToPush(swReg) {
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
     // บันทึก subscription ลง Firestore ผูกกับ phone
+    // 🔐 FIX: Rules ต้องการ request.auth != null + endpoint field ที่ top-level
     const subData = sub.toJSON();
     const { setDoc, doc: fsDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     await setDoc(fsDoc(db, 'pushSubscriptions', user.phone), {
       phone: user.phone,
       name: user.name || '',
+      endpoint: subData.endpoint || '',   // ← top-level ตาม rules: hasAll(['endpoint'])
       subscription: subData,
       updatedAt: new Date().toISOString()
     }, { merge: true });
@@ -1015,48 +1020,33 @@ window.redeemReward = async function(rewardId, rewardName, pointCost, emoji) {
   const userPoints = window._userPoints || 0;
   if (userPoints < pointCost) { showToast('แต้มไม่เพียงพอ'); return; }
 
-  // ตรวจสอบ maxQty ก่อนแลก
-  try {
-    const rewardDoc = await getDoc(doc(db, 'rewards', rewardId));
-    if (rewardDoc.exists()) {
-      const rData = rewardDoc.data();
-      if (rData.maxQty > 0) {
-        const usedSnap = await getDocs(query(collection(db,'rewardRedemptions'), where('rewardId','==',rewardId)));
-        const usedCount = usedSnap.docs.filter(d => d.data().status !== 'rejected').length;
-        if (usedCount >= rData.maxQty) { showToast('😢 รางวัลนี้หมดแล้ว'); return; }
-      }
-    }
-  } catch(e) { console.warn('maxQty check:', e.message); }
-
   if (!confirm('ยืนยันแลก "' + rewardName + '" ใช้ ' + pointCost + ' แต้ม?')) return;
   _isRedeeming = true;
   showLoading(true);
   try {
-    // หักแต้ม
-    const stampRef = doc(db, 'stamps', user.phone);
-    const stampSnap = await getDoc(stampRef);
-    const curPoints = stampSnap.exists() ? (stampSnap.data().points || stampSnap.data().total || 0) : 0;
-    const newPoints = Math.max(0, curPoints - pointCost);
-    await updateDoc(stampRef, { points: newPoints, updatedAt: serverTimestamp() });
-
-    // บันทึก redemption
-    await addDoc(collection(db, 'rewardRedemptions'), {
+    // 🔐 FIX: เรียก redeemReward callable แทนการเขียน stamps/rewardRedemptions ตรง
+    // เดิม: updateDoc(stamps) + addDoc(rewardRedemptions) จาก client
+    //   → stamps rules: allow create,update: if false → ฟีเจอร์แลกรางวัลพัง 100%
+    //   → ไม่มี atomic: หักแต้มไปแล้วแต่ redemption อาจ fail → แต้มหายฟรี
+    // ใหม่: callable ตรวจ ownership + atomic transaction + server-side pointCost verify
+    const redeemFn = httpsCallable(functions, 'redeemReward');
+    const result = await redeemFn({
       rewardId,
       rewardName,
-      pointsUsed: pointCost,
+      pointCost,
       emoji,
-      phone: user.phone,
-      customerName: user.name || '',
-      userId: user.userId || '',
-      status: 'pending',
-      createdAt: serverTimestamp(),
+      ...(user.phone      ? { phone: user.phone }           : {}),
+      ...(user.lineUserId ? { lineUserId: user.lineUserId } : {}),
     });
+    const newPoints = result.data.newPoints;
 
     // Update local state
+    const cachedKey = user.phone || user.lineUserId;
+    const cached = JSON.parse(localStorage.getItem('imkum_stamps_' + cachedKey) || '{}');
     window._userPoints = newPoints;
-    localStorage.setItem('imkum_stamps_' + user.phone, JSON.stringify({
+    localStorage.setItem('imkum_stamps_' + cachedKey, JSON.stringify({
       points: newPoints,
-      lifetimePoints: stampSnap.exists() ? (stampSnap.data().lifetimePoints || 0) : 0
+      lifetimePoints: cached.lifetimePoints || 0,
     }));
 
     closeRewardCatalog();

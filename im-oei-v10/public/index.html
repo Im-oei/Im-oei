@@ -127,47 +127,6 @@
   <button id="pwa-dismiss-btn" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
 </div>
 
-<!-- LOGIN MODAL -->
-<div id="login-modal">
-  <div id="login-modal-backdrop" onclick="closeLoginModal()"></div>
-  <div id="login-modal-box">
-    <div class="im-modal-header">
-      <div class="im-modal-header-bg"></div>
-      <div class="im-modal-icon">🍳</div>
-      <div class="im-modal-title">เข้าสู่ระบบก่อนสั่งอาหาร</div>
-      <div class="im-modal-sub">เพื่อติดตามออเดอร์และสะสมแต้ม ⭐</div>
-      <button class="im-modal-close" onclick="closeLoginModal()">✕</button>
-    </div>
-    <div class="im-modal-body">
-      <div class="im-modal-error" id="modal-error"></div>
-      <button class="im-line-btn" onclick="loginWithLine()">
-        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill="white" fill-opacity="0.2"/>
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M20 8C13.373 8 8 12.477 8 18c0 3.674 2.387 6.896 5.996 8.787-.247.899-.895 3.25-.976 3.636-.1.449.165.443.347.322.143-.096 2.276-1.546 3.196-2.17.787.112 1.607.17 2.437.17C26.627 28.745 32 24.27 32 18c0-5.523-5.373-10-12-10zm-5.5 13.25h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 1 0V20.25H14.5a.5.5 0 0 1 0 1zm2 0a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 1 0v5.5zm5.25 0a.5.5 0 0 1-.867.34l-2.633-3.59v3.25a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 .867-.34l2.633 3.59V15.75a.5.5 0 0 1 1 0v5.5zm3.75 0h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 .5-.5H25.5a.5.5 0 0 1 0 1H23.5V17.5H25.5a.5.5 0 0 1 0 1H23.5V20.25H25.5a.5.5 0 0 1 0 1z" fill="white"/>
-        </svg>
-        <div class="im-line-btn-text">
-          <span class="im-line-btn-main">เข้าสู่ระบบด้วย LINE</span>
-          <span class="im-line-btn-sub">กดครั้งเดียว ไม่ต้องกรอกอะไร</span>
-        </div>
-      </button>
-      <div class="im-line-chips">
-        <span class="im-chip">✅ ได้ชื่อ+รูปอัตโนมัติ</span>
-        <span class="im-chip">🔔 แจ้งเตือนผ่าน LINE</span>
-        <span class="im-chip">⭐ สะสมแต้ม</span>
-      </div>
-      <div class="im-or-divider"><span>หรือ เข้าแบบผู้เยี่ยมชม</span></div>
-      <label class="im-field-label">👤 ชื่อของคุณ</label>
-      <input type="text" id="modal-name" class="im-field" placeholder="เช่น สมชาย, นิสา" maxlength="30"
-        onkeydown="if(event.key==='Enter')submitLoginModal()">
-      <p style="font-size:11px;color:#AAA;margin:-4px 0 10px;text-align:center;">ไม่ต้องกรอกเบอร์ — แต่จะไม่ได้แต้มสะสม</p>
-      <button class="im-submit-btn" onclick="submitLoginModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:middle;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        เริ่มสั่งอาหาร
-      </button>
-      <a href="login.html" class="im-full-link">🔑 เข้าสู่ระบบแบบเต็ม (แอดมิน) →</a>
-    </div>
-  </div>
-</div>
 
 <!-- IMAGE LIGHTBOX -->
 <div id="img-lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;padding:20px;animation:lbFadeIn .2s ease;">

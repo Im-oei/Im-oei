@@ -3,11 +3,13 @@
 // ✅ ใช้ Firestore โดยตรง ไม่ต้องใช้ Firebase Functions
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { FIREBASE_CONFIG, LIFF_ID } from "../config.js";
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
+const functions = getFunctions(app, 'asia-northeast1');
 const ORDER_URL = "index.html";
 let lineProfile = null;
 
@@ -36,13 +38,14 @@ async function initLiff() {
       const data = userSnap.data();
       const phone = data.phone;
 
-      // อัปเดตโปรไฟล์ถ้าเปลี่ยน
+      // อัปเดตโปรไฟล์ถ้าเปลี่ยน — ผ่าน bindLineAccount callable (rules บล็อก client write)
       if (data.displayName !== displayName || data.pictureUrl !== pictureUrl) {
-        updateDoc(doc(db, "lineUsers", userId), {
+        httpsCallable(functions, 'bindLineAccount')({
+          lineUserId: userId,
           displayName,
-          pictureUrl: pictureUrl || null,
-          updatedAt: Date.now()
-        }).catch(() => {});
+          phone,
+          liffIdToken: liff.getIDToken(),
+        }).catch(() => {}); // best-effort profile refresh
       }
 
       saveUserSession(displayName, phone, userId, pictureUrl);
@@ -98,32 +101,14 @@ window.submitPhone = async function() {
   showLoading(true);
   try {
     const { userId, displayName, pictureUrl } = lineProfile;
+    const liffIdToken = liff.getIDToken();
 
-    // บันทึกลง lineUsers collection
-    await setDoc(doc(db, "lineUsers", userId), {
-      userId,
-      displayName,
-      phone,
-      pictureUrl: pictureUrl || null,
-      linkedAt: Date.now(),
-      updatedAt: Date.now()
-    }, { merge: true });
-
-    // บันทึกลง linePhoneMap (phone → userId)
-    await setDoc(doc(db, "linePhoneMap", phone), {
-      userId,
-      displayName,
-      updatedAt: Date.now()
-    }, { merge: true });
-
-    // บันทึกลง customers collection
-    await setDoc(doc(db, "customers", phone), {
-      phone,
-      name: displayName,
-      lineUserId: userId,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+    // 🔐 FIX: เรียก bindLineAccount callable แทนการเขียน lineUsers/linePhoneMap/customers ตรง
+    // เดิม: setDoc lineUsers + linePhoneMap + customers จาก client
+    //   → lineUsers rules: allow write: if false → ทุก write จะ fail!
+    // ใหม่: callable verify LIFF token กับ LINE API ก่อน แล้วค่อยเขียนผ่าน Admin SDK
+    const bindLineAccount = httpsCallable(functions, 'bindLineAccount');
+    await bindLineAccount({ lineUserId: userId, displayName, phone, liffIdToken });
 
     saveUserSession(displayName, phone, userId, pictureUrl);
 

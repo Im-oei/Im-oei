@@ -91,7 +91,9 @@ window.checkout = async function() {
 
   const userSess = sessionStorage.getItem('imkum_user');
   const userObj = userSess ? JSON.parse(userSess) : null;
-  if (!userObj || !userObj.phone) { showCartLoginPrompt(); return; }
+  // ต้องมี identity อย่างใดอย่างหนึ่ง: phone, lineUserId, หรือ guestId
+  const hasIdentity = userObj && (userObj.phone || userObj.lineUserId || userObj.guestId);
+  if (!hasIdentity) { window.location.href = 'login.html'; return; }
 
   var nameEl = document.getElementById('name-input');
   var customerName = (nameEl ? nameEl.value : '').trim();
