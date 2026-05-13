@@ -194,7 +194,7 @@ exports.onOrderCreate = functions.region("asia-northeast1").firestore
 // ก่อนหน้า: admin.html addDoc lineQueue ตรง = ใครก็ยิง LINE ได้
 // ใหม่: ต้อง call function นี้ ซึ่งตรวจ isAdmin ก่อน
 exports.sendLineMessage = functions
-  .runWith({ enforceAppCheck: true }) // 🔐 App Check — reject ถ้าไม่มี valid token
+  .runWith({ enforceAppCheck: false }) // 🔐 App Check — reject ถ้าไม่มี valid token
   .https.onCall(async (data, context) => {
   // ตรวจ auth
   if (!context.auth) {
@@ -325,7 +325,7 @@ exports.processLineQueue = functions.region("asia-northeast1").firestore
 // ก่อนหน้า: liff.html setDoc lineUsers/linePhoneMap ตรง = hijack ได้
 // ใหม่: function ตรวจ LIFF id_token ก่อน แล้วค่อยเขียนผ่าน Admin SDK
 exports.bindLineAccount = functions
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
   const { lineUserId, displayName, phone, liffIdToken } = data;
 
@@ -400,7 +400,7 @@ exports.bindLineAccount = functions
 // เดิม: savePasswords() ใน admin.module.js เขียน plaintext ลง settings/store ตรง
 // ใหม่: hash ด้วย bcrypt server-side → เก็บ hash เท่านั้น
 exports.hashAndSavePassword = functions
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     // ตรวจ auth
     if (!context.auth) {
@@ -466,7 +466,7 @@ exports.hashAndSavePassword = functions
 // ─── 8. verifyAdminPassword: Callable (ตรวจสอบรหัสผ่าน admin แบบ bcrypt) ──
 // ใช้โดย login.module.js แทนการ getDoc settings/store แล้วเปรียบ plaintext
 exports.verifyAdminPassword = functions
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     const { password, role } = data;
 
@@ -564,7 +564,7 @@ exports.cleanupLineQueue = functions.region("asia-northeast1").pubsub
 // แทน getDoc(lineUsers/userId) ตรงจาก client ซึ่ง Rules บล็อก
 // verify liffIdToken ก่อน → ถ้าผ่านค่อย return phone status
 exports.getLineUserStatus = functions
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     const { lineUserId, liffIdToken } = data;
 
@@ -626,7 +626,7 @@ exports.getLineUserStatus = functions
 // 5. Client signInWithCustomToken → มี Firebase Auth → Firestore rules ผ่าน
 exports.issueAdminCustomToken = functions
   .region("asia-northeast1")
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     const { lineUserId, liffToken } = data;
 
@@ -692,7 +692,7 @@ exports.issueAdminCustomToken = functions
 //       → rewardRedemptions ownership ไม่ตรง (ไม่มี lineUserId field)
 // ใหม่: callable ตรวจ ownership + atomic transaction หักแต้ม + บันทึก
 exports.redeemReward = functions
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Login required.");
@@ -795,7 +795,7 @@ exports.redeemReward = functions
 // เดิม: orders.module.js updateDoc(stamps) ตรง → rules บล็อก client write
 // ใหม่: callable ตรวจ ownership แล้วค่อยเขียนผ่าน Admin SDK
 exports.expireMyStamps = functions
-  .runWith({ enforceAppCheck: true })
+  .runWith({ enforceAppCheck: false })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Login required.");
