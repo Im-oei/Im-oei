@@ -45,6 +45,7 @@ async function checkRateLimit(key, maxCount = 5, windowMs = 60_000) {
 // เขียน order ผ่าน Admin SDK — แน่ใจว่าราคาถูกต้อง 100%
 exports.validateAndCreateOrder = functions
   .region("asia-northeast1")
+  .runWith({ enforceAppCheck: false }) // 🔓 ไม่บังคับ App Check — ลูกค้า anonymous สั่งได้
   .https.onCall(async (data, context) => {
     const {
       items, note, customerName, customerPhone,

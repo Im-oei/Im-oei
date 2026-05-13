@@ -112,3 +112,37 @@ https://console.cloud.google.com/apis/library/cloudscheduler.googleapis.com?proj
 - ปุ่มเปลี่ยนเป็น "🔄 ส่งอีกครั้ง" หลังส่งครั้งแรก
 - กดซ้ำ = สร้าง doc ใหม่ใน lineQueue → Cloud Function trigger ใหม่
 - retry อัตโนมัติ 3 ครั้ง ถ้า LINE API 5xx หรือ network error
+
+---
+
+## 🔴 แก้ CORS / FirebaseError: internal ตอนสั่งซื้อ
+
+Error: `Access-Control-Allow-Origin` blocked + `FirebaseError: internal`
+
+### สาเหตุ
+`onCall` functions ไม่มี CORS ปัญหาถ้า App Check token ถูกต้อง
+Error `internal` มักเกิดจาก App Check token invalid/missing
+
+### วิธีแก้ (ต้องทำใน Firebase Console)
+
+**Option A — ยังไม่พร้อมใช้ App Check (Development)**
+1. ไปที่ Firebase Console → App Check → Apps
+2. เลือก app → **Register** → เปิด **Debug token**
+3. Copy debug token → ใส่ใน `config.js`:
+   ```js
+   // Development only — อย่า commit
+   self.FIREBASE_APPCHECK_DEBUG_TOKEN = "your-debug-token-here";
+   ```
+   หรือใน browser console พิมพ์ token ที่ได้จาก console log แล้ว add ใน Firebase Console
+
+**Option B — Production พร้อม deploy**
+1. Firebase Console → App Check → Apps → Register reCAPTCHA v3
+2. ได้ Site Key → ใส่ใน `config.js`:
+   ```js
+   export const RECAPTCHA_SITE_KEY = "6Lc...your-key";
+   ```
+3. Firebase Console → App Check → APIs → **Cloud Functions → Enforce**
+
+**Option C — ปิด App Check ชั่วคราว (dev เท่านั้น)**
+ใน `functions/index.js` เปลี่ยน `enforceAppCheck: true` → `enforceAppCheck: false`
+แล้ว `firebase deploy --only functions`

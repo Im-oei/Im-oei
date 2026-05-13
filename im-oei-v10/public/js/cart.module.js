@@ -199,8 +199,19 @@ window.checkout = async function() {
     }
     window.location.href = 'success.html';
   } catch(e) {
-    console.error(e);
-    showToast('เกิดข้อผิดพลาด: ' + (e.message || 'กรุณาลองใหม่'));
+    console.error('checkout error:', e);
+    var msg = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+    if (e.code === 'functions/internal') {
+      msg = '❌ ระบบขัดข้องชั่วคราว กรุณาลองใหม่ใน 1 นาที';
+    } else if (e.code === 'functions/unauthenticated') {
+      msg = '❌ กรุณาเข้าสู่ระบบก่อนสั่งอาหาร';
+      setTimeout(function(){ window.location.href = 'login.html'; }, 1500);
+    } else if (e.code === 'functions/unavailable' || !navigator.onLine) {
+      msg = '❌ ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ';
+    } else if (e.message) {
+      msg = '❌ ' + e.message;
+    }
+    showToast(msg);
   } finally {
     _isCheckingOut = false;
     showLoading(false);
