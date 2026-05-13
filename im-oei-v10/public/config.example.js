@@ -21,3 +21,7 @@ export const VAPID_PUBLIC_KEY = "YOUR_VAPID_PUBLIC_KEY";
 
 // หมายเหตุ: LINE_CHANNEL_TOKEN ถูกย้ายไปอยู่ใน Firebase Functions config แล้ว
 // firebase functions:config:set line.token="YOUR_TOKEN" line.liff_id="YOUR_LIFF_ID"
+
+// Google reCAPTCHA v3 Site Key — ใช้สำหรับ Firebase App Check
+// https://www.google.com/recaptcha/admin → Im oei → reCAPTCHA keys → SITE KEY
+export const RECAPTCHA_SITE_KEY = "6LfBotcsAAAAACxl8p6XtLXisjPH-XacxIXX-ZiC";
