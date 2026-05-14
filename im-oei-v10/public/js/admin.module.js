@@ -74,6 +74,15 @@ window._filterOrdersByStatus = function(status) {
 let storeIsOpen = true;
 let unsubOrders = null;
 let _unsubLineQueue = null;
+let unsubMenu = null;
+let unsubCustomers = null;
+
+function cleanupListeners() {
+  if (unsubOrders) { unsubOrders(); unsubOrders = null; }
+  if (_unsubLineQueue) { _unsubLineQueue(); _unsubLineQueue = null; }
+  if (unsubMenu) { unsubMenu(); unsubMenu = null; }
+  if (unsubCustomers) { unsubCustomers(); unsubCustomers = null; }
+}
 let currentFeaturedIds = [];
 
 // ====== INIT ======
@@ -132,7 +141,7 @@ if (checkAuth()) {
 // ====== REALTIME ORDERS ======
 function listenOrders() {
   if (unsubOrders) { unsubOrders(); unsubOrders = null; } // cleanup ก่อน re-subscribe
-  const q = collection(db, 'orders');
+  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(200));
   unsubOrders = onSnapshot(q,
     snap => {
       allOrders = snap.docs
@@ -2189,6 +2198,79 @@ window.resetAllData = async function() {
 
 // ====== EXPOSE FIREBASE TO GLOBAL SCOPE ======
 // Required so plain <script> blocks (updateStatus, deleteOrder, loadPickupLocations, etc.) can access Firestore
+// ====== updateStatus — เรียกจาก onclick ใน order cards ======
+window.updateStatus = async function(orderId, newStatus) {
+  if (!orderId || !newStatus) return;
+  try {
+    await updateDoc(doc(db, 'orders', orderId), {
+      status: newStatus,
+      updatedAt: serverTimestamp(),
+    });
+    if (typeof playStatusSound === 'function') playStatusSound();
+    showToast(
+      newStatus === 'preparing' ? '🔵 กำลังทำ' :
+      newStatus === 'ready'     ? '🟢 พร้อมรับแล้ว' :
+      newStatus === 'done'      ? '✅ รับแล้ว' :
+      newStatus === 'cancelled' ? '❌ ยกเลิกแล้ว' : '✅ อัพเดทแล้ว'
+    );
+  } catch (e) {
+    console.error('updateStatus:', e);
+    showToast('❌ อัพเดทไม่ได้: ' + (e.code || e.message));
+  }
+};
+
+// ====== notifyCustomer — แจ้งลูกค้าผ่าน LINE ======
+window.notifyCustomer = async function(orderId, customerName, pickupTime) {
+  try {
+    const orderSnap = await getDoc(doc(db, 'orders', orderId));
+    if (!orderSnap.exists()) { showToast('ไม่พบออเดอร์'); return; }
+    const orderData = orderSnap.data();
+    const lineUserId = orderData.lineUserId || orderData.userId || '';
+    if (!lineUserId) {
+      showToast('⚠️ ลูกค้าไม่มี LINE ID — แจ้งเองทางโทรศัพท์');
+      return;
+    }
+    const sendLineMessageFn = httpsCallable(functions, 'sendLineMessage');
+    const msg = `✅ อาหารของคุณพร้อมแล้ว!\nสวัสดีคุณ ${customerName || 'ลูกค้า'} 😊\nกรุณามารับอาหารได้ที่ร้าน เวลา ${pickupTime || '07:30'} น. ครับ/ค่ะ 🙏`;
+    const result = await sendLineMessageFn({ lineUserId, message: msg, orderId });
+    const queueDocId = result.data?.docId;
+    showToast('📤 กำลังส่ง LINE...');
+    if (!queueDocId) return;
+    let tries = 0;
+    const poll = setInterval(async () => {
+      tries++;
+      if (tries > 8) { clearInterval(poll); return; }
+      try {
+        const qSnap = await getDoc(doc(db, 'lineQueue', queueDocId));
+        const st = qSnap.data()?.status;
+        if (st === 'sent') { clearInterval(poll); showToast('✅ ส่ง LINE หาลูกค้าสำเร็จ!'); }
+        else if (st === 'error') { clearInterval(poll); showToast('❌ LINE ส่งไม่ได้: ' + (qSnap.data()?.error || '')); }
+      } catch (_) {}
+    }, 1000);
+  } catch (e) {
+    showToast('❌ แจ้งไม่ได้: ' + (e.code || e.message));
+  }
+};
+
+// ====== compressImageToBase64 — ใช้โดย uploadBannerModal ======
+function compressImageToBase64(file, maxWidth, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 window._db = db;
 window._updateDoc = updateDoc;
 window._deleteDoc = deleteDoc;
@@ -2228,24 +2310,75 @@ window.renderStats     = renderStats;
 window.loadCategories  = loadCategories;
 window.loadPreorderSetting = loadPreorderSetting;
 
+// ── Aliases: HTML/render uses openAddItem / openEditItem (no underscore) ──
+window.openAddItem  = window._openAddItem;
+window.openEditItem = window._openEditItem;
+
 
 // ===== Dashboard Navigation Fix =====
-window.switchTab = function(name, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const target = document.getElementById(`panel-${name}`);
-  if (target) target.classList.add('active');
+window.currentTab = 'dashboard';
 
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+window.switchTab = function(tab, btn) {
+  try {
+    window.currentTab = tab;
 
-  if (window.innerWidth < 1024) {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar) sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('show');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(`panel-${tab}`);
+    if (!target) { console.error('Panel not found:', `panel-${tab}`); return; }
+    target.classList.add('active');
+
+    if (window.innerWidth < 1024) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('show');
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    switch (tab) {
+      case 'orders':
+        renderOrders();
+        break;
+      case 'menu':
+        if (allMenuItems.length > 0) {
+          renderMenuAdmin();
+        } else {
+          loadMenu();
+        }
+        break;
+      case 'customers':
+        if (_allCustomers.length > 0) {
+          renderCustomers();
+        } else {
+          loadCustomers();
+        }
+        break;
+      case 'stats':
+        renderStats();
+        break;
+      case 'banners':
+        loadBanners();
+        break;
+      case 'loyalty':
+        loadRewards();
+        break;
+      case 'store':
+        loadSettings();
+        break;
+      case 'settings':
+        loadSettings();
+        break;
+      case 'dashboard':
+        updateSummary();
+        break;
+    }
+  } catch (e) {
+    console.error('switchTab error:', e);
   }
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.openPanel = function(panelName){
@@ -2278,3 +2411,60 @@ window.addEventListener('DOMContentLoaded', ()=> {
   });
 });
 // ===== End Dashboard Navigation Fix =====
+
+// ====== MISSING WINDOW FUNCTIONS ======
+
+// toggleStore — สวิตช์เปิด/ปิดร้านจาก panel-store
+window.toggleStore = async function() {
+  const tog = document.getElementById('store-open-toggle');
+  const lbl = document.getElementById('store-status-label');
+  const isOpen = tog ? tog.checked : true;
+  if (lbl) lbl.textContent = isOpen ? 'เปิดร้าน' : 'ปิดร้าน';
+  storeIsOpen = isOpen;
+  localStorage.setItem('imkum_store_open', String(isOpen));
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { isOpen }, { merge: true });
+    showToast(isOpen ? '🟢 เปิดร้านแล้ว' : '🔴 ปิดร้านแล้ว');
+  } catch(e) {
+    showToast('⚠️ บันทึกสถานะร้านไม่สำเร็จ: ' + e.message);
+  }
+};
+
+// uploadBrandLogo — อัปโหลดโลโก้จากเครื่อง
+window.uploadBrandLogo = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  compressImageToBase64(file, 300, async (base64) => {
+    const preview = document.getElementById('hero-logo-preview-img');
+    const urlInput = document.getElementById('set-hero-logo-url');
+    if (preview) { preview.src = base64; preview.style.display = 'block'; }
+    if (urlInput) urlInput.value = base64;
+    window._storeLogo = base64;
+    showToast('✅ โหลดโลโก้แล้ว กด บันทึกโลโก้ เพื่อบันทึก');
+  });
+};
+
+// uploadBrandHero — อัปโหลด Hero Banner จากเครื่อง
+window.uploadBrandHero = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  compressImageToBase64(file, 800, async (base64) => {
+    const preview = document.getElementById('banner-preview-img');
+    const urlInput = document.getElementById('set-banner-url');
+    if (preview) { preview.src = base64; preview.style.display = 'block'; }
+    if (urlInput) urlInput.value = base64;
+    showToast('✅ โหลดรูป Banner แล้ว กด บันทึก Banner เพื่อบันทึก');
+  });
+};
+
+// quickUploadPhoto — อัปโหลดรูปเมนูจากเครื่อง (modal-image)
+window.quickUploadPhoto = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  compressImageToBase64(file, 600, (base64) => {
+    const preview = document.getElementById('img-modal-preview');
+    const urlInput = document.getElementById('img-url-input');
+    if (preview) { preview.src = base64; preview.style.display = 'block'; }
+    if (urlInput) urlInput.value = base64;
+  });
+};

@@ -479,7 +479,7 @@
 <noscript>ระบบนี้ต้องเปิด JavaScript เพื่อทำงาน</noscript>
 
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-img">🍱</div>
     <div class="logo-text">
@@ -702,6 +702,7 @@
       </div>
     </div>
 
+  </div><!-- /panel-dashboard -->
 
   <!-- ======== PANEL: ORDERS ======== -->
   <div id="panel-orders" class="panel">
@@ -709,6 +710,7 @@
       <div class="page-header-row">
         <div><h1>📋 ออเดอร์</h1><p>จัดการออเดอร์ทั้งหมดแบบ Realtime</p></div>
       </div>
+    </div>
     <div id="notif-permission-bar" style="display:none">
       🔔 อนุญาตการแจ้งเตือนเพื่อรับแจ้งออเดอร์ใหม่
       <button onclick="requestNotifPermission()">อนุญาต</button>
@@ -729,7 +731,6 @@
     </div>
     <div id="orders-list"></div>
   </div><!-- /panel-orders -->
-  </div>
 
   <!-- ======== PANEL: MENU ======== -->
   <div id="panel-menu" class="panel">
@@ -738,6 +739,7 @@
         <div><h1>🍽️ เมนูอาหาร</h1><p>จัดการรายการเมนูและหมวดหมู่</p></div>
         <button class="btn-primary" onclick="openAddItem()">+ เพิ่มเมนู</button>
       </div>
+    </div>
 
     <div class="section-card">
       <div class="section-title">รายการเมนูทั้งหมด</div>
@@ -751,7 +753,7 @@
       <div id="cat-admin-list">
       </div>
     </div>
-    </div>
+  </div>
     <!-- Modal: Add/Edit Menu Item -->
     <div id="modal-edit" class="modal-overlay">
       <div class="modal-box">
@@ -823,8 +825,6 @@
           <button class="btn-primary" onclick="saveCategoryItem()">💾 บันทึก</button>
         </div>
       </div>
-    </div>
-  </div>
   </div>
   <!-- ======== PANEL: BANNERS ======== -->
   <div id="panel-banners" class="panel">
@@ -833,6 +833,7 @@
         <div><h1>📢 แบนเนอร์</h1><p>จัดการแบนเนอร์และโปรโมชัน</p></div>
         <button class="btn-primary" onclick="openAddBanner()">+ เพิ่มแบนเนอร์</button>
       </div>
+    </div>
     <div class="section-card">
       <div id="banners-list"><div style="text-align:center;padding:20px;color:var(--text-sub)">กำลังโหลด...</div></div>
     </div>
@@ -898,9 +899,8 @@
           <button class="btn-primary" onclick="saveBannerItem()">💾 บันทึก</button>
         </div>
       </div>
-    </div><!-- /panel-banners -->
     </div>
-  </div>
+  </div><!-- /panel-banners -->
 
   <!-- ======== PANEL: CUSTOMERS ======== -->
   <div id="panel-customers" class="panel">
@@ -909,6 +909,7 @@
         <div><h1>👥 ลูกค้า</h1><p>ข้อมูลลูกค้าและประวัติการสั่ง</p></div>
         <button class="btn-primary" onclick="openAddCustomer()">+ เพิ่มลูกค้า</button>
       </div>
+    </div>
     <div class="section-card">
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <button class="ltab-btn active" id="tab-line-btn" onclick="switchCustTab('line')">LINE ลูกค้า</button>
@@ -941,9 +942,8 @@
           <button class="btn-primary" onclick="saveCustomer()">💾 บันทึก</button>
         </div>
       </div>
-    </div><!-- /panel-customers -->
     </div>
-  </div>
+  </div><!-- /panel-customers -->
 
   <!-- ======== PANEL: LOYALTY ======== -->
   <div id="panel-loyalty" class="panel">
@@ -951,6 +951,7 @@
       <div class="page-header-row">
         <div><h1>🎁 แต้มสะสม & Loyalty</h1><p>ระบบแต้มและรางวัลสำหรับลูกค้า</p></div>
       </div>
+    </div>
     <div style="margin-bottom:14px">
       <button class="ltab-btn active" id="ltab-config" onclick="switchLoyaltyTab('config')">⚙️ ตั้งค่าแต้ม</button>
       <button class="ltab-btn" id="ltab-rewards" onclick="switchLoyaltyTab('rewards')">🎁 รางวัล</button>
@@ -1036,9 +1037,8 @@
           <button class="btn-primary" onclick="saveReward()">💾 บันทึก</button>
         </div>
       </div>
-    </div><!-- /panel-loyalty -->
     </div>
-  </div>
+  </div><!-- /panel-loyalty -->
 
   <!-- ======== PANEL: STATS ======== -->
   <div id="panel-stats" class="panel">
@@ -1049,6 +1049,7 @@
           <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="exportOrdersCSV()">📥 Export CSV</button>
         </div>
       </div>
+    </div>
     <div class="period-tabs">
       <button class="period-btn active" id="period-today" onclick="setStatsPeriod('today')">วันนี้</button>
       <button class="period-btn" id="period-week" onclick="setStatsPeriod('week')">7 วัน</button>
@@ -1089,7 +1090,6 @@
       <div id="stats-ratings"></div>
     </div>
   </div><!-- /panel-stats -->
-  </div>
 
   <!-- ======== PANEL: STORE MANAGEMENT ======== -->
   <div id="panel-store" class="panel">
@@ -1097,6 +1097,7 @@
       <div class="page-header-row">
         <div><h1>🏪 จัดการร้านค้า</h1><p>ตั้งค่าการรับออเดอร์และจุดรับอาหาร</p></div>
       </div>
+    </div>
     <div class="section-card">
       <div class="section-title">🚦 สถานะร้าน</div>
       <div class="store-toggle-row">
@@ -1136,7 +1137,6 @@
       <button class="btn-primary" onclick="savePreorderSetting()">💾 บันทึก</button>
     </div>
   </div><!-- /panel-store -->
-  </div>
 
   <!-- ======== PANEL: SETTINGS ======== -->
   <div id="panel-settings" class="panel">
@@ -1144,6 +1144,7 @@
       <div class="page-header-row">
         <div><h1>⚙️ ตั้งค่า</h1><p>ข้อมูลร้านและการตั้งค่าระบบ</p></div>
       </div>
+    </div>
     <div class="section-card">
       <div class="section-title">🏷️ ข้อมูลร้าน</div>
       <div class="form-row">
@@ -1194,7 +1195,6 @@
       </div>
     </div>
   </div><!-- /panel-settings -->
-  </div>
 
   <!-- ======== NOTIFICATIONS SLIDE PANEL ======== -->
   <div class="notif-panel-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
@@ -1244,15 +1244,18 @@
     </div>
   </div>
 
-  </div><!-- /panel-dashboard -->
-
+  </div><!-- /content -->
   <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
-  </div>
+</div><!-- /main -->
 
 <script>
 // Sales Line Chart — initialized with empty data, updated by admin.module.js
-const ctx = document.getElementById('salesChart').getContext('2d');
-window.salesChart = new Chart(ctx, {
+function createSalesChart() {
+  const canvas = document.getElementById('salesChart');
+  if (!canvas) return;
+  if (window.salesChart) { window.salesChart.destroy(); window.salesChart = null; }
+  const ctx = canvas.getContext('2d');
+  window.salesChart = new Chart(ctx, {
   type: 'line',
   data: {
     labels: [],
@@ -1284,11 +1287,17 @@ window.salesChart = new Chart(ctx, {
       y: { grid: { color: '#f3f4f6' }, ticks: { font: { family: 'Sarabun', size: 11 } } }
     }
   }
-});
+  });
+}
+createSalesChart();
 
 // Donut Chart — initialized empty, updated by admin.module.js
-const ctx2 = document.getElementById('donutChart').getContext('2d');
-window.donutChart = new Chart(ctx2, {
+function createDonutChart() {
+  const canvas = document.getElementById('donutChart');
+  if (!canvas) return;
+  if (window.donutChart) { window.donutChart.destroy(); window.donutChart = null; }
+  const ctx2 = canvas.getContext('2d');
+  window.donutChart = new Chart(ctx2, {
   type: 'doughnut',
   data: {
     labels: ['รับที่ร้าน','เดลิเวอรี่','เช็คเมตี'],
@@ -1298,7 +1307,9 @@ window.donutChart = new Chart(ctx2, {
     responsive: true, maintainAspectRatio: true, cutout: '68%',
     plugins: { legend: { display: false } }
   }
-});
+  });
+}
+createDonutChart();
 </script>
 <div id="toast"></div>
   <script type="module" src="js/admin.module.js"></script>

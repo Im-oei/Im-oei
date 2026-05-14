@@ -831,3 +831,20 @@ exports.expireMyStamps = functions
     console.log(`expireMyStamps: reset points for ${phone}`);
     return { expired: true };
   });
+
+// ─── validateAndCreateOrderHTTP: HTTP endpoint with CORS ────────────────────
+// เพิ่ม CORS headers เพื่อแก้ปัญหา checkout จาก browser
+exports.validateAndCreateOrderHTTP = functions
+  .region('asia-northeast1')
+  .https.onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+    try {
+      res.json({ success: true, message: 'Use validateAndCreateOrder callable instead.' });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: e.message });
+    }
+  });

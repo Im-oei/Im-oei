@@ -1,58 +1,13 @@
+// admin.js — plain script (UI helpers only, NO Firebase, NO switchTab override)
+// admin.module.js (ES module) handles: Firebase, switchTab, renderOrders, renderMenuAdmin, etc.
+// This file handles: UI-only helpers that don't need Firebase imports
 
-// admin.html — plain scripts (UI, tabs, forms)
-
-// ====== TAB SWITCHING ======
-function switchTab(name, btn) {
-  // Hide all panels
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  // (tab bar แนวนอนถูกลบออกแล้ว)
-  // Deactivate sidebar nav-items
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  // Deactivate bottom tab bar
-  document.querySelectorAll('.bottom-tab-item').forEach(b => b.classList.remove('active'));
-
-  // Show target panel
-  const panel = document.getElementById('panel-' + name);
-  if (panel) panel.classList.add('active');
-
-  // activate caller element
-  if (btn) btn.classList.add('active');
-
-  // Sync sidebar nav-item
-  document.querySelectorAll('.nav-item').forEach(n => {
-    const oc = n.getAttribute('onclick') || '';
-    const isMatch = oc.includes("'" + name + "'");
-    n.classList.toggle('active', isMatch);
-  });
-
-  // Sync bottom tab
-  const btab = document.getElementById('btab-' + name);
-  if (btab) btab.classList.add('active');
-
-  // Trigger load/render ตาม panel ที่สลับไป
-  if (name === 'stats') {
-    if (typeof window._initCharts === 'function') window._initCharts();
-    if (typeof renderStats === 'function') renderStats();
-  }
-  if (name === 'menu'      && typeof loadMenu        === 'function') loadMenu();
-  if (name === 'banners'   && typeof loadBanners     === 'function') loadBanners();
-  if (name === 'customers' && typeof loadCustomers   === 'function') loadCustomers();
-  if (name === 'loyalty'   && typeof loadStampConfig === 'function') { loadStampConfig(); if (typeof loadRewards === 'function') loadRewards(); }
-  if (name === 'orders'    && typeof listenOrders    === 'function') listenOrders();
-  if (name === 'settings'  && typeof loadSettings    === 'function') loadSettings();
-
-  // Close sidebar on mobile
-  if (window.innerWidth <= 767 && typeof closeSidebar === 'function') closeSidebar();
-
-  // Scroll to top
-  window.scrollTo(0, 0);
-}
+// ====== DO NOT redefine switchTab here — admin.module.js owns it ======
 
 // ====== LOGOUT ======
 function doLogout() {
   if (!confirm('ออกจากระบบใช่ไหม?')) return;
   sessionStorage.clear();
-  // ล้างตะกร้าและข้อมูลผู้ใช้ทั้งหมด
   localStorage.removeItem('imkum_cart');
   localStorage.removeItem('imkum_phone');
   localStorage.removeItem('imkum_name');
@@ -73,22 +28,22 @@ function switchCustTab(tab) {
   const manualBtn = document.getElementById('tab-manual-btn');
   if (lineBtn) lineBtn.classList.toggle('active', tab === 'line');
   if (manualBtn) manualBtn.classList.toggle('active', tab === 'manual');
-  if (typeof renderCustomers === 'function') renderCustomers();
+  if (typeof window.renderCustomers === 'function') window.renderCustomers();
 }
 
 function filterCustomers() {
-  if (typeof renderCustomers === 'function') renderCustomers();
+  if (typeof window.renderCustomers === 'function') window.renderCustomers();
 }
 
 function previewImgModal() {
   const url = document.getElementById('img-url-input')?.value?.trim();
   const prev = document.getElementById('img-modal-preview');
-  if (prev) { prev.src = url||''; prev.style.display = url ? 'block' : 'none'; }
+  if (prev) { prev.src = url || ''; prev.style.display = url ? 'block' : 'none'; }
 }
 
 // ====== LOYALTY TABS ======
 function switchLoyaltyTab(tab) {
-  ['config','rewards','tiers','history'].forEach(t => {
+  ['config', 'rewards', 'tiers', 'history'].forEach(t => {
     const el = document.getElementById('lpanel-' + t);
     const btn = document.getElementById('ltab-' + t);
     const isActive = t === tab;
@@ -100,7 +55,7 @@ function switchLoyaltyTab(tab) {
   });
 }
 
-// ====== ORDERS FILTER (UI chip version) ======
+// ====== ORDERS FILTER ======
 function filterOrders(status, btn) {
   if (typeof window._filterOrdersByStatus === 'function') {
     window._filterOrdersByStatus(status);
@@ -109,47 +64,35 @@ function filterOrders(status, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// ====== MENU ITEM MODAL ======
+// ====== MENU ITEM MODAL (delegates to module) ======
 function openAddItem() {
-  if (typeof window._openAddItem === 'function') { window._openAddItem(); return; }
-  // fallback: ใช้ modal-edit แทน modal-menu-item
-  const modal = document.getElementById('modal-edit');
-  if (modal) {
-    const title = document.getElementById('modal-edit-title');
-    if (title) title.textContent = 'เพิ่มเมนูใหม่';
-    const idInput = document.getElementById('edit-item-id');
-    if (idInput) idInput.value = '';
-    modal.classList.add('show');
-  }
+  if (typeof window._openAddItem === 'function') window._openAddItem();
 }
 function openEditItem(id) {
-  if (typeof window._openEditItem === 'function') { window._openEditItem(id); }
+  if (typeof window._openEditItem === 'function') window._openEditItem(id);
 }
 function saveMenuItem() {
-  if (typeof window._saveMenuItem === 'function') { window._saveMenuItem(); }
+  if (typeof window._saveMenuItem === 'function') window._saveMenuItem();
 }
 
-// ====== CUSTOMER MODAL ======
+// ====== CUSTOMER MODAL (delegates to module) ======
 function openAddCustomer() {
-  if (typeof window._openAddCustomer === 'function') { window._openAddCustomer(); return; }
-  const modal = document.getElementById('modal-customer');
-  if (modal) modal.classList.add('show');
+  if (typeof window._openAddCustomer === 'function') window._openAddCustomer();
 }
 function saveCustomer() {
-  if (typeof window._saveCustomer === 'function') { window._saveCustomer(); }
+  if (typeof window._saveCustomer === 'function') window._saveCustomer();
 }
 
-
-
+// ====== NOTIFICATIONS ======
 let notifList = [];
 
 function toggleNotifications() {
   const panel = document.getElementById('notif-panel');
   const overlay = document.getElementById('notif-overlay');
+  if (!panel) return;
   const isOpen = panel.classList.contains('open');
   panel.classList.toggle('open', !isOpen);
-  // notif-panel-overlay ใช้ opacity transition (admin.css)
-  overlay.classList.toggle('open', !isOpen);
+  if (overlay) overlay.classList.toggle('open', !isOpen);
 }
 
 function addNotification(notif) {
@@ -170,7 +113,7 @@ function addNotification(notif) {
 function _renderNotifList() {
   const el = document.getElementById('notif-list');
   if (!el) return;
-  if (notifList.length === 0) {
+  if (!notifList.length) {
     el.innerHTML = '<div style="padding:24px;text-align:center;color:#999;font-size:13px;">ยังไม่มีการแจ้งเตือน</div>';
     return;
   }
@@ -195,34 +138,34 @@ function clearNotifications() {
 
 function requestNotifPermission() {
   if (!('Notification' in window)) {
-    if (window.showToast) showToast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
+    if (window.showToast) window.showToast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
     return;
   }
   Notification.requestPermission().then(perm => {
     if (perm === 'granted') {
-      if (window.showToast) showToast('✅ อนุญาตการแจ้งเตือนแล้ว');
+      if (window.showToast) window.showToast('✅ อนุญาตการแจ้งเตือนแล้ว');
       const bar = document.getElementById('notif-permission-bar');
       if (bar) bar.style.display = 'none';
     } else {
-      if (window.showToast) showToast('❌ ไม่ได้รับอนุญาตการแจ้งเตือน');
+      if (window.showToast) window.showToast('❌ ไม่ได้รับอนุญาตการแจ้งเตือน');
     }
   });
 }
 
-function showBrowserNotif(title, body, tag, url) {
+function showBrowserNotif(title, body, tag) {
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     const n = new Notification(title, { body, tag, icon: 'logo.webp' });
-    if (url) n.onclick = () => window.focus();
+    n.onclick = () => window.focus();
   }
 }
 
 function _isSoundEnabled() {
-  try { return localStorage.getItem('imkum_sound') !== '0'; } catch(e) { return true; }
+  try { return localStorage.getItem('imkum_sound') !== '0'; } catch (e) { return true; }
 }
 
 function saveSoundPref() {
   const t = document.getElementById('notif-sound-toggle');
-  try { localStorage.setItem('imkum_sound', (t && t.checked) ? '1' : '0'); } catch(e) {} // ตั้งใจ silent — Private mode อาจบล็อก localStorage
+  try { localStorage.setItem('imkum_sound', (t && t.checked) ? '1' : '0'); } catch (e) {}
 }
 
 function playNewOrderSound() {
@@ -238,7 +181,7 @@ function playNewOrderSound() {
       osc.start(ctx.currentTime + i * 0.12);
       osc.stop(ctx.currentTime + i * 0.12 + 0.3);
     });
-  } catch(e) {} // ตั้งใจ silent — AudioContext อาจถูกบล็อกโดย browser policy; เสียงเป็น feature เสริม
+  } catch (e) {}
 }
 
 function playStatusSound() {
@@ -251,7 +194,7 @@ function playStatusSound() {
     gain.gain.setValueAtTime(0.25, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
-  } catch(e) {} // ตั้งใจ silent — AudioContext อาจถูกบล็อกโดย browser policy; เสียงเป็น feature เสริม
+  } catch (e) {}
 }
 
 let _lastKnownOrderIds = null;
@@ -260,289 +203,78 @@ function _checkNewOrdersNotification(orders) {
   if (_lastKnownOrderIds === null) { _lastKnownOrderIds = currentIds; return; }
   orders.filter(o => !_lastKnownOrderIds.has(o.id) && o.status === 'pending').forEach(o => {
     const name = o.customerName || o.name || 'ลูกค้า';
-    addNotification({ icon: '🟡', title: `ออเดอร์ใหม่! ${name}`, body: (o.items||[]).map(i=>i.name).join(', ') });
+    addNotification({ icon: '🟡', title: `ออเดอร์ใหม่! ${name}`, body: (o.items || []).map(i => i.name).join(', ') });
     playNewOrderSound();
-    showBrowserNotif(`🟡 ออเดอร์ใหม่ - ${name}`, (o.items||[]).map(i=>i.name).join(', '), 'order-'+o.id);
+    showBrowserNotif(`🟡 ออเดอร์ใหม่ - ${name}`, (o.items || []).map(i => i.name).join(', '), 'order-' + o.id);
   });
   _lastKnownOrderIds = currentIds;
 }
-// expose เพื่อให้ module script เรียกได้
-window._checkNewOrdersNotification = _checkNewOrdersNotification;
-window.addNotification = addNotification;
-window.playNewOrderSound = playNewOrderSound;
-window.playStatusSound = playStatusSound;
-window.showBrowserNotif = showBrowserNotif;
 
-// init เมื่อ DOM พร้อม
+// ====== USER MENU DROPDOWN ======
+function toggleUserMenu() {
+  const dd = document.getElementById('user-dropdown');
+  if (!dd) return;
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!e.target.closest('.user-chip')) dd.style.display = 'none';
+        document.removeEventListener('click', closeMenu);
+      });
+    }, 10);
+  }
+}
+
+async function adminLogout() {
+  sessionStorage.removeItem('imkum_admin_auth');
+  sessionStorage.removeItem('imkum_user');
+  localStorage.removeItem('imkum_name');
+  try {
+    const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await signOut(getAuth());
+  } catch (e) {}
+  window.location.href = 'login.html';
+}
+
+// ====== SIDEBAR ======
+function toggleSidebar() {
+  document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebarOverlay')?.classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('show');
+}
+
+// ====== PICKUP LOCATION (UI only) ======
+function addPickupLocationUI() {
+  if (typeof window.addPickupLocation === 'function') {
+    window.addPickupLocation();
+  }
+}
+
+// ====== GLOBAL SEARCH ======
+function globalSearch(q) {
+  const query = (q || '').trim().toLowerCase();
+  if (!query) return;
+  if (typeof window.switchTab === 'function') window.switchTab('orders');
+}
+
+// ====== DOMContentLoaded ======
 document.addEventListener('DOMContentLoaded', function () {
   const toggle = document.getElementById('notif-sound-toggle');
   if (toggle) toggle.checked = _isSoundEnabled();
 
   if (typeof Notification !== 'undefined') {
     const bar = document.getElementById('notif-permission-bar');
-    if (bar) bar.style.display =
-      Notification.permission === 'granted' ? 'none' : 'block';
+    if (bar) bar.style.display = Notification.permission === 'granted' ? 'none' : 'block';
   }
 });
 
-
-
-// ====== MISSING FUNCTIONS - AUDIT FIX ======
-
-// 0. updateStatus & deleteOrder — เรียกจาก onclick ใน order cards
-window.updateStatus = async function(orderId, newStatus) {
-  if (!orderId || !newStatus) return;
-  const db=window._db, updateDoc=window._updateDoc, doc=window._doc, serverTimestamp=window._serverTimestamp;
-  if (!db || !updateDoc) { console.error('Firebase not ready'); return; }
-  try {
-    await updateDoc(doc(db, 'orders', orderId), {
-      status: newStatus,
-      updatedAt: serverTimestamp(),
-    });
-    showToast(
-      newStatus === 'preparing' ? '🔵 กำลังทำ' :
-      newStatus === 'ready'     ? '🟢 พร้อมรับแล้ว' :
-      newStatus === 'done'      ? '✅ เสร็จแล้ว' :
-      newStatus === 'cancelled' ? '❌ ยกเลิกแล้ว' : '✅ อัพเดทแล้ว'
-    );
-  } catch(e) {
-    console.error('updateStatus:', e);
-    showToast('❌ อัพเดทไม่ได้: ' + (e.code || e.message));
-  }
-};
-
-window.deleteOrder = async function(orderId) {
-  if (!orderId) return;
-  if (!confirm('ลบออเดอร์นี้จริงไหม?')) return;
-  const db=window._db, deleteDoc=window._deleteDoc, doc=window._doc;
-  if (!db || !deleteDoc) { console.error('Firebase not ready'); return; }
-  try {
-    await deleteDoc(doc(db, 'orders', orderId));
-    showToast('🗑️ ลบออเดอร์แล้ว');
-  } catch(e) {
-    console.error('deleteOrder:', e);
-    showToast('❌ ลบไม่ได้: ' + (e.code || e.message));
-  }
-};
-
-// 1. toggleStore — เปิด/ปิดร้านจาก header toggle
-window.toggleStore = async function() {
-  const db=window._db, setDoc=window._setDoc, doc=window._doc;
-  const toggle = document.getElementById('store-open-toggle');
-  const label = document.getElementById('store-status-label');
-  storeIsOpen = toggle ? toggle.checked : true;
-  if (label) label.textContent = storeIsOpen ? 'เปิดร้าน' : 'ปิดร้าน';
-  localStorage.setItem('imkum_store_open', storeIsOpen ? 'true' : 'false');
-  try {
-    await setDoc(doc(db, 'settings', 'store'), { isOpen: storeIsOpen }, { merge: true });
-    showToast(storeIsOpen ? '✅ เปิดร้านแล้ว' : '🔴 ปิดร้านแล้ว');
-  } catch(e) {
-    showToast('❌ บันทึกไม่ได้: ' + (e.code || e.message));
-  }
-};
-
-// 2. notifyCustomer — แจ้งลูกค้าผ่าน LINE (เมื่อออเดอร์พร้อม)
-window.notifyCustomer = async function(orderId, customerName, pickupTime) {
-  const db=window._db, getDoc=window._getDoc, doc=window._doc, setDoc=window._setDoc, serverTimestamp=window._serverTimestamp;
-  if (!db) return;
-  try {
-    const orderSnap = await getDoc(doc(db, 'orders', orderId));
-    if (!orderSnap.exists()) { showToast('ไม่พบออเดอร์'); return; }
-    const orderData = orderSnap.data();
-    const lineUserId = orderData.lineUserId || orderData.userId || '';
-    if (!lineUserId) {
-      showToast('⚠️ ลูกค้าไม่มี LINE ID — แจ้งเองทางโทรศัพท์');
-      return;
-    }
-    // 🔴 SECURITY FIX: เรียก sendLineMessage Cloud Function แทน setDoc lineQueue ตรง
-    // ก่อนหน้า: ใครก็เขียน lineQueue ตรงได้ = spam LINE ได้โดยไม่ต้อง login
-    const sendLineMessageFn = httpsCallable(functions, 'sendLineMessage');
-    const msg = `✅ อาหารของคุณพร้อมแล้ว!\nสวัสดีคุณ ${customerName || 'ลูกค้า'} 😊\nกรุณามารับอาหารได้ที่ร้าน เวลา ${pickupTime || '07:30'} น. ครับ/ค่ะ 🙏`;
-    const result = await sendLineMessageFn({ lineUserId, message: msg, orderId });
-    const queueDocId = result.data.docId;
-    showToast('📤 กำลังส่ง LINE...');
-
-    // รอ Cloud Function ประมวลผล แล้วแสดงผล (max 8 วินาที)
-    let tries = 0;
-    const poll = setInterval(async () => {
-      tries++;
-      if (tries > 8) {
-        clearInterval(poll);
-        showToast('⏱️ ส่ง LINE แล้ว (รอ Cloud Function ประมวลผล)');
-        return;
-      }
-      try {
-        const qSnap = await getDoc(doc(db, 'lineQueue', queueDocId));
-        const st = qSnap.data()?.status;
-        if (st === 'sent') {
-          clearInterval(poll);
-          showToast('✅ ส่ง LINE หาลูกค้าสำเร็จ!');
-        } else if (st === 'error') {
-          clearInterval(poll);
-          const errMsg = qSnap.data()?.error || 'unknown';
-          showToast('❌ LINE ส่งไม่ได้: ' + errMsg);
-        }
-      } catch (_) {}
-    }, 1000);
-  } catch(e) {
-    showToast('❌ แจ้งไม่ได้: ' + (e.code || e.message));
-  }
-};
-
-// 3. quickUploadPhoto — อัพโหลดรูปจากเครื่องสำหรับ menu item (modal รูป)
-window.quickUploadPhoto = function(input) {
-  if (input.files[0] && input.files[0].size > 3*1024*1024) { showToast && showToast('❌ รูปใหญ่เกินไป (สูงสุด 3MB)'); input.value=''; return; }
-  const file = input.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const urlInput = document.getElementById('img-url-input');
-    const preview = document.getElementById('img-modal-preview');
-    if (urlInput) urlInput.value = e.target.result;
-    if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
-  };
-  reader.readAsDataURL(file);
-};
-
-// 4. updateRewardTypeUI — แสดง/ซ่อน field ตามประเภทรางวัล
-window.updateRewardTypeUI = function() {
-  const type = document.getElementById('reward-type')?.value;
-  const menuGroup = document.getElementById('reward-menuitem-group');
-  const discountGroup = document.getElementById('reward-discount-group');
-  if (menuGroup) menuGroup.style.display = type === 'free_item' ? '' : 'none';
-  if (discountGroup) discountGroup.style.display = type === 'discount_percent' ? '' : 'none';
-};
-
-// 5. uploadBrandLogo — อัพโหลดโลโก้ร้านจากเครื่อง (base64)
-window.uploadBrandLogo = function(input) {
-  if (input.files[0] && input.files[0].size > 2*1024*1024) { showToast && showToast('❌ โลโก้ใหญ่เกินไป (สูงสุด 2MB)'); input.value=''; return; }
-  const file = input.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const urlInput = document.getElementById('set-hero-logo-url');
-    const preview = document.getElementById('hero-logo-preview-img');
-    const brandPreview = document.getElementById('brand-logo-preview');
-    if (urlInput) urlInput.value = e.target.result;
-    if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
-    if (brandPreview) { brandPreview.src = e.target.result; brandPreview.style.display = 'block'; }
-    window._storeLogo = e.target.result;
-    showToast('📷 โหลดรูปแล้ว กด "บันทึกโลโก้" เพื่อบันทึก');
-  };
-  reader.readAsDataURL(file);
-};
-
-// 6. uploadBrandHero — อัพโหลดรูป Hero banner จากเครื่อง (base64)
-window.uploadBrandHero = function(input) {
-  if (input.files[0] && input.files[0].size > 5*1024*1024) { showToast && showToast('❌ รูป Hero ใหญ่เกินไป (สูงสุด 5MB)'); input.value=''; return; }
-  const file = input.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const urlInput = document.getElementById('set-banner-url');
-    const preview = document.getElementById('banner-preview-img');
-    if (urlInput) urlInput.value = e.target.result;
-    if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
-    showToast('🌅 โหลดรูปแล้ว กด "บันทึกรูป Hero" เพื่อบันทึก');
-  };
-  reader.readAsDataURL(file);
-};
-
-
-
-// sidebar controls (not in module)
-window.toggleSidebar = function() {
-  document.querySelector('.sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('open');
-};
-window.closeSidebar = function() {
-  document.querySelector('.sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-};
-window.addPickupLocation=function(){
- const wrap=document.getElementById('pickup-locations');
- if(!wrap)return;
- const div=document.createElement('div');
- div.innerHTML='<input class="input" placeholder="จุดรับสินค้า">';
- wrap.appendChild(div);
-};
-['saveBanner','saveBannerItem','saveCategoryItem','saveHeroLogo','saveItemImage','savePasswords','savePickupLocations','savePreorderSetting','saveReward','saveSettings','saveStampConfig','saveStoreName','saveTierConfig'].forEach(fn=>{
- window[fn]=function(){__safeToast('บันทึกสำเร็จ');};
-});
-window.openAddBanner=function(){__safeToast('เปิดเพิ่ม Banner');};
-window.openAddReward=function(){__safeToast('เปิดเพิ่ม Reward');};
-
-
-// Auto initialize dashboard + expose globals
-window.switchTab = switchTab;
-
-// duplicate DOMContentLoaded removed
-// duplicate switchTab removed
-
-
-// ====== USER MENU DROPDOWN ======
-window.toggleUserMenu = function() {
-  const dd = document.getElementById('user-dropdown');
-  if (!dd) return;
-  const isOpen = dd.style.display !== 'none';
-  dd.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) {
-    // ปิดเมื่อกดนอก
-    setTimeout(() => {
-      document.addEventListener('click', function closeMenu(e) {
-        if (!e.target.closest('.user-chip')) {
-          dd.style.display = 'none';
-        }
-        document.removeEventListener('click', closeMenu);
-      });
-    }, 10);
-  }
-};
-
-window.adminLogout = async function() {
-  sessionStorage.removeItem('imkum_admin_auth');
-  sessionStorage.removeItem('imkum_user');
-  localStorage.removeItem('imkum_name');
-  try {
-    const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    await signOut(getAuth()); // await ก่อน redirect — ล้าง IndexedDB session ให้เสร็จก่อน
-  } catch(e) {}
-  window.location.href = 'login.html';
-};
-
-// ====== GLOBAL SEARCH ======
-window.globalSearch = function(q) {
-  const query = (q || '').trim().toLowerCase();
-  if (!query) return;
-
-  // ค้นหาใน allOrders
-  if (window.allOrders && window.allOrders.length > 0) {
-    const matched = window.allOrders.filter(o =>
-      (o.customerName || '').toLowerCase().includes(query) ||
-      (o.customerPhone || '').includes(query) ||
-      (o.id || '').toLowerCase().includes(query) ||
-      (o.items || []).some(i => (i.name || '').toLowerCase().includes(query))
-    );
-    if (matched.length > 0) {
-      window.switchTab('orders');
-      window._renderFilteredOrders && window._renderFilteredOrders(matched);
-      return;
-    }
-  }
-
-  // ค้นหาใน menu — switch ไปหน้า menu + highlight
-  window.switchTab('menu');
-  const menuItems = document.querySelectorAll('.menu-item-card, .menu-card');
-  menuItems.forEach(el => {
-    const text = el.textContent.toLowerCase();
-    el.style.opacity = text.includes(query) ? '1' : '0.3';
-  });
-};
-
-
-// Expose admin UI handlers globally for inline HTML buttons
-Object.assign(window,{
-  switchTab,
+// ====== EXPOSE TO GLOBAL SCOPE ======
+Object.assign(window, {
+  doLogout,
   switchCustTab,
   filterCustomers,
   previewImgModal,
@@ -557,5 +289,15 @@ Object.assign(window,{
   clearNotifications,
   requestNotifPermission,
   saveSoundPref,
-  doLogout
+  playNewOrderSound,
+  playStatusSound,
+  showBrowserNotif,
+  toggleUserMenu,
+  adminLogout,
+  toggleSidebar,
+  closeSidebar,
+  globalSearch,
+  addPickupLocationUI,
+  _checkNewOrdersNotification,
+  addNotification,
 });
