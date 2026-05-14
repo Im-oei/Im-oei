@@ -1249,6 +1249,7 @@
   <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
   </div>
 
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Sales Line Chart — initialized with empty data, updated by admin.module.js
 const ctx = document.getElementById('salesChart').getContext('2d');
@@ -1301,7 +1302,7 @@ window.donutChart = new Chart(ctx2, {
 });
 </script>
 <div id="toast"></div>
-  <script type="module" src="js/admin.module.js"></script>
+  <script type="module" defer src="js/admin.module.js"></script>
   <script src="js/admin.js" defer></script>
 
 <script>

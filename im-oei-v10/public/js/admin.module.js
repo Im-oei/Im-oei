@@ -132,7 +132,7 @@ if (checkAuth()) {
 // ====== REALTIME ORDERS ======
 function listenOrders() {
   if (unsubOrders) { unsubOrders(); unsubOrders = null; } // cleanup ก่อน re-subscribe
-  const q = collection(db, 'orders');
+  const q = query(collection(db, 'orders'), limit(200));
   unsubOrders = onSnapshot(q,
     snap => {
       allOrders = snap.docs
@@ -161,7 +161,7 @@ function listenOrders() {
       if (dot) { dot.style.background = 'var(--red)'; dot.style.animation = 'none'; }
       if (st) st.textContent = '⚠️ real-time ล้มเหลว: ' + (err.code || err.message) + ' — กำลัง fallback...';
       const container = document.getElementById('orders-list');
-      container.innerHTML = `<div style="margin:16px;background:#FFEBEE;border-radius:12px;padding:14px;font-size:13px;color:#B71C1C">
+      if (container) container.innerHTML = `<div style="margin:16px;background:#FFEBEE;border-radius:12px;padding:14px;font-size:13px;color:#B71C1C">
         ⚠️ real-time ล้มเหลว: <b>${err.code || err.message}</b><br>
         <span style="font-size:12px;color:#666;margin-top:6px;display:block">กำลังลองโหลดแบบปกติ...</span>
       </div>`;
@@ -172,7 +172,7 @@ function listenOrders() {
 
 // ====== REALTIME LINE QUEUE STATUS ======
 function listenLineQueue() {
-  if (_unsubLineQueue) _unsubLineQueue();
+  if (_unsubLineQueue) { _unsubLineQueue(); _unsubLineQueue = null; }
   _unsubLineQueue = onSnapshot(collection(db, 'lineQueue'), snap => {
     _lineQueueCache = {};
     snap.docs.forEach(d => {
@@ -234,7 +234,7 @@ function updateSummary() {
   const customersEl = document.getElementById('sum-customers');
 
   if (totalOrdersEl) totalOrdersEl.textContent = todayOrders.length;
-  const revenue = todayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0);
+  const revenue = todayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(Number(o.total)||0),0);
   if (revenueEl) revenueEl.textContent = revenue.toLocaleString('th-TH') + '฿';
   const pendingCount = todayOrders.filter(o=>o.status==='pending'||o.status==='preparing').length;
   if (pendingEl) pendingEl.textContent = pendingCount;
@@ -319,7 +319,7 @@ function updateSummary() {
   const channelKeys = ['pickup','delivery','checkmee'];
   const channelCounts = channelKeys.map(k=>todayOrders.filter(o=>(o.channel||o.orderType)===k).length);
   const total = channelCounts.reduce((a,b)=>a+b,0)||1;
-  if (window.donutChart) {
+  if (window.donutChart && window.donutChart.data && window.donutChart.data.datasets) {
     window.donutChart.data.datasets[0].data = channelCounts;
     window.donutChart.update();
   }
@@ -332,7 +332,7 @@ function updateSummary() {
   }
 
   // --- Sales Line Chart (7 days) ---
-  if (window.salesChart) {
+  if (window.salesChart && window.salesChart.data && window.salesChart.data.datasets) {
     const days = [];
     const revenuePerDay = [];
     const ordersPerDay = [];
@@ -344,7 +344,7 @@ function updateSummary() {
         const od = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt||0);
         return od>=d && od<next;
       });
-      revenuePerDay.push(dayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0));
+      revenuePerDay.push(dayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(Number(o.total)||0),0));
       ordersPerDay.push(dayOrders.length);
     }
     window.salesChart.data.labels = days;
