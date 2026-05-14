@@ -436,7 +436,8 @@
   .cd-cancel { background: #f3f4f6; color: var(--text-main); }
 
   /* ===== DANGER DIALOG ===== */
-  /* danger-dialog-overlay: ใช้ admin.css opacity transition (ไม่ใช้ display:none) */
+  .danger-dialog-overlay { display: none !important; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; align-items: center; justify-content: center; padding: 24px; }
+  .danger-dialog-overlay.show { display: flex !important; }
   .danger-dialog-box { background: #fff; border-radius: 20px; width: 100%; max-width: 400px; padding: 28px 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
   .dd-icon-wrap { width: 64px; height: 64px; border-radius: 50%; border: 3px solid #ef4444; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; background: #fee2e2; }
   .dd-title { font-size: 17px; font-weight: 800; color: #b91c1c; margin-bottom: 6px; }
@@ -1300,8 +1301,8 @@ window.donutChart = new Chart(ctx2, {
 });
 </script>
 <div id="toast"></div>
+  <script type="module" src="js/admin.module.js"></script>
   <script src="js/admin.js" defer></script>
-  <script type="module" src="js/admin.module.js" defer></script>
 
 <script>
 window.addEventListener('error',function(e){

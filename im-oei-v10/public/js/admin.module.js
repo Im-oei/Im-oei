@@ -319,12 +319,7 @@ function updateSummary() {
   const channelKeys = ['pickup','delivery','checkmee'];
   const channelCounts = channelKeys.map(k=>todayOrders.filter(o=>(o.channel||o.orderType)===k).length);
   const total = channelCounts.reduce((a,b)=>a+b,0)||1;
-  if (
-    window.donutChart &&
-    window.donutChart.data &&
-    window.donutChart.data.datasets &&
-    window.donutChart.data.datasets[0]
-  ) {
+  if (window.donutChart) {
     window.donutChart.data.datasets[0].data = channelCounts;
     window.donutChart.update();
   }
@@ -2232,3 +2227,54 @@ window.listenLineQueue = listenLineQueue;
 window.renderStats     = renderStats;
 window.loadCategories  = loadCategories;
 window.loadPreorderSetting = loadPreorderSetting;
+
+
+// ===== Dashboard Navigation Fix =====
+window.switchTab = function(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(`panel-${name}`);
+  if (target) target.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (window.innerWidth < 1024) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.openPanel = function(panelName){
+  const navBtn = [...document.querySelectorAll('.nav-item')].find(el => (el.getAttribute('onclick')||'').includes(`'${panelName}'`) || (el.getAttribute('onclick')||'').includes(`"${panelName}"`));
+  window.switchTab(panelName, navBtn);
+};
+
+window.toggleSidebar = function(){
+  document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebarOverlay')?.classList.toggle('show');
+};
+
+window.closeSidebar = function(){
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('show');
+};
+
+// Dashboard cards clickable
+window.addEventListener('DOMContentLoaded', ()=> {
+  const cards = document.querySelectorAll('.stat-card');
+  const targets = ['reports','orders','orders','orders','customers'];
+  cards.forEach((card,idx)=>{
+    card.style.cursor='pointer';
+    card.addEventListener('click',()=>window.openPanel(targets[idx]||'dashboard'));
+  });
+
+  document.querySelectorAll('.card-link').forEach(btn=>{
+    btn.style.cursor='pointer';
+    btn.addEventListener('click',()=>window.openPanel('orders'));
+  });
+});
+// ===== End Dashboard Navigation Fix =====

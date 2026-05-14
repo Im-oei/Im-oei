@@ -71,7 +71,9 @@ service cloud.firestore {
 
     // ─── ADMINS ───────────────────────────────────────────────────────────────
     match /admins/{uid} {
-      allow read: if isFirebaseAdmin();
+      // 🔐 FIX: ต้อง allow read: if request.auth != null (ไม่ใช้ isFirebaseAdmin)
+      // เพราะ isFirebaseAdmin() ใช้ exists(admins/uid) → circular dependency → deny ทุกอย่าง
+      allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
     }
 
