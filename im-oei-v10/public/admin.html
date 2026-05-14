@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>อิ่มเอ้ย - IM OEI Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" defer></script>
+<script defer src="./assets/js/chart.js"></script>
 <style>
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1249,7 +1249,6 @@
   <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
   </div>
 
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Sales Line Chart — initialized with empty data, updated by admin.module.js
 const ctx = document.getElementById('salesChart').getContext('2d');
@@ -1302,7 +1301,7 @@ window.donutChart = new Chart(ctx2, {
 });
 </script>
 <div id="toast"></div>
-  <script type="module" defer src="js/admin.module.js"></script>
+  <script type="module" src="js/admin.module.js"></script>
   <script src="js/admin.js" defer></script>
 
 <script>
