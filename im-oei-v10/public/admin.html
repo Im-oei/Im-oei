@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>อิ่มเอ้ย - IM OEI Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script defer src="./assets/js/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1253,7 +1253,8 @@
 function createSalesChart() {
   const canvas = document.getElementById('salesChart');
   if (!canvas) return;
-  if (window.salesChart) { window.salesChart.destroy(); window.salesChart = null; }
+  if (window.salesChart && typeof window.salesChart.destroy === 'function') { window.salesChart.destroy(); }
+  window.salesChart = null;
   const ctx = canvas.getContext('2d');
   window.salesChart = new Chart(ctx, {
   type: 'line',
@@ -1295,7 +1296,8 @@ createSalesChart();
 function createDonutChart() {
   const canvas = document.getElementById('donutChart');
   if (!canvas) return;
-  if (window.donutChart) { window.donutChart.destroy(); window.donutChart = null; }
+  if (window.donutChart && typeof window.donutChart.destroy === 'function') { window.donutChart.destroy(); }
+  window.donutChart = null;
   const ctx2 = canvas.getContext('2d');
   window.donutChart = new Chart(ctx2, {
   type: 'doughnut',

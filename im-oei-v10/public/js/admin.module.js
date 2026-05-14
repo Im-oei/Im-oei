@@ -328,7 +328,12 @@ function updateSummary() {
   const channelKeys = ['pickup','delivery','checkmee'];
   const channelCounts = channelKeys.map(k=>todayOrders.filter(o=>(o.channel||o.orderType)===k).length);
   const total = channelCounts.reduce((a,b)=>a+b,0)||1;
-  if (window.donutChart) {
+  if (
+    window.donutChart &&
+    window.donutChart.data &&
+    window.donutChart.data.datasets &&
+    window.donutChart.data.datasets[0]
+  ) {
     window.donutChart.data.datasets[0].data = channelCounts;
     window.donutChart.update();
   }
