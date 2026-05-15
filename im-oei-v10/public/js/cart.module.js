@@ -4,7 +4,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { FIREBASE_CONFIG } from "../config.js";
 window._onSnapshot = onSnapshot;
 window._collection = collection;
@@ -12,10 +11,10 @@ window._collection = collection;
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const functions = getFunctions(app, 'asia-northeast1');
+// NOTE: Cloud Functions (Blaze plan) ยังไม่ได้ใช้งาน — checkout เขียน Firestore ตรงๆ
 
 loadPickupLocations(db);
-_execLoadPickup(db, getDocs, collection);
+_execLoadPickup(db, getDoc, doc);
 
 async function syncMenu() {
   try {
@@ -126,38 +125,52 @@ window.checkout = async function() {
     // ── ensure Firebase Auth ก่อน addDoc → Rules require request.auth != null ──
     await ensureAuth();
 
-    // 🔐 FIX: เรียก validateAndCreateOrder Cloud Function แทน addDoc ตรง
-    // เดิม: client ส่ง price + total เอง = แก้ราคาได้ (price manipulation)
-    // ใหม่: server ดึงราคาจาก menu collection แล้ว recalculate total
-    const validateAndCreateOrder = httpsCallable(functions, 'validateAndCreateOrder');
-    const orderResult = await validateAndCreateOrder({
-      items: Object.keys(cart).map(id => ({ id, qty: cart[id] })), // ส่งแค่ id + qty
-      note,
-      customerName,
-      ...(phone ? { customerPhone: phone } : {}),
-      ...(lineUserId ? { lineUserId } : {}),
-      ...(guestId ? { guestId } : {}),
-      pickupTime,
-      pickupLocation: selectedLocation,
-      pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation,
+    // ── ดึงราคาล่าสุดจาก Firestore ก่อน checkout (ป้องกัน stale cache) ──
+    // ราคามาจาก Firestore menu collection ที่ syncMenu() โหลดไว้ใน ALL_ITEMS
+    // ไม่รับราคาจาก client — คำนวณใหม่จาก ALL_ITEMS ทุกครั้ง
+    let calculatedTotal = 0;
+    const verifiedItems = [];
+    for (const id of Object.keys(cart)) {
+      const qty = cart[id];
+      if (!qty || qty < 1) continue;
+      const item = ALL_ITEMS.find(i => i.id === id);
+      if (!item) { showToast(`⚠️ ไม่พบเมนู "${id}" กรุณารีเฟรชหน้า`); showLoading(false); _isCheckingOut = false; return; }
+      if (item.hidden) { showToast(`⚠️ เมนู "${item.name}" ถูกซ่อนแล้ว`); showLoading(false); _isCheckingOut = false; return; }
+      if (item.soldOut) { showToast(`⚠️ เมนู "${item.name}" หมดแล้ว`); showLoading(false); _isCheckingOut = false; return; }
+      const subtotal = item.price * qty;
+      calculatedTotal += subtotal;
+      verifiedItems.push({ id, name: item.name, qty, price: item.price, subtotal });
+    }
+    if (calculatedTotal <= 0 || verifiedItems.length === 0) { showToast('ไม่มีสินค้าในตะกร้า'); showLoading(false); _isCheckingOut = false; return; }
+    total = calculatedTotal;
+
+    // ── เขียน order ลง Firestore ตรงๆ (ไม่ต้องใช้ Cloud Functions / Blaze) ──
+    const orderRef = await addDoc(collection(db, 'orders'), {
+      items: verifiedItems,
+      total,
+      note: note || '',
+      customerName: customerName || '',
+      ...(phone      ? { customerPhone: phone }   : {}),
+      ...(lineUserId ? { lineUserId }              : {}),
+      ...(guestId    ? { guestId }                 : {}),
+      pickupTime: pickupTime || '07:30',
+      pickupLocation: selectedLocation || '',
+      pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation || '',
+      status: 'pending',
       isPreorder: isNextDay || false,
       preorderDate: isNextDay ? (localStorage.getItem('imkum_preorder_date') || '') : null,
+      createdAt: serverTimestamp(),
     });
-    const { orderId, total: confirmedTotal } = orderResult.data;
-    // ใช้ total จาก server (ที่ validate แล้ว) แทน client-calculated
-    total = confirmedTotal;
-    const orderRef = { id: orderId };
 
-    // อัพเดทแต้ม (20 บาท = 1 แต้ม, คำนวณจากยอดออเดอร์)
-    // upsert ข้อมูลลูกค้าลง customers collection ทุกครั้งที่สั่ง
+    // ── upsert ข้อมูลลูกค้า ──
     try {
       const u = (() => { try { return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); } catch(e){ return null; } })();
       const custId = lineUserId ? ('line_' + lineUserId) : (phone ? 'phone_' + phone : 'guest_' + guestId);
       await setDoc(doc(db, 'customers', custId), {
         name: customerName,
-        ...(phone ? { phone } : {}),
+        ...(phone      ? { phone }      : {}),
         ...(lineUserId ? { lineUserId } : {}),
-        ...(guestId ? { guestId } : {}),
+        ...(guestId    ? { guestId }    : {}),
         source: lineUserId ? 'line' : (phone ? 'phone' : 'guest'),
         photoUrl: u?.photoURL || '',
         lastOrderAt: serverTimestamp(),
@@ -165,28 +178,18 @@ window.checkout = async function() {
       }, { merge: true });
     } catch(e) { console.warn('customer upsert:', e.message); }
 
-    // 🔴 SECURITY FIX: ถอด stamp write ออกจาก client แล้ว
-    // ก่อนหน้า: client เขียน stamps ตรง = ปั๊มแต้มได้ (points += 100 ทุก request)
-    // ใหม่: onOrderCreate Cloud Function คำนวณและเขียน stamps ผ่าน Admin SDK
-    // แต้มจะอัปเดตอัตโนมัติหลัง order สร้างสำเร็จ (~1-2 วินาที)
+    // ── แสดงข้อความแต้ม (คำนวณ client-side เท่านั้น ยังไม่เขียน Firestore) ──
     let stampMsg = null;
     try {
-      // อ่านแต้มเก่าจาก localStorage เพื่อแสดง UI (ไม่ได้เขียน Firestore)
-      const stampKey = lineUserId || phone || guestId;
-      const cachedStamps = localStorage.getItem('imkum_stamps_' + stampKey);
-      const cached = cachedStamps ? JSON.parse(cachedStamps) : { points: 0 };
-      const stSnap = await fetch ? null : null; // placeholder
       const stSettings = await getDoc(doc(db, 'settings', 'stamps')).catch(() => null);
       const bahtPerPoint = stSettings?.exists() ? (stSettings.data().bahtPerPoint || 25) : 25;
       const earnedPoints = Math.floor(total / bahtPerPoint);
-      stampMsg = earnedPoints > 0
-        ? `⭐ จะได้รับ ${earnedPoints} แต้ม (Cloud Function กำลังบันทึก...)`
-        : null;
-    } catch(e) { console.warn('stamp preview failed:', e.message); }
+      stampMsg = earnedPoints > 0 ? `⭐ จะได้รับ ${earnedPoints} แต้มจากออเดอร์นี้` : null;
+    } catch(e) { /* ไม่แสดงแต้มถ้า error */ }
 
     localStorage.setItem('imkum_last_order', JSON.stringify({
       orderId: orderRef.id, total, pickupTime, customerName, isPreorder: isNextDay,
-      items: orderItems,
+      items: verifiedItems,
       preorderDate: isNextDay ? (localStorage.getItem('imkum_preorder_date') || '') : null,
       pickupLocation: selectedLocation,
       pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || '',
@@ -201,12 +204,10 @@ window.checkout = async function() {
   } catch(e) {
     console.error('checkout error:', e);
     var msg = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
-    if (e.code === 'functions/internal') {
-      msg = '❌ ระบบขัดข้องชั่วคราว กรุณาลองใหม่ใน 1 นาที';
-    } else if (e.code === 'functions/unauthenticated') {
-      msg = '❌ กรุณาเข้าสู่ระบบก่อนสั่งอาหาร';
+    if (e.code === 'permission-denied') {
+      msg = '❌ ไม่มีสิทธิ์สั่งซื้อ กรุณาเข้าสู่ระบบใหม่';
       setTimeout(function(){ window.location.href = 'login.html'; }, 1500);
-    } else if (e.code === 'functions/unavailable' || !navigator.onLine) {
+    } else if (e.code === 'unavailable' || !navigator.onLine) {
       msg = '❌ ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ';
     } else if (e.message) {
       msg = '❌ ' + e.message;
