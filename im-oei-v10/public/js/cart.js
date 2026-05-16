@@ -6,7 +6,6 @@
   if(!sess){ window.location.href = 'login.html'; return; }
   try {
     var user = JSON.parse(sess);
-    // ตรวจ session expiry 8 ชั่วโมง
     if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
       sessionStorage.clear(); window.location.href = 'login.html'; return;
     }
@@ -37,32 +36,35 @@ function cancelPreorder() {
 }
 
 // ===== PICKUP LOCATIONS =====
-// จุดรับอาหาร — โหลดจาก Firestore (fallback hardcode ถ้าไม่มีข้อมูล)
 var PICKUP_LOCATIONS = [
   { id:'main', name:'ร้านอิ่มเอ๋ย (หลัก)', desc:'หน้าร้านชั้น 1', icon:'🏪', mapUrl:'' }
 ];
 var selectedLocation = localStorage.getItem('imkum_location') || '';
 
 function loadPickupLocations(db) {
-  // Use getDocs via module - stored in window after module loads
   window._pickupDb = db;
-  // Will be called from module after it loads
 }
-function _execLoadPickup(db, getDocs, collection) {
-  getDocs(collection(db, 'pickupLocations')).then((snap) => {
-    if (!snap.empty) {
-      PICKUP_LOCATIONS = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-      if (!PICKUP_LOCATIONS.find(l => l.id === selectedLocation)) {
-        selectedLocation = PICKUP_LOCATIONS[0]?.id || '';
-        localStorage.setItem('imkum_location', selectedLocation);
+// FIX: signature ตรงกับ cart.module.js ที่ส่ง (db, getDoc, doc)
+// เดิม: getDocs(collection(db,'pickupLocations')) → path 1 segment = ERROR
+// ใหม่: getDoc(doc(db,'settings','pickupLocations')) → path 2 segment = ถูกต้อง
+function _execLoadPickup(db, getDoc, doc) {
+  getDoc(doc(db, 'settings', 'pickupLocations')).then(function(snap) {
+    if (snap.exists()) {
+      var data = snap.data();
+      if (Array.isArray(data.list) && data.list.length > 0) {
+        PICKUP_LOCATIONS = data.list.slice().sort(function(a, b) {
+          return (a.order != null ? a.order : 99) - (b.order != null ? b.order : 99);
+        });
+        if (!PICKUP_LOCATIONS.find(function(l){ return l.id === selectedLocation; })) {
+          selectedLocation = PICKUP_LOCATIONS[0] ? PICKUP_LOCATIONS[0].id : '';
+          localStorage.setItem('imkum_location', selectedLocation);
+        }
       }
     }
     if (document.getElementById('cart-body')) renderCart();
-  }).catch(e => {
-    // ตั้งใจ silent — ถ้าโหลด pickupLocations ไม่ได้ ใช้ค่า default PICKUP_LOCATIONS แทน
+  }).catch(function(e) {
     console.warn('loadPickupLocations: ใช้จุดรับอาหาร default:', e.code || e.message);
+    if (document.getElementById('cart-body')) renderCart();
   });
 }
 function selectLocation(id) {
@@ -92,10 +94,9 @@ var MENU = [
 var ALL_ITEMS = [].concat.apply([], MENU.map(function(c){ return c.items; }));
 var STORE_SETTINGS = { pickupStart:'07:00', pickupEnd:'08:00' };
 var STAMP_GOAL = 10;
-var POINTS_PER_BAHT = 20; // 20 บาท = 1 แต้ม (โหลดจาก Firestore)
+var POINTS_PER_BAHT = 20;
 
 var cart = JSON.parse(localStorage.getItem('imkum_cart') || '{}');
-// Cache ราคา กรณี ALL_ITEMS ยังไม่ sync จาก Firestore
 var cartPriceCache = JSON.parse(localStorage.getItem('imkum_cart_prices') || '{}');
 function saveCart(){
   localStorage.setItem('imkum_cart', JSON.stringify(cart));
@@ -137,7 +138,6 @@ function generateTimeSlots(start, end, nextDay) {
   return slots;
 }
 
-// Stamp card info
 function getStampInfo() {
   var u; try { u = JSON.parse(sessionStorage.getItem('imkum_user')||'null'); } catch { u = null; }
   if (!u || !u.phone) return null;
@@ -153,15 +153,10 @@ function renderCart(){
     return;
   }
 
-  var slots = generateTimeSlots(
-    STORE_SETTINGS.pickupStart||'07:00',
-    STORE_SETTINGS.pickupEnd||'08:00',
-    isPreorder
-  );
+  var slots = generateTimeSlots(STORE_SETTINGS.pickupStart||'07:00', STORE_SETTINGS.pickupEnd||'08:00', isPreorder);
   var timeHTML = slots.map(function(s){ return '<option value="'+s.val+'">'+s.label+' น.</option>'; }).join('');
   var savedName = (function(){ try { var u=JSON.parse(sessionStorage.getItem('imkum_user')||'null'); return (u&&u.name)||localStorage.getItem('imkum_name')||''; } catch(e){ return localStorage.getItem('imkum_name')||''; } })();
 
-  // Points earn notice (20 บาท = 1 แต้ม)
   var stampInfo = getStampInfo();
   var stampHTML = '';
   var currentTotal = getTotal();
@@ -169,19 +164,18 @@ function renderCart(){
   if (stampInfo !== null) {
     var currentPoints = stampInfo.points !== undefined ? stampInfo.points : (stampInfo.total || 0);
     var afterPoints = currentPoints + earnThisOrder;
-    // ดึง cached rewards เพื่อหาว่าเกือบแลกได้อะไร
     var nearReward = '';
     try {
       var cachedRewards = JSON.parse(localStorage.getItem('imkum_rewards_cache') || '[]');
       var reachable = cachedRewards.filter(function(r){ return r.active !== false && afterPoints >= r.pointCost; });
-      var almost   = cachedRewards.filter(function(r){ return r.active !== false && afterPoints < r.pointCost && r.pointCost <= afterPoints + 200; });
+      var almost = cachedRewards.filter(function(r){ return r.active !== false && afterPoints < r.pointCost && r.pointCost <= afterPoints + 200; });
       if (reachable.length) {
         nearReward = '<div style="margin-top:6px;font-size:12px;color:#2E7D32;font-weight:700">🎁 แลกได้แล้ว: ' + reachable.map(function(r){return (r.emoji||'🎁')+' '+r.name;}).join(', ') + '</div>';
       } else if (almost.length) {
         var r = almost[0];
         nearReward = '<div style="margin-top:6px;font-size:12px;color:#F57F17;font-weight:700">✨ อีก '+(r.pointCost - afterPoints)+' แต้มแลก '+(r.emoji||'🎁')+' '+r.name+'!</div>';
       }
-    } catch(e) { console.warn('rewards cache parse failed:', e.message); /* ใช้ค่า default nearReward = '' */ }
+    } catch(e) { console.warn('rewards cache parse failed:', e.message); }
     stampHTML = '<div class="stamp-earn-box"><span class="icon">⭐</span><div class="text">'+
       'แต้มของคุณ: <b>'+currentPoints+'</b> แต้ม' +
       (earnThisOrder > 0 ? ' &nbsp;+&nbsp; <b>'+earnThisOrder+'</b> แต้มจากออเดอร์นี้' : '') +
@@ -212,7 +206,6 @@ function renderCart(){
   });
 
   var pickupLabel = isPreorder ? '📅 เวลารับอาหาร (พรุ่งนี้)' : '🕐 เวลารับอาหาร';
-
   html += stampHTML +
     '<div class="note-section" style="padding-top:14px"><label>ชื่อผู้สั่ง</label><input type="text" class="name-input" id="name-input" placeholder="กรอกชื่อของคุณ" value="'+savedName+'"></div>'+
     '<div class="pickup-row" style="flex-direction:column;align-items:flex-start;gap:8px;padding:14px 16px">'+
@@ -223,7 +216,6 @@ function renderCart(){
     '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" maxlength="200" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
     '<div class="total-row"><span class="total-label">รวมทั้งหมด</span><span><span class="total-amount" id="cart-total">'+getTotal()+'</span><span class="total-unit">บาท</span></span></div>'+
     '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="checkout()">ยืนยันการสั่งซื้อ</button></div>';
-
   body.innerHTML=html;
 }
 
@@ -268,8 +260,6 @@ function clearCart(){
   cart={}; saveCart(); renderCart();
 }
 
-// Stub: module script โหลดช้ากว่า inline onclick
-// window.checkout จะถูก override โดย <script type="module"> ด้านล่าง
 window.checkout = function() {
   showToast('กำลังโหลด กรุณารอสักครู่...');
 };
@@ -277,11 +267,6 @@ window.placeOrder = window.checkout;
 
 renderCart();
 
-
-
-function showCartLoginPrompt(){
-  // modal ถูกลบออกแล้ว — redirect ไป login.html แทน
-  window.location.href = 'login.html';
-}
+function showCartLoginPrompt(){ window.location.href = 'login.html'; }
 function closeCartLogin(){ /* deprecated */ }
 function submitCartLogin(){ /* deprecated */ }
