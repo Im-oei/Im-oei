@@ -2140,3 +2140,49 @@ window.confirmDangerAction = async function() {
     _dangerAction = null;
   }
 };
+
+// ====== SWITCH TAB ======
+window.switchTab = function(tab, el) {
+  // ซ่อนทุก panel
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  // แสดง panel ที่เลือก
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+  // อัปเดต nav highlight (sidebar)
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // อัปเดต bottom tab highlight
+  document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
+  const btab = document.getElementById('btab-' + tab);
+  if (btab) btab.classList.add('active');
+  // render stats เมื่อเปิดแท็บสถิติ
+  if (tab === 'stats') renderStats();
+  // load customers เมื่อเปิดแท็บลูกค้า
+  if (tab === 'customers') loadCustomers();
+  // render featured checkboxes เมื่อเปิด settings
+  if (tab === 'settings' || tab === 'store') renderFeaturedCheckboxes();
+  // close sidebar on mobile
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('open');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (overlay) overlay.classList.remove('show');
+};
+
+// ====== SWITCH LOYALTY TAB ======
+var _custTab = 'line';
+window.switchCustTab = function(tab) {
+  _custTab = tab;
+  renderCustomers();
+};
+
+window.switchLoyaltyTab = function(tab) {
+  ['config','rewards','tiers','history'].forEach(t => {
+    const el = document.getElementById('lpanel-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+};
+
+window.filterOrders = function(status) {
+  currentFilter = status;
+  renderOrders();
+};
