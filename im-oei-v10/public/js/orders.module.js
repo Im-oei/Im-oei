@@ -1,4 +1,3 @@
-
 // orders.html — ES module
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -691,9 +690,11 @@ async function subscribeToPush(swReg) {
     // บันทึก subscription ลง Firestore ผูกกับ phone
     // 🔐 FIX: Rules ต้องการ request.auth != null + endpoint field ที่ top-level
     const subData = sub.toJSON();
+    const pushId = user.phone || user.lineUserId || user.guestId;
+    if (!pushId) return;
     const { setDoc, doc: fsDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    await setDoc(fsDoc(db, 'pushSubscriptions', user.phone), {
-      phone: user.phone,
+    await setDoc(fsDoc(db, 'pushSubscriptions', pushId), {
+      phone: user.phone || '',
       name: user.name || '',
       endpoint: subData.endpoint || '',   // ← top-level ตาม rules: hasAll(['endpoint'])
       subscription: subData,
@@ -1235,10 +1236,6 @@ async function renderRealtimeOrders() {
   });
 }
 
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    renderRealtimeOrders();
-  }, 500);
-});
+// renderRealtimeOrders ถูกลบออก — ใช้ startOrdersRealtime() แทน (query lineUserId ถูกต้อง)
 
 // ===== End Realtime Orders Fix =====
