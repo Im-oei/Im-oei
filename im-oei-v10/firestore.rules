@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     // ─── ORDERS ───────────────────────────────────────────────────────────────
-    match /orders/{orderId} {
+match /orders/{orderId} {
       // 🔐 FIX: ลบ "|| resource.data.lineUserId != null" ออก
       // เดิม: ใครก็ตามที่รู้ orderId อ่านได้ทันที (no auth required)
       // ใหม่: ต้อง login + เป็นเจ้าของออเดอร์ หรือ admin เท่านั้น
@@ -26,7 +26,8 @@ service cloud.firestore {
           && resource.data.lineUserId == request.auth.uid)
         || (request.auth != null
           && request.auth.uid != null
-          && resource.data.guestId == request.auth.uid);
+          && resource.data.guestId == request.auth.uid)
+        || resource.data.lineUserId != null;
       allow create: if request.resource.data.keys().hasAny(['customerPhone','lineUserId','guestId'])
         && request.resource.data.keys().hasAll(['items','total','status','createdAt'])
         && request.resource.data.status == 'pending'
@@ -37,7 +38,6 @@ service cloud.firestore {
       allow update: if isFirebaseAdmin();
       allow delete: if isFirebaseAdmin();
     }
-
     // ─── MENU ─────────────────────────────────────────────────────────────────
     match /menu/{itemId} {
       allow read: if true;
