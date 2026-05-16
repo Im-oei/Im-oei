@@ -2099,69 +2099,44 @@ window.closeDangerDialog = function() {
 };
 
 window.confirmDangerAction = async function() {
-  var action = _dangerActi
-
-// ====== PICKUP LOCATIONS (Admin) ======
-// โหลด/แสดง/บันทึกจุดรับอาหารลง Firestore: settings/pickupLocations { list: [...] }
-
-var _pickupLocs = []; // working copy
-
-window.loadPickupLocations = async function() {
+  var action = _dangerAction;
+  if (!action) return;
+  closeDangerDialog();
+  showLoading(true);
   try {
-    const snap = await getDoc(doc(db, 'settings', 'pickupLocations'));
-    if (snap.exists() && Array.isArray(snap.data().list)) {
-      _pickupLocs = snap.data().list.slice();
-    } else {
-      _pickupLocs = [{ id: 'main', name: 'ร้านอิ่มเอ๋ย (หลัก)', desc: 'หน้าร้านชั้น 1', icon: '🏪', mapUrl: '', order: 0 }];
+    if (action === 'rating') {
+      const snap = await getDocs(collection(db, 'ratings'));
+      const dels = snap.docs.map(d => deleteDoc(doc(db, 'ratings', d.id)));
+      await Promise.all(dels);
+      showToast('✅ ล้าง Rating แล้ว (' + snap.docs.length + ' รายการ)');
+    } else if (action === 'completed') {
+      const snap = await getDocs(collection(db, 'orders'));
+      const dels = snap.docs
+        .filter(d => ['done','cancelled'].includes(d.data().status))
+        .map(d => deleteDoc(doc(db, 'orders', d.id)));
+      await Promise.all(dels);
+      showToast('✅ ลบออเดอร์เก่าแล้ว (' + dels.length + ' รายการ)');
+    } else if (action === 'all') {
+      const snap = await getDocs(collection(db, 'orders'));
+      const dels = snap.docs.map(d => deleteDoc(doc(db, 'orders', d.id)));
+      await Promise.all(dels);
+      showToast('✅ ลบออเดอร์ทั้งหมดแล้ว (' + snap.docs.length + ' รายการ)');
+    } else if (action === 'reset') {
+      const [oSnap, sSnap] = await Promise.all([
+        getDocs(collection(db, 'orders')),
+        getDocs(collection(db, 'stamps')),
+      ]);
+      const dels = [
+        ...oSnap.docs.map(d => deleteDoc(doc(db, 'orders', d.id))),
+        ...sSnap.docs.map(d => deleteDoc(doc(db, 'stamps', d.id))),
+      ];
+      await Promise.all(dels);
+      showToast('✅ รีเซ็ตระบบแล้ว (ออเดอร์ ' + oSnap.docs.length + ', แต้ม ' + sSnap.docs.length + ')');
     }
   } catch(e) {
-    _pickupLocs = [{ id: 'main', name: 'ร้านอิ่มเอ๋ย (หลัก)', desc: 'หน้าร้านชั้น 1', icon: '🏪', mapUrl: '', order: 0 }];
-  }
-  _renderPickupLocations();
-};
-
-function _renderPickupLocations() {
-  const container = document.getElementById('pickup-locations-list');
-  if (!container) return;
-  if (!_pickupLocs.length) {
-    container.innerHTML = '<div style="color:#999;font-size:13px;padding:8px 0">ยังไม่มีจุดรับอาหาร</div>';
-    return;
-  }
-  container.innerHTML = _pickupLocs.map((loc, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#fff8f0;border-radius:10px;margin-bottom:8px;border:1px solid #ffe0b2">
-      <input value="${loc.icon||'🏪'}" style="width:42px;font-size:18px;text-align:center;border:1px solid #ddd;border-radius:8px;padding:4px" onchange="_pickupLocs[${i}].icon=this.value">
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-        <input value="${loc.name||''}" placeholder="ชื่อจุด" style="border:1px solid #ddd;border-radius:6px;padding:5px 8px;font-size:13px;width:100%" onchange="_pickupLocs[${i}].name=this.value">
-        <input value="${loc.desc||''}" placeholder="คำอธิบาย (เช่น หน้าร้านชั้น 1)" style="border:1px solid #ddd;border-radius:6px;padding:5px 8px;font-size:12px;width:100%;color:#777" onchange="_pickupLocs[${i}].desc=this.value">
-        <input value="${loc.mapUrl||''}" placeholder="ลิงก์ Google Maps (ถ้ามี)" style="border:1px solid #ddd;border-radius:6px;padding:5px 8px;font-size:11px;width:100%;color:#777" onchange="_pickupLocs[${i}].mapUrl=this.value">
-      </div>
-      <button onclick="_pickupLocs.splice(${i},1);_renderPickupLocations()" style="background:#fee2e2;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;color:#dc2626">🗑</button>
-    </div>
-  `).join('');
-}
-
-window.addPickupLocation = function() {
-  const nameEl = document.getElementById('new-pickup-name');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const id = 'loc_' + Date.now();
-  _pickupLocs.push({ id, name: name || 'จุดใหม่', desc: '', icon: '📍', mapUrl: '', order: _pickupLocs.length });
-  if (nameEl) nameEl.value = '';
-  _renderPickupLocations();
-};
-
-window.savePickupLocations = async function() {
-  try {
-    // อัปเดต order ตาม index ปัจจุบัน
-    _pickupLocs.forEach((loc, i) => { loc.order = i; });
-    await setDoc(doc(db, 'settings', 'pickupLocations'), { list: _pickupLocs }, { merge: false });
-    // แสดง toast
-    const t = document.getElementById('toast') || document.getElementById('admin-toast');
-    if (t) { t.textContent = '✅ บันทึกจุดรับอาหารแล้ว'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
-    else alert('✅ บันทึกจุดรับอาหารแล้ว');
-  } catch(e) {
-    alert('❌ บันทึกไม่สำเร็จ: ' + e.message);
+    showToast('❌ ' + (e.code||e.message));
+  } finally {
+    showLoading(false);
+    _dangerAction = null;
   }
 };
-
-// โหลดทันทีเมื่อ module load
-window.loadPickupLocations();
