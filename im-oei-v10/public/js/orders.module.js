@@ -297,18 +297,20 @@ function renderOrders(docs){
   // === ACTIVE ORDERS (full card) ===
   const activeWrap = document.getElementById('active-wrap');
   const activeCount = document.getElementById('active-count');
-  if(active.length){
-    activeCount.textContent = active.length; activeCount.style.display='inline';
-    activeWrap.innerHTML = active.map(o => renderActiveCard(o)).join('');
-  } else {
-    activeCount.style.display='none';
-    activeWrap.innerHTML = '<div class="sec-header-empty">ไม่มีออเดอร์ที่กำลังดำเนินการ</div>';
+  if(activeWrap) {
+    if(active.length){
+      if(activeCount){ activeCount.textContent = active.length; activeCount.style.display='inline'; }
+      activeWrap.innerHTML = active.map(o => renderActiveCard(o)).join('');
+    } else {
+      if(activeCount) activeCount.style.display='none';
+      activeWrap.innerHTML = '<div class="sec-header-empty">ไม่มีออเดอร์ที่กำลังดำเนินการ</div>';
+    }
   }
 
   // === HISTORY (compact rows) ===
   const historyCount = document.getElementById('history-count');
   if(history.length){
-    historyCount.textContent = history.length; historyCount.style.display='inline';
+    if(historyCount){ historyCount.textContent = history.length; historyCount.style.display='inline'; }
     renderHistoryRows(historyExpanded ? history : history.slice(0, HISTORY_PREVIEW));
     const btn = document.getElementById('show-more-btn');
     if(history.length > HISTORY_PREVIEW){
