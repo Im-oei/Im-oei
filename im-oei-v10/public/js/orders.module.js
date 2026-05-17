@@ -589,9 +589,10 @@ function renderStampCard(points, lifetimePoints, tierCfg) {
 async function loadStamps(){
   await loadStampConfig(); // โหลด goal จาก Firestore ก่อนเสมอ
   if(!user.phone && !user.lineUserId){renderStampCard(0,0,null);return;}
+  const stampDocId = user.phone || user.lineUserId;
   try{
     const [sd, tierSnap, cfgSnap2] = await Promise.all([
-      getDoc(doc(db,'stamps',user.phone)),
+      getDoc(doc(db,'stamps', stampDocId)),
       getDoc(doc(db,'settings','tiers')),
       getDoc(doc(db,'settings','stamps')),
     ]);
@@ -616,13 +617,13 @@ async function loadStamps(){
       }
     }
 
-    localStorage.setItem('imkum_stamps_' + user.phone, JSON.stringify({ points, lifetimePoints }));
+    localStorage.setItem('imkum_stamps_' + stampDocId, JSON.stringify({ points, lifetimePoints }));
     renderStampCard(points, lifetimePoints, tierCfg);
     window._userPoints = points;
     window._userTierCfg = tierCfg;
   }catch(e){
     try{
-      const c = JSON.parse(localStorage.getItem('imkum_stamps_'+user.phone)||'{"points":0,"total":0}');
+      const c = JSON.parse(localStorage.getItem('imkum_stamps_'+(user.phone||user.lineUserId))||'{"points":0,"total":0}');
       renderStampCard(c.points || c.total || 0, c.lifetimePoints || c.points || 0, null);
     } catch { renderStampCard(0,0,null); }
   }
@@ -976,7 +977,7 @@ async function renderRewardCatalog() {
     const snap = await getDocs(collection(db, 'rewards'));
     const tierCfg = window._userTierCfg || { silver:500, gold:2000, platinum:5000 };
     const lifetimePts = (() => {
-      try { const c = JSON.parse(localStorage.getItem('imkum_stamps_'+user.phone)||'{}'); return c.lifetimePoints||0; } catch { return 0; }
+      try { const c = JSON.parse(localStorage.getItem('imkum_stamps_'+(user.phone||user.lineUserId))||'{}'); return c.lifetimePoints||0; } catch { return 0; }
     })();
     const tierRank = lifetimePts >= (tierCfg.platinum||5000) ? 3 : lifetimePts >= (tierCfg.gold||2000) ? 2 : lifetimePts >= (tierCfg.silver||500) ? 1 : 0;
     const reqRank = { none:0, silver:1, gold:2, platinum:3 };
