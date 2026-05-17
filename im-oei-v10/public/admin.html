@@ -1291,7 +1291,7 @@ function createSalesChart() {
   }
   });
 }
-createSalesChart();
+if (typeof Chart !== 'undefined') createSalesChart();
 
 // Donut Chart — initialized empty, updated by admin.module.js
 function createDonutChart() {
@@ -1312,7 +1312,7 @@ function createDonutChart() {
   }
   });
 }
-createDonutChart();
+if (typeof Chart !== 'undefined') createDonutChart();
 </script>
 <div id="toast-container"></div>
   <script type="module" src="js/admin.module.js"></script>
