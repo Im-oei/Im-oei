@@ -2186,3 +2186,33 @@ window.filterOrders = function(status) {
   currentFilter = status;
   renderOrders();
 };
+
+// ====== UPDATE ORDER STATUS ======
+window.updateStatus = async function(id, status) {
+  try {
+    showLoading(true);
+    await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
+    showToast({
+      pending:'🟡 รอรับออเดอร์', preparing:'🔵 กำลังทำอาหาร',
+      ready:'🟢 พร้อมรับแล้ว', done:'✅ รับอาหารแล้ว', cancelled:'❌ ยกเลิกแล้ว'
+    }[status] || 'อัปเดตแล้ว');
+  } catch(e) {
+    showToast('❌ อัปเดตไม่ได้: ' + (e.code || e.message));
+  } finally {
+    showLoading(false);
+  }
+};
+
+// ====== DELETE ORDER ======
+window.deleteOrder = async function(id) {
+  if (!confirm('ลบออเดอร์นี้?')) return;
+  try {
+    showLoading(true);
+    await deleteDoc(doc(db, 'orders', id));
+    showToast('🗑️ ลบออเดอร์แล้ว');
+  } catch(e) {
+    showToast('❌ ลบไม่ได้: ' + (e.code || e.message));
+  } finally {
+    showLoading(false);
+  }
+};
