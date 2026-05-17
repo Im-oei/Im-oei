@@ -1,4 +1,3 @@
-
 // cart.html — ES module (Firebase)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -178,14 +177,31 @@ window.checkout = async function() {
       }, { merge: true });
     } catch(e) { console.warn('customer upsert:', e.message); }
 
-    // ── แสดงข้อความแต้ม (คำนวณ client-side เท่านั้น ยังไม่เขียน Firestore) ──
+    // ── เขียน stamps ลง Firestore (client-side จนกว่าจะ upgrade Blaze) ──
     let stampMsg = null;
     try {
       const stSettings = await getDoc(doc(db, 'settings', 'stamps')).catch(() => null);
-      const bahtPerPoint = stSettings?.exists() ? (stSettings.data().bahtPerPoint || 25) : 25;
-      const earnedPoints = Math.floor(total / bahtPerPoint);
-      stampMsg = earnedPoints > 0 ? `⭐ จะได้รับ ${earnedPoints} แต้มจากออเดอร์นี้` : null;
-    } catch(e) { /* ไม่แสดงแต้มถ้า error */ }
+      const pointsPerBaht = stSettings?.exists() ? (stSettings.data().pointsPerBaht || 100) : 100;
+      const earnedPoints = Math.floor(total / pointsPerBaht);
+      const stampDocId = lineUserId || phone;
+      if (earnedPoints > 0 && stampDocId) {
+        const stampRef = doc(db, 'stamps', stampDocId);
+        const stampSnap = await getDoc(stampRef).catch(() => null);
+        const existing = stampSnap?.exists() ? stampSnap.data() : { points: 0, lifetimePoints: 0 };
+        const newPoints = (existing.points || 0) + earnedPoints;
+        const newLifetime = (existing.lifetimePoints || 0) + earnedPoints;
+        await setDoc(stampRef, {
+          points: newPoints,
+          lifetimePoints: newLifetime,
+          ...(phone ? { phone } : {}),
+          ...(lineUserId ? { lineUserId } : {}),
+          updatedAt: serverTimestamp(),
+        }, { merge: true }).catch(e => console.warn('stamp write:', e.message));
+        const cacheKey = 'imkum_stamps_' + stampDocId;
+        localStorage.setItem(cacheKey, JSON.stringify({ points: newPoints, lifetimePoints: newLifetime }));
+      }
+      stampMsg = earnedPoints > 0 ? `⭐ ได้รับ ${earnedPoints} แต้มจากออเดอร์นี้` : null;
+    } catch(e) { console.warn('stamp error:', e.message); }
 
     localStorage.setItem('imkum_last_order', JSON.stringify({
       orderId: orderRef.id, total, pickupTime, customerName, isPreorder: isNextDay,
