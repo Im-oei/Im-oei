@@ -2196,6 +2196,7 @@ window.updateStatus = async function(id, status) {
       pending:'🟡 รอรับออเดอร์', preparing:'🔵 กำลังทำอาหาร',
       ready:'🟢 พร้อมรับแล้ว', done:'✅ รับอาหารแล้ว', cancelled:'❌ ยกเลิกแล้ว'
     }[status] || 'อัปเดตแล้ว');
+    if (typeof window.playStatusSound === 'function') window.playStatusSound();
   } catch(e) {
     showToast('❌ อัปเดตไม่ได้: ' + (e.code || e.message));
   } finally {
