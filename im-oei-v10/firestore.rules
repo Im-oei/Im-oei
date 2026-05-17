@@ -75,13 +75,11 @@ service cloud.firestore {
     }
 
     // ─── STAMPS ───────────────────────────────────────────────────────────────
-    match /stamps/{customerId} {
-      allow read: if isFirebaseAdmin()
-        || (request.auth != null
-          && request.auth.token.phone_number == customerId);
-      allow create, update: if false;
-      allow delete: if isFirebaseAdmin();
-    }
+match /stamps/{customerId} {
+  allow read: if true;
+  allow create, update: if true;
+  allow delete: if isFirebaseAdmin();
+}
 
     // ─── RATINGS ──────────────────────────────────────────────────────────────
     match /ratings/{ratingId} {
