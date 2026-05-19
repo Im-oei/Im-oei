@@ -223,12 +223,15 @@ function buildLocationSection() {
   var html = '<div class="location-section"><div class="location-label">📍 เลือกจุดรับอาหาร</div><div class="location-cards">';
   PICKUP_LOCATIONS.forEach(function(loc) {
     var sel = selectedLocation === loc.id ? ' selected' : '';
+    var _icon = loc.icon || '📍';
+    var _desc = loc.desc || '';
+    var _map  = loc.mapUrl || '';
     html += '<div class="location-card'+sel+'" data-loc-id="'+loc.id+'" onclick="selectLocation(\''+loc.id+'\')">'+
-      '<div class="loc-icon">'+loc.icon+'</div>'+
+      '<div class="loc-icon">'+_icon+'</div>'+
       '<div class="loc-info">'+
         '<div class="loc-name">'+loc.name+'</div>'+
-        '<div class="loc-desc">'+loc.desc+'</div>'+
-        '<a class="loc-map" href="'+loc.mapUrl+'" target="_blank" onclick="event.stopPropagation()">🗺️ ดูแผนที่</a>'+
+        (_desc ? '<div class="loc-desc">'+_desc+'</div>' : '')+
+        (_map ? '<a class="loc-map" href="'+_map+'" target="_blank" onclick="event.stopPropagation()">🗺️ ดูแผนที่</a>' : '')+
       '</div>'+
       '<div class="loc-radio"></div>'+
     '</div>';

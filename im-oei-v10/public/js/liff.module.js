@@ -3,13 +3,11 @@
 // ✅ ใช้ Firestore โดยตรง ไม่ต้องใช้ Firebase Functions
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { FIREBASE_CONFIG, LIFF_ID } from "../config.js";
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
-const functions = getFunctions(app, 'asia-northeast1');
 const ORDER_URL = "index.html";
 let lineProfile = null;
 
@@ -38,14 +36,13 @@ async function initLiff() {
       const data = userSnap.data();
       const phone = data.phone;
 
-      // อัปเดตโปรไฟล์ถ้าเปลี่ยน — ผ่าน bindLineAccount callable (rules บล็อก client write)
+      // อัปเดตโปรไฟล์ถ้าเปลี่ยน — เขียนตรง Firestore
       if (data.displayName !== displayName || data.pictureUrl !== pictureUrl) {
-        httpsCallable(functions, 'bindLineAccount')({
-          lineUserId: userId,
+        setDoc(doc(db, "lineUsers", userId), {
           displayName,
-          phone,
-          liffIdToken: liff.getIDToken(),
-        }).catch(() => {}); // best-effort profile refresh
+          pictureUrl: pictureUrl || "",
+          updatedAt: serverTimestamp(),
+        }, { merge: true }).catch(() => {}); // best-effort profile refresh
       }
 
       saveUserSession(displayName, phone, userId, pictureUrl);
@@ -101,14 +98,22 @@ window.submitPhone = async function() {
   showLoading(true);
   try {
     const { userId, displayName, pictureUrl } = lineProfile;
-    const liffIdToken = liff.getIDToken();
+    const now = serverTimestamp();
 
-    // 🔐 FIX: เรียก bindLineAccount callable แทนการเขียน lineUsers/linePhoneMap/customers ตรง
-    // เดิม: setDoc lineUsers + linePhoneMap + customers จาก client
-    //   → lineUsers rules: allow write: if false → ทุก write จะ fail!
-    // ใหม่: callable verify LIFF token กับ LINE API ก่อน แล้วค่อยเขียนผ่าน Admin SDK
-    const bindLineAccount = httpsCallable(functions, 'bindLineAccount');
-    await bindLineAccount({ lineUserId: userId, displayName, phone, liffIdToken });
+    // เขียนตรง Firestore (ไม่ต้องผ่าน Functions)
+    await setDoc(doc(db, "lineUsers", userId), {
+      userId,
+      displayName: displayName || "",
+      phone,
+      pictureUrl: pictureUrl || "",
+      linkedAt: now,
+      updatedAt: now,
+    }, { merge: true });
+
+    await setDoc(doc(db, "linePhoneMap", phone), {
+      userId,
+      updatedAt: now,
+    });
 
     saveUserSession(displayName, phone, userId, pictureUrl);
 
@@ -118,7 +123,7 @@ window.submitPhone = async function() {
 
   } catch (err) {
     console.error("submitPhone error:", err);
-    showToast("บันทึกข้อมูลไม่สำเร็จ: " + (err.message || "ลองใหม่อีกครั้ง"));
+    showToast("บันทึกไม่สำเร็จ: " + (err.code || err.message || JSON.stringify(err)));
   } finally {
     showLoading(false);
   }

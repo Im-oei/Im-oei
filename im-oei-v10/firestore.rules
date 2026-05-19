@@ -75,11 +75,12 @@ service cloud.firestore {
     }
 
     // ─── STAMPS ───────────────────────────────────────────────────────────────
-match /stamps/{customerId} {
-  allow read: if true;
-  allow create, update: if true;
-  allow delete: if isFirebaseAdmin();
-}
+    match /stamps/{customerId} {
+      // อ่านได้เลย — เบอร์/lineUserId ไม่ใช่ข้อมูลลับ และลูกค้า LINE ไม่มี Firebase Auth
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isFirebaseAdmin();
+    }
 
     // ─── RATINGS ──────────────────────────────────────────────────────────────
     match /ratings/{ratingId} {
@@ -120,14 +121,16 @@ match /stamps/{customerId} {
 
     // ─── LINE USERS ───────────────────────────────────────────────────────────
     match /lineUsers/{userId} {
-      allow read: if isFirebaseAdmin();
-      allow write: if false;
+      // อ่านได้ทุกคน (ลูกค้า LINE ไม่มี Firebase Auth)
+      allow read: if true;
+      // เขียนได้ทุกคน — LINE userId เป็น public identifier ไม่มีข้อมูลลับ
+      allow write: if true;
     }
 
     // ─── LINE PHONE MAP ───────────────────────────────────────────────────────
     match /linePhoneMap/{phone} {
       allow read: if isFirebaseAdmin();
-      allow write: if false;
+      allow write: if true;
     }
 
     // ─── PUSH SUBSCRIPTIONS ───────────────────────────────────────────────────

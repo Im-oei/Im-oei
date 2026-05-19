@@ -815,24 +815,24 @@ window.previewBannerModal = function() {
   if (info) info.textContent = (posLabel[pos]||pos) + ' · ' + (sizeLabel[size]||size);
 };
 
-window.uploadBannerModal = function(input) {
-  if (input.files[0] && input.files[0].size > 5 * 1024 * 1024) {
-    showToast('❌ ไฟล์ใหญ่เกินไป (สูงสุด 5MB)'); input.value = ''; return;
-  }
+window.uploadBannerModal = async function(input) {
   const file = input.files[0]; if (!file) return;
   showLoading(true);
-  // compress ลงให้เล็กที่สุด (max 400px wide) เพื่อให้ Firestore รับได้
-  compressImageToBase64(file, 400, compressed => {
-    const kb = Math.round(compressed.length / 1024);
-    if (compressed.length > 700000) {
-      showToast('❌ รูปยังใหญ่เกิน (' + kb + ' KB) กรุณาใช้รูปขนาดเล็กกว่านี้');
-      showLoading(false); return;
-    }
-    document.getElementById('banner-img-url').value = compressed;
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('key', IMGBB_API_KEY);
+    const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error?.message || 'อัปโหลดไม่สำเร็จ');
+    document.getElementById('banner-img-url').value = json.data.url;
     previewBannerModal();
-    showToast('โหลดรูปสำเร็จ (' + kb + ' KB)');
+    showToast('✅ อัปโหลดรูปสำเร็จ');
+  } catch(err) {
+    showToast('❌ ' + (err.message || 'อัปโหลดรูปไม่สำเร็จ'));
+  } finally {
     showLoading(false);
-  });
+  }
 };
 
 window.saveBannerItem = async function() {
@@ -1487,15 +1487,28 @@ window.previewEditImg = function() {
   if (prev) { prev.src = url; prev.style.display = url ? 'block' : 'none'; }
 };
 
+const IMGBB_API_KEY = '653cb3bc9990cbd7f9e9b25e35fc076d';
+
 window.uploadItemPhoto = async function(input) {
   const file = input.files?.[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('edit-image-url').value = e.target.result;
+  showLoading(true);
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('key', IMGBB_API_KEY);
+    const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error?.message || 'อัปโหลดไม่สำเร็จ');
+    const url = json.data.url;
+    document.getElementById('edit-image-url').value = url;
     window.previewEditImg();
-  };
-  reader.readAsDataURL(file);
+    showToast('✅ อัปโหลดรูปสำเร็จ');
+  } catch(err) {
+    showToast('❌ ' + (err.message || 'อัปโหลดรูปไม่สำเร็จ'));
+  } finally {
+    showLoading(false);
+  }
 };
 
 window.openImageModal = function(id) {
@@ -1576,17 +1589,15 @@ async function loadCustomers() {
       const data = d.data();
       const phone = data.phone || '';
       return {
+        ...data,
         id: d.id, _col: 'lineUsers', source: 'line',
         userId: data.userId || d.id,
         name: data.displayName || data.name || '-',
         phone,
         photoUrl: data.pictureUrl || data.photoUrl || '',
-        // join points จาก stamps collection
-        points: stampsMap[phone] ?? data.points ?? 0,
         lastOrderAt: data.updatedAt || null,
-        ...data,
-        // override points ด้วยค่าจาก stampsMap (สำคัญ: ต้องหลัง ...data)
-        points: stampsMap[phone] ?? data.points ?? 0,
+        // override points ด้วยค่าจาก stamps/{phone} เสมอ
+        points: stampsMap[phone] ?? 0,
       };
     });
 
@@ -1653,10 +1664,17 @@ window.editCustomer = function(id) {
 };
 
 window.deleteCustomer = async function(id) {
+  const cust = _allCustomers.find(c => c.id === id);
+  if (!cust) return;
   const ok = await showConfirmDialog({ icon:'🗑️', iconBg:'#FFEBEE', iconBorder:'#FFCDD2', title:'ลบลูกค้านี้?', desc:'ข้อมูลลูกค้าจะถูกลบถาวร', confirmText:'ลบ', confirmColor:'linear-gradient(135deg,#E53935,#B71C1C)', confirmTextColor:'#fff' });
   if (!ok) return;
   try {
-    await deleteDoc(doc(db, 'customers', id));
+    const col = cust._col || 'customers';
+    await deleteDoc(doc(db, col, id));
+    // ถ้าเป็น lineUsers ลบ linePhoneMap ด้วย
+    if (col === 'lineUsers' && cust.phone) {
+      await deleteDoc(doc(db, 'linePhoneMap', cust.phone)).catch(() => {});
+    }
     _allCustomers = _allCustomers.filter(c => c.id !== id);
     renderCustomers();
     showToast('🗑️ ลบลูกค้าแล้ว');
@@ -1701,7 +1719,13 @@ window._saveCustomer = async function() {
   showLoading(true);
   try {
     const docId = id || 'cust_' + Date.now();
-    await setDoc(doc(db, 'customers', docId), data, { merge: true });
+    // บันทึกข้อมูลลูกค้า (ไม่รวม points — points อยู่ใน stamps/{phone})
+    const { points: pts, ...dataWithoutPoints } = data;
+    await setDoc(doc(db, 'customers', docId), dataWithoutPoints, { merge: true });
+    // บันทึก points ลง stamps/{phone} ถ้ามีเบอร์
+    if (phone) {
+      await setDoc(doc(db, 'stamps', phone), { points: pts || 0 }, { merge: true });
+    }
     showToast(id ? '✅ แก้ไขข้อมูลลูกค้าแล้ว' : '✅ เพิ่มลูกค้าแล้ว');
     document.getElementById('modal-customer').classList.remove('show');
     await loadCustomers();
@@ -1710,6 +1734,63 @@ window._saveCustomer = async function() {
 };
 
 // ====== SETTINGS SAVES ======
+// ====== PICKUP LOCATIONS ======
+let _pickupLocations = [];
+
+window.loadAndRenderPickupLocations = async function() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'pickupLocations'));
+    _pickupLocations = snap.exists() && Array.isArray(snap.data().list) ? snap.data().list : [];
+  } catch(e) { _pickupLocations = []; }
+  renderPickupLocationsList();
+};
+
+function renderPickupLocationsList() {
+  const wrap = document.getElementById('pickup-locations-list');
+  if (!wrap) return;
+  if (!_pickupLocations.length) {
+    wrap.innerHTML = '<div style="color:#999;font-size:13px;padding:8px">ยังไม่มีจุดรับอาหาร</div>';
+    return;
+  }
+  wrap.innerHTML = _pickupLocations.map((loc, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:12px;margin-bottom:8px;border:1.5px solid #F0F0F0">
+      <span style="font-size:22px">${loc.icon || '📍'}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px;color:#3E2000">${loc.name}</div>
+        <div style="font-size:12px;color:#999">${loc.desc || '-'}</div>
+        ${loc.mapUrl ? `<a href="${loc.mapUrl}" target="_blank" style="font-size:11px;color:#1565C0">🗺️ ดูแผนที่</a>` : ''}
+      </div>
+      <button onclick="removePickupLocation(${i})" style="background:#FFEBEE;border:none;border-radius:8px;padding:6px 10px;color:#C62828;font-size:12px;cursor:pointer">ลบ</button>
+    </div>
+  `).join('');
+}
+
+window.addPickupLocation = function() {
+  const name = document.getElementById('new-pickup-name')?.value.trim();
+  const icon = document.getElementById('new-pickup-icon')?.value.trim() || '📍';
+  const desc = document.getElementById('new-pickup-desc')?.value.trim() || '';
+  const mapUrl = document.getElementById('new-pickup-map')?.value.trim() || '';
+  if (!name) { showToast('❌ กรุณาใส่ชื่อจุดรับ'); return; }
+  _pickupLocations.push({ id: 'loc_' + Date.now(), name, icon, desc, mapUrl, order: _pickupLocations.length });
+  renderPickupLocationsList();
+  ['new-pickup-name','new-pickup-desc','new-pickup-map'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const iconEl = document.getElementById('new-pickup-icon'); if(iconEl) iconEl.value = '📍';
+};
+
+window.removePickupLocation = function(index) {
+  _pickupLocations.splice(index, 1);
+  renderPickupLocationsList();
+};
+
+window.savePickupLocations = async function() {
+  showLoading(true);
+  try {
+    await setDoc(doc(db, 'settings', 'pickupLocations'), { list: _pickupLocations }, { merge: true });
+    showToast('✅ บันทึกจุดรับอาหารแล้ว');
+  } catch(e) { showToast('❌ ' + (e.code || e.message)); }
+  finally { showLoading(false); }
+};
+
 window.saveSettings = async function() {
   showLoading(true);
   try {
@@ -2161,6 +2242,7 @@ window.switchTab = function(tab, el) {
   if (tab === 'customers') loadCustomers();
   // render featured checkboxes เมื่อเปิด settings
   if (tab === 'settings' || tab === 'store') renderFeaturedCheckboxes();
+  if (tab === 'store') window.loadAndRenderPickupLocations();
   // close sidebar on mobile
   const sidebar = document.getElementById('sidebar');
   if (sidebar) sidebar.classList.remove('open');

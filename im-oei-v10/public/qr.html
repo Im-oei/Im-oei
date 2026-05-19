@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code — อิ่มเอ๋ย</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:linear-gradient(135deg,#FFF8E1 0%,#FFF3CD 50%,#FFE0A0 100%);font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border-radius:32px;padding:32px 28px;box-shadow:0 16px 48px rgba(255,160,0,0.18);max-width:380px;width:100%;text-align:center}
+.logo{width:80px;height:80px;border-radius:20px;object-fit:cover;margin:0 auto 12px;display:block;box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+.shop-name{font-family:'Prompt',sans-serif;font-size:22px;font-weight:800;color:#3E2000;margin-bottom:4px}
+.shop-sub{font-size:13px;color:#999;margin-bottom:24px}
+.qr-wrap{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border-radius:24px;padding:20px;margin-bottom:20px;border:2px dashed #FFD54F;display:inline-block;width:100%}
+#qr-code{display:flex;align-items:center;justify-content:center}
+#qr-code canvas,#qr-code img{border-radius:12px!important}
+.qr-label{font-family:'Prompt',sans-serif;font-size:13px;font-weight:700;color:#E65100;margin-top:12px}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:#ccc;font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#eee}
+.url-box{background:#F8F8F8;border-radius:12px;padding:10px 14px;font-size:12px;color:#666;word-break:break-all;cursor:pointer;border:1.5px solid #eee;transition:border-color 0.2s}
+.url-box:hover{border-color:#FFC107}
+.btn-row{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;padding:13px;border-radius:14px;border:none;font-family:'Prompt',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s}
+.btn:active{transform:scale(0.97)}
+.btn-yellow{background:linear-gradient(135deg,#FFC107,#F5A623);color:#3E2000;box-shadow:0 4px 12px rgba(255,193,7,0.35)}
+.btn-outline{background:#fff;border:2px solid #eee;color:#666}
+.tabs{display:flex;gap:8px;margin-bottom:20px;background:#F5F5F5;border-radius:12px;padding:4px}
+.tab{flex:1;padding:8px;border-radius:9px;border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#999;transition:all 0.2s}
+.tab.active{background:#fff;color:#3E2000;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(44,44,44,0.92);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.28s;z-index:600;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media print{body{background:#fff;padding:0}.btn-row,.tabs{display:none!important}.card{box-shadow:none;border:none}}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img class="logo" src="hero.webp" alt="อิ่มเอ๋ย" onerror="this.style.display='none'">
+  <div class="shop-name">🍜 อิ่มเอ๋ย Im Oei</div>
+  <div class="shop-sub">สแกนเพื่อสั่งอาหาร</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('order')">🛒 สั่งอาหาร</button>
+    <button class="tab" onclick="switchTab('line')">💬 LINE</button>
+  </div>
+
+  <div class="tab-content active" id="tab-order">
+    <div class="qr-wrap">
+      <div id="qr-code"></div>
+      <div class="qr-label">📱 สแกนเพื่อดูเมนูและสั่งอาหาร</div>
+    </div>
+    <div class="divider">หรือ</div>
+    <div class="url-box" onclick="copyUrl('https://im-oei.web.app')">
+      🔗 im-oei.web.app <span style="color:#FFC107">(แตะเพื่อคัดลอก)</span>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-line">
+    <div class="qr-wrap">
+      <div id="qr-liff"></div>
+      <div class="qr-label">💚 สแกนเพื่อเชื่อม LINE และสะสมแต้ม</div>
+    </div>
+    <div class="divider">หรือ</div>
+    <div class="url-box" onclick="copyUrl('https://liff.line.me/2009910221-ySbGklzJ')">
+      🔗 liff.line.me/2009910221-ySbGklzJ <span style="color:#FFC107">(แตะเพื่อคัดลอก)</span>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์</button>
+    <button class="btn btn-yellow" onclick="downloadQR()">💾 บันทึก QR</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ORDER_URL = 'https://im-oei.web.app';
+const LIFF_URL  = 'https://liff.line.me/2009910221-ySbGklzJ';
+
+// สร้าง QR สั่งอาหาร
+new QRCode(document.getElementById('qr-code'), {
+  text: ORDER_URL, width: 220, height: 220,
+  colorDark: '#3E2000', colorLight: '#FFF8E1',
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+// สร้าง QR LINE LIFF
+new QRCode(document.getElementById('qr-liff'), {
+  text: LIFF_URL, width: 220, height: 220,
+  colorDark: '#00B900', colorLight: '#F0FFF0',
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+let activeTab = 'order';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['order','line'][i] === tab));
+  document.querySelectorAll('.tab-content').forEach((c,i) => c.classList.toggle('active', ['tab-order','tab-line'][i] === 'tab-'+tab));
+}
+
+function copyUrl(url) {
+  navigator.clipboard?.writeText(url).then(() => showToast('✅ คัดลอกแล้ว')).catch(() => showToast(url));
+}
+
+function downloadQR() {
+  const tabId = activeTab === 'order' ? 'qr-code' : 'qr-liff';
+  const canvas = document.querySelector('#'+tabId+' canvas');
+  if (!canvas) { showToast('❌ ไม่พบ QR Code'); return; }
+  const a = document.createElement('a');
+  a.download = 'imoei-qr-'+ activeTab +'.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  showToast('✅ บันทึก QR Code แล้ว');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>

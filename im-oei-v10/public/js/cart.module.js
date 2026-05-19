@@ -1,3 +1,4 @@
+
 // cart.html — ES module (Firebase)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -55,15 +56,15 @@ async function syncMenu() {
     const userSess = sessionStorage.getItem('imkum_user');
     const userObj = userSess ? JSON.parse(userSess) : null;
     const phone = userObj && userObj.phone;
-    if (phone) {
-      // ต้อง ensure auth ก่อนอ่าน stamps (Rules ตรวจ uid ใน customers doc)
-      await ensureAuth();
-      const stampRef = doc(db, 'stamps', phone);
-      const snap = await getDoc(stampRef);
-      if (snap.exists()) {
-        const key = 'imkum_stamps_' + phone;
+    const lineUserId = userObj && userObj.lineUserId;
+    const stampDocId = lineUserId || phone; // ต้องตรงกับที่บันทึก
+    if (stampDocId) {
+      const stampRef = doc(db, 'stamps', stampDocId);
+      const snap = await getDoc(stampRef).catch(() => null);
+      if (snap && snap.exists()) {
         const d = snap.data();
-        localStorage.setItem(key, JSON.stringify({ total: d.total || 0 }));
+        const key = 'imkum_stamps_' + stampDocId;
+        localStorage.setItem(key, JSON.stringify({ points: d.points || 0, lifetimePoints: d.lifetimePoints || 0 }));
         renderCart();
       }
     }
