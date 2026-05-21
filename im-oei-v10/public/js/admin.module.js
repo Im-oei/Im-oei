@@ -61,6 +61,7 @@ function applyRoleUI() {
 
 // ====== STATE ======
 let allOrders = [];
+let _searchQuery = ''; // global search query สำหรับ highlight
 let _lineQueueCache = {}; // { orderId: { status, sentAt, error } }
 let allMenuItems = [];
 let allBanners = [];
@@ -70,6 +71,22 @@ let currentFilter = 'all';
 window._filterOrdersByStatus = function(status) {
   currentFilter = status;
   renderOrders();
+};
+window._setSearchQuery = function(q) {
+  _searchQuery = q || '';
+  if (_searchQuery) {
+    // switch ไป orders tab ถ้ายังไม่ได้อยู่
+    if (typeof window.switchTab === 'function') window.switchTab('orders');
+    // clear status filter เพื่อค้นทุก status
+    currentFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('.filter-btn[onclick*="all"]');
+    if (allBtn) allBtn.classList.add('active');
+  }
+  renderOrders();
+  // highlight search box
+  const input = document.getElementById('global-search');
+  if (input) input.style.borderColor = _searchQuery ? '#FFC107' : '';
 };
 let storeIsOpen = true;
 let unsubOrders = null;
@@ -457,14 +474,38 @@ function updateSummary() {
 function renderOrders() {
   const container = document.getElementById('orders-list');
   let filtered = currentFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentFilter);
+  // filter ด้วย search query ถ้ามี
+  if (_searchQuery) {
+    const q = _searchQuery.toLowerCase();
+    filtered = filtered.filter(o =>
+      (o.id||'').toLowerCase().includes(q) ||
+      (o.customerName||'').toLowerCase().includes(q) ||
+      (o.customerPhone||'').includes(q) ||
+      (o.pickupLocationName||'').toLowerCase().includes(q) ||
+      (o.items||[]).some(i => (i.name||'').toLowerCase().includes(q))
+    );
+  }
   if (!filtered.length) {
-    container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>ไม่มีออเดอร์</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${_searchQuery ? 'ไม่พบออเดอร์ที่ค้นหา' : 'ไม่มีออเดอร์'}</p></div>`;
     return;
   }
-  container.innerHTML = filtered.map(o => renderOrderCard(o)).join('');
+  container.innerHTML = filtered.map(o => renderOrderCard(o, _searchQuery)).join('');
+  // auto-scroll ไปออเดอร์แรกที่เจอ
+  if (_searchQuery) {
+    const first = container.querySelector('.order-card.search-match');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
-function renderOrderCard(o) {
+function highlight(text, q) {
+  if (!q || !text) return esc(text||'');
+  const safe = esc(text);
+  const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return safe.replace(new RegExp('('+safeQ+')', 'gi'), '<mark style="background:#FFF176;border-radius:3px;padding:0 2px">$1</mark>');
+}
+
+function renderOrderCard(o, searchQuery) {
+  const _q = (searchQuery||'').toLowerCase();
   const statusMap = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };
   const statusClass = { pending:'status-pending', preparing:'status-preparing', ready:'status-ready', done:'status-done', cancelled:'status-cancelled' };
   const createdAt = o.createdAt?.toDate ? o.createdAt.toDate() : (o.createdAt ? new Date(o.createdAt) : new Date());
@@ -475,7 +516,7 @@ function renderOrderCard(o) {
 
   const itemsHTML = (o.items||[]).map(i =>
     `<div class="order-item-row">
-      <span>${esc(i.name)} × ${Number(i.qty)||0}</span>
+      <span>${highlight(i.name, _q)} × ${Number(i.qty)||0}</span>
       <span style="font-weight:700">${Number(i.subtotal)||0} บาท</span>
     </div>`
   ).join('');
@@ -516,13 +557,13 @@ function renderOrderCard(o) {
     : `<span style="font-size:24px;flex-shrink:0;">🍱</span>`;
 
   return `
-    <div class="order-card" id="order-${o.id}" style="${isPreorder ? 'border-left:4px solid #764ba2;' : ''}">
+    <div class="order-card${_q ? ' search-match' : ''}" id="order-${o.id}" style="${isPreorder ? 'border-left:4px solid #764ba2;' : ''}">
       <div class="order-head">
         <div style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;">
           ${logoHtml}
           <div style="flex:1;min-width:0;">
-            <div class="order-id">#${o.id.slice(0,8).toUpperCase()}</div>
-            <div class="order-name">👤 ${esc(o.customerName) || 'ไม่ระบุชื่อ'}</div>
+            <div class="order-id">#${highlight(o.id.slice(0,8).toUpperCase(), _q.replace('#',''))}</div>
+            <div class="order-name">👤 ${highlight(o.customerName||'ไม่ระบุชื่อ', _q)}${o.customerPhone ? ` <span style="font-size:12px;color:#999;font-weight:600">📞 ${highlight(o.customerPhone, _q)}</span>` : ''}</div>
             ${isPreorder ? `<div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;margin-bottom:4px;">📅 สั่งล่วงหน้า${preorderDate ? ' · '+preorderDate : ''}</div>` : ''}
             <div class="order-meta">${dateStr} เวลา ${timeStr} &nbsp;|&nbsp; <span class="pickup-time-tag">🕐 ${esc(o.pickupTime) || '07:30'} น.</span></div>
             ${o.pickupLocationName ? `<div class="order-location-tag">📍 ${esc(o.pickupLocationName)}</div>` : ''}

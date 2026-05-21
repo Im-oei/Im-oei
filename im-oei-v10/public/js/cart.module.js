@@ -104,10 +104,18 @@ window.checkout = async function() {
   var pickupRaw = document.getElementById('pickup-select') ? document.getElementById('pickup-select').value : '07:30';
   var isNextDay = pickupRaw.startsWith('next:');
   var pickupTime = pickupRaw.replace('next:', '');
-  const phone = userObj.phone || '';
+  // ใช้เบอร์จาก input ก่อน ถ้าไม่มีใช้จาก session
+  var phoneInputEl = document.getElementById('phone-cart-input');
+  const phone = (phoneInputEl ? phoneInputEl.value.trim() : '') || userObj.phone || '';
   if (phone && !/^0[0-9]{9}$/.test(phone.replace(/[-\s]/g,''))) {
-    showToast('⚠️ เบอร์โทรศัพท์ไม่ถูกต้อง กรุณาแก้ไขในโปรไฟล์');
+    showToast('⚠️ เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 10 หลัก)');
+    if(phoneInputEl) phoneInputEl.focus();
     return;
+  }
+  // บันทึกเบอร์ลง session ถ้ากรอกใหม่
+  if (phone && phone !== userObj.phone) {
+    userObj.phone = phone;
+    sessionStorage.setItem('imkum_user', JSON.stringify(userObj));
   }
   const lineUserId = userObj.lineUserId || '';
   const guestId = userObj.guestId || '';

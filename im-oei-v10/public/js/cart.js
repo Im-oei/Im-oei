@@ -208,8 +208,9 @@ function renderCart(){
   var pickupLabel = isPreorder ? '📅 เวลารับอาหาร (พรุ่งนี้)' : '🕐 เวลารับอาหาร';
   html += stampHTML +
     '<div class="note-section" style="padding-top:14px"><label>ชื่อผู้สั่ง</label><input type="text" class="name-input" id="name-input" placeholder="กรอกชื่อของคุณ" value="'+savedName+'"></div>'+
+    '<div class="note-section" style="padding-top:0"><label>📞 เบอร์โทรศัพท์</label><input type="tel" class="name-input" id="phone-cart-input" inputmode="numeric" maxlength="10" placeholder="0812345678" value="'+(function(){try{var u=JSON.parse(sessionStorage.getItem('imkum_user')||'{}');return u.phone||'';}catch(e){return '';}})()+'"></div>'+
     '<div class="pickup-row" style="flex-direction:column;align-items:flex-start;gap:8px;padding:14px 16px">'+
-      '<div style="display:flex;align-items:center;gap:8px"><span class="clock">🕐</span><span style="font-size:14px;font-weight:700">'+pickupLabel+'</span></div>'+
+      '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:700">'+pickupLabel+'</span></div>'+
       '<select class="pickup-select" id="pickup-select">'+timeHTML+'</select>'+
     '</div>'+
     buildLocationSection()+

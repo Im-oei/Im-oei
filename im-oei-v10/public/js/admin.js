@@ -257,8 +257,8 @@ function addPickupLocationUI() {
 // ====== GLOBAL SEARCH ======
 function globalSearch(q) {
   const query = (q || '').trim().toLowerCase();
-  if (!query) return;
-  if (typeof window.switchTab === 'function') window.switchTab('orders');
+  // set _searchQuery ใน admin.module scope ผ่าน window
+  window._setSearchQuery(query);
 }
 
 // ====== DOMContentLoaded ======

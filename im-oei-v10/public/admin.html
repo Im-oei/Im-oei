@@ -534,7 +534,7 @@
     <button class="hamburger" onclick="toggleSidebar()" aria-label="เมนู">☰</button>
     <div class="search-box">
       <span>🔍</span>
-      <input type="text" id="global-search" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า..." oninput="globalSearch(this.value)">
+      <input type="text" id="global-search" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
     </div>
     <div class="topbar-right">
       <div class="notif-btn" onclick="toggleNotifications()" style="cursor:pointer">🔔<div class="dot" id="notif-badge" style="display:none">0</div></div>
