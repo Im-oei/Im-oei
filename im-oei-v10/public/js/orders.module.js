@@ -138,7 +138,21 @@ function formatPhone(p){
 }
 (function(){
   const span = document.getElementById('phone-text');
-  if(span) span.textContent = formatPhone(user.phone);
+  if(!span) return;
+  // อ่าน phone จาก sessionStorage ใหม่เสมอ (อาจถูกอัพเดตจาก cart)
+  function refreshPhone() {
+    try {
+      const latest = JSON.parse(sessionStorage.getItem('imkum_user') || '{}');
+      span.textContent = formatPhone(latest.phone || user.phone);
+    } catch(e) { span.textContent = formatPhone(user.phone); }
+  }
+  refreshPhone();
+  // refresh ทุก 2 วิ เผื่อ cart redirect มาแล้ว session ยังไม่อัพเดต
+  let _tries = 0;
+  const _t = setInterval(() => {
+    refreshPhone();
+    if (++_tries >= 5) clearInterval(_t);
+  }, 800);
 })();
 
 // Role chip

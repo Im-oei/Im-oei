@@ -779,7 +779,14 @@
         <div class="form-group" style="margin-bottom:12px"><label>คำอธิบาย</label><textarea id="edit-desc" placeholder="รายละเอียดเมนู..."></textarea></div>
         <div class="form-group" style="margin-bottom:12px"><label>URL รูปภาพ</label>
           <input id="edit-image-url" placeholder="https://..." oninput="previewEditImg()">
-          <img id="edit-img-preview" style="display:none;max-width:100%;border-radius:8px;margin-top:6px" alt="">
+          <div style="margin-top:8px">
+            <label style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#FFC107,#F5A623);color:#3E2000;padding:9px 16px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px">
+              📷 เลือกรูปจากเครื่อง
+              <input type="file" accept="image/*" style="display:none" onchange="uploadItemPhoto(this)">
+            </label>
+            <span id="edit-img-upload-status" style="font-size:12px;color:#999;margin-left:8px"></span>
+          </div>
+          <img id="edit-img-preview" style="display:none;max-width:100%;border-radius:8px;margin-top:8px" alt="">
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" onclick="closeModal('modal-edit')">ยกเลิก</button>

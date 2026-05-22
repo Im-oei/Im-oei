@@ -1533,6 +1533,8 @@ const IMGBB_API_KEY = '653cb3bc9990cbd7f9e9b25e35fc076d';
 window.uploadItemPhoto = async function(input) {
   const file = input.files?.[0];
   if (!file) return;
+  const status = document.getElementById('edit-img-upload-status');
+  if (status) status.textContent = '⏳ กำลังอัปโหลด...';
   showLoading(true);
   try {
     const formData = new FormData();
@@ -1544,11 +1546,14 @@ window.uploadItemPhoto = async function(input) {
     const url = json.data.url;
     document.getElementById('edit-image-url').value = url;
     window.previewEditImg();
+    if (status) status.textContent = '✅ อัปโหลดสำเร็จ';
     showToast('✅ อัปโหลดรูปสำเร็จ');
   } catch(err) {
+    if (status) status.textContent = '❌ ' + (err.message || 'ล้มเหลว');
     showToast('❌ ' + (err.message || 'อัปโหลดรูปไม่สำเร็จ'));
   } finally {
     showLoading(false);
+    input.value = '';
   }
 };
 

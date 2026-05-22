@@ -15,7 +15,38 @@ const functions = getFunctions(app, 'asia-northeast1');
 
 function showLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
-function showError(msg){ const b=document.getElementById('error-box'); document.getElementById('error-msg').textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',4000); }
+function showError(msg){
+  // แสดง error-box ด้วย (ถ้ามี)
+  const b=document.getElementById('error-box');
+  if(b){ document.getElementById('error-msg').textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',4000); }
+  // แสดง dialog popup
+  let dlg = document.getElementById('login-error-dialog');
+  if(!dlg){
+    dlg = document.createElement('div');
+    dlg.id = 'login-error-dialog';
+    dlg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:20px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,0.2)';
+    const icon = document.createElement('div');
+    icon.style.cssText = 'font-size:48px;margin-bottom:12px';
+    icon.textContent = '⚠️';
+    const msgEl = document.createElement('div');
+    msgEl.id = 'login-error-dialog-msg';
+    msgEl.style.cssText = "font-family:'Prompt',sans-serif;font-size:16px;font-weight:700;color:#C62828;margin-bottom:20px";
+    const btn = document.createElement('button');
+    btn.textContent = 'ตกลง';
+    btn.style.cssText = "background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:12px;padding:12px 32px;font-family:'Prompt',sans-serif;font-size:14px;font-weight:800;color:#3E2000;cursor:pointer";
+    btn.addEventListener('click', () => { dlg.style.display = 'none'; });
+    box.appendChild(icon);
+    box.appendChild(msgEl);
+    box.appendChild(btn);
+    dlg.appendChild(box);
+    dlg.addEventListener('click', (e) => { if(e.target === dlg) dlg.style.display = 'none'; });
+    document.body.appendChild(dlg);
+  }
+  document.getElementById('login-error-dialog-msg').textContent = msg;
+  dlg.style.display = 'flex';
+}
 function hideError(){ document.getElementById('error-box').style.display='none'; }
 
 // ─── LIFF Init & LINE Login ───────────────────────────────────────────────
