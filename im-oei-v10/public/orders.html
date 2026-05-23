@@ -16,9 +16,7 @@
 </head>
 <body style="background:#F7F3EE;padding-bottom:80px;">
 <div id="app-loader">
-  <img src="logo.webp" alt="อิ่มเอ๋ย">
-  <div class="loader-dots"><span></span><span></span><span></span></div>
-  <div class="loader-text">กำลังโหลด...</div>
+  <img class="al-logo" src="logo.webp" alt="อิ่มเอ๋ย">
 </div>
 
 <div class="profile-hero">
@@ -223,6 +221,16 @@
     if(document.readyState === 'complete') { setTimeout(hideLoader, 400); }
     else { window.addEventListener('load', function(){ setTimeout(hideLoader, 400); }); }
   })();
+</script>
+<script>
+(function(){
+  function hideLoader(){
+    var el=document.getElementById('app-loader');
+    if(el){el.classList.add('hide');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},520);}
+  }
+  if(document.readyState==='complete'){setTimeout(hideLoader,350);}
+  else{window.addEventListener('load',function(){setTimeout(hideLoader,350);});}
+})();
 </script>
 </body>
 </html>

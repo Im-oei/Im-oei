@@ -116,10 +116,13 @@
   /* STAT CARDS */
   .stat-cards { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
   .stat-card {
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
     flex: 1; min-width: 140px; background: var(--card-bg);
     border-radius: 12px; padding: 16px; border: 1px solid var(--border);
     display: flex; align-items: center; gap: 12px;
   }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .stat-card:active { transform: scale(0.98); }
   .stat-card.primary { background: linear-gradient(135deg, #f97316, #fb923c); border-color: transparent; }
   .stat-card.primary * { color: #fff !important; }
   .stat-icon {
@@ -186,7 +189,9 @@
     /* Stat cards — 2 columns on mobile */
     .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .stat-card { min-width: 0; }
-    .stat-card.primary { grid-column: 1 / -1; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .stat-card:active { transform: scale(0.98); }
+  .stat-card.primary { grid-column: 1 / -1; }
 
     /* All grids → single column */
     .grid-row,
@@ -211,7 +216,9 @@
   /* ===== SMALL PHONE: ≤400px ===== */
   @media (max-width: 400px) {
     .stat-cards { grid-template-columns: 1fr; }
-    .stat-card.primary { grid-column: unset; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .stat-card:active { transform: scale(0.98); }
+  .stat-card.primary { grid-column: unset; }
     .content { padding: 10px; }
   }
 
@@ -330,8 +337,8 @@
   .form-group label { font-size: 12px; font-weight: 700; color: var(--text-sub); }
   .form-group input, .form-group select, .form-group textarea { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-family: 'Sarabun', sans-serif; font-size: 13px; background: var(--bg); color: var(--text-main); width: 100%; box-sizing: border-box; }
   .form-group textarea { resize: vertical; min-height: 70px; }
-  .btn-primary { background: var(--primary); color: #fff; border: none; border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
-  .btn-secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-primary { background: var(--primary); color: #fff; border: none; border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; box-shadow: 0 2px 8px rgba(249,115,22,0.3); } .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(249,115,22,0.4); } .btn-primary:active { transform: scale(0.97); }
+  .btn-secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: transform 0.12s, background 0.12s; } .btn-secondary:hover { background: #f9fafb; transform: translateY(-1px); } .btn-secondary:active { transform: scale(0.97); }
   .btn-danger { background: #E53935; color: #fff; border: none; border-radius: 10px; padding: 9px 18px; font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
 
   /* ===== KPI CARDS (Stats panel) ===== */
@@ -367,7 +374,7 @@
   .menu-item-admin .info .name { font-size: 13px; font-weight: 700; }
   .menu-item-admin .info .price { font-size: 12px; color: var(--primary); font-weight: 700; }
   .menu-item-admin .actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; flex-wrap: wrap; }
-  .icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: transform 0.12s, box-shadow 0.12s; } .icon-btn:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); } .icon-btn:active { transform: scale(0.95); }
   .btn-edit { background: #e0f2fe; }
   .btn-img { background: #f3e8ff; }
   .btn-hide { background: #fef9c3; }
@@ -468,51 +475,46 @@
   /* ===== FULL-SCREEN LOADING OVERLAY ===== */
   #app-loader {
     position: fixed; inset: 0; z-index: 99999;
-    background: linear-gradient(160deg, #FFF9F0 0%, #FFE9B0 100%);
+    background: #FFF9F0;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 18px;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
+    gap: 0;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
   }
-  #app-loader.hide {
-    opacity: 0; visibility: hidden; pointer-events: none;
-  }
-  #app-loader img {
+  #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  #app-loader .al-logo {
     width: 88px; height: 88px; border-radius: 24px;
     object-fit: cover;
-    box-shadow: 0 8px 32px rgba(255,140,0,0.25);
-    animation: loaderPulse 1.2s ease-in-out infinite;
+    animation: alPulse 1.4s ease-in-out infinite;
   }
-  #app-loader .loader-dots {
-    display: flex; gap: 8px;
+  @keyframes alPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
   }
-  #app-loader .loader-dots span {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #FFC107;
-    animation: loaderBounce 1.2s ease-in-out infinite;
+  
+  #app-loader {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #FFF9F0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
   }
-  #app-loader .loader-dots span:nth-child(2) { animation-delay: 0.2s; background: #FF8C00; }
-  #app-loader .loader-dots span:nth-child(3) { animation-delay: 0.4s; background: #FF6B00; }
-  #app-loader .loader-text {
-    font-family: 'Prompt', sans-serif; font-size: 14px;
-    color: #B8860B; font-weight: 600; letter-spacing: 0.5px;
+  #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  #app-loader .al-logo {
+    width: 88px; height: 88px; border-radius: 24px;
+    object-fit: cover;
+    animation: alPulse 1.4s ease-in-out infinite;
   }
-  @keyframes loaderPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(255,140,0,0.25); }
-    50% { transform: scale(1.07); box-shadow: 0 12px 40px rgba(255,140,0,0.4); }
-  }
-  @keyframes loaderBounce {
-    0%, 100% { transform: translateY(0); opacity: 0.5; }
-    50% { transform: translateY(-8px); opacity: 1; }
+  @keyframes alPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
   }
   </style>
 <meta name="robots" content="noindex,nofollow">
 </head>
 <body>
 <div id="app-loader">
-  <img src="logo.webp" alt="อิ่มเอ๋ย">
-  <div class="loader-dots"><span></span><span></span><span></span></div>
-  <div class="loader-text">กำลังโหลด...</div>
+  <img class="al-logo" src="logo.webp" alt="อิ่มเอ๋ย">
 </div>
 <script>
 (function(){
@@ -622,7 +624,7 @@
 
     <!-- STAT CARDS -->
     <div class="stat-cards">
-      <div class="stat-card primary">
+      <div class="stat-card primary" onclick="switchTab('stats')" style="cursor:pointer">
         <div class="stat-icon">🛍️</div>
         <div class="stat-body">
           <div class="label">ยอดขายวันนี้</div>
@@ -633,7 +635,7 @@
       <div class="stat-card">
         <div class="stat-icon green">📦</div>
         <div class="stat-body">
-          <div class="label">ออเดอร์วันนี้</div>
+          <div class="label" onclick="switchTab('orders')" style="cursor:pointer">ออเดอร์วันนี้</div>
           <div class="value" id="sum-total-orders" style="color:var(--green)">—</div>
           <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
         </div>
@@ -641,7 +643,7 @@
       <div class="stat-card">
         <div class="stat-icon blue">🕐</div>
         <div class="stat-body">
-          <div class="label">กำลังทำ</div>
+          <div class="label" onclick="switchTab('orders')" style="cursor:pointer">กำลังทำ</div>
           <div class="value" id="sum-pending" style="color:var(--blue)">—</div>
           <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
         </div>
@@ -649,7 +651,7 @@
       <div class="stat-card">
         <div class="stat-icon purple">✅</div>
         <div class="stat-body">
-          <div class="label">เสร็จแล้ว</div>
+          <div class="label" onclick="switchTab('orders')" style="cursor:pointer">เสร็จแล้ว</div>
           <div class="value" id="sum-done" style="color:var(--purple)">—</div>
           <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
         </div>
@@ -657,7 +659,7 @@
       <div class="stat-card">
         <div class="stat-icon yellow">👥</div>
         <div class="stat-body">
-          <div class="label">ลูกค้าทั้งหมด</div>
+          <div class="label" onclick="switchTab('customers')" style="cursor:pointer">ลูกค้าทั้งหมด</div>
           <div class="value" id="sum-customers" style="color:var(--yellow)">—</div>
           <div class="change" style="color:var(--text-sub)">คน</div>
         </div>
@@ -1395,17 +1397,15 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 
-
 <script>
-  // Hide loader when page is ready
-  (function(){
-    function hideLoader(){
-      var el = document.getElementById('app-loader');
-      if(el){ el.classList.add('hide'); setTimeout(function(){ el.remove(); }, 450); }
-    }
-    if(document.readyState === 'complete') { setTimeout(hideLoader, 400); }
-    else { window.addEventListener('load', function(){ setTimeout(hideLoader, 400); }); }
-  })();
+(function(){
+  function hideLoader(){
+    var el=document.getElementById('app-loader');
+    if(el){el.classList.add('hide');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},520);}
+  }
+  if(document.readyState==='complete'){setTimeout(hideLoader,350);}
+  else{window.addEventListener('load',function(){setTimeout(hideLoader,350);});}
+})();
 </script>
 </body>
 </html>
