@@ -429,22 +429,20 @@ body{
 .otp-hint{font-size:13px; color:#666; text-align:center; margin-bottom:14px; line-height:1.5;}
 .otp-err{font-size:13px; font-weight:700; color:#EF4444; text-align:center; margin-top:8px; min-height:20px;}
 #recaptcha-container{margin-bottom:10px;}
-
-  /* ===== FULL-SCREEN LOADING OVERLAY ===== */
+  
   #app-loader {
     position: fixed; inset: 0; z-index: 99999;
     background: #FFF9F0;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 0;
     transition: opacity 0.5s ease, visibility 0.5s ease;
   }
   #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
   #app-loader .al-logo {
-    width: 88px; height: 88px; min-width: 88px; min-height: 88px; max-width: 88px; max-height: 88px;
-    border-radius: 24px; object-fit: cover;
+    width: 88px; height: 88px;
+    border-radius: 24px;
+    object-fit: cover;
     animation: alPulse 1.4s ease-in-out infinite;
-    flex-shrink: 0;
   }
   @keyframes alPulse {
     0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
@@ -453,9 +451,7 @@ body{
   </style>
 </head>
 <body>
-<div id="app-loader">
-  <img class="al-logo" src="logo.webp" alt="อิ่มเอ๋ย">
-</div>
+<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div></div>
 
 <div class="page">
 
