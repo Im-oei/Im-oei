@@ -173,7 +173,9 @@ async function handleLiffLogin() {
       }
     } catch(e) { console.warn('phone check:', e.message); }
 
-    setTimeout(() => window.location.href = 'index.html', 800);
+    const _returnTo1 = sessionStorage.getItem('imkum_return_to') || 'index.html';
+    sessionStorage.removeItem('imkum_return_to');
+    setTimeout(() => window.location.href = _returnTo1, 800);
   } catch (e) {
     showError('เข้าสู่ระบบ LINE ไม่สำเร็จ: ' + e.message);
     showLoading(false);
@@ -302,7 +304,9 @@ window._mod_customerLogin = window.customerLogin = async function(){
 
     showLoading(false);
     showToast('✅ ยินดีต้อนรับ ' + name + '!');
-    setTimeout(() => window.location.href = 'index.html', 800);
+    const _returnTo2 = sessionStorage.getItem('imkum_return_to') || 'index.html';
+    sessionStorage.removeItem('imkum_return_to');
+    setTimeout(() => window.location.href = _returnTo2, 800);
 
   } catch(e){
     showError('เข้าสู่ระบบไม่สำเร็จ');
@@ -321,7 +325,9 @@ try {
   if(sess){
     const user = JSON.parse(sess);
     if(Date.now()-(user.loginAt||0) < 8*60*60*1000){
-      window.location.href = user.role==='customer' ? 'index.html' : 'admin.html';
+      const _returnTo3 = sessionStorage.getItem('imkum_return_to') || 'index.html';
+      sessionStorage.removeItem('imkum_return_to');
+      window.location.href = user.role==='customer' ? _returnTo3 : 'admin.html';
     } else {
       localStorage.removeItem('imkum_user');
     }

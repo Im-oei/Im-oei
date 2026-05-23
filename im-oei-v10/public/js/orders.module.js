@@ -444,7 +444,7 @@ window.reorder=function(items){
   items.forEach(item=>{if(item.id)cart[item.id]=(cart[item.id]||0)+(item.qty||1);});
   localStorage.setItem('imkum_cart',JSON.stringify(cart));
   showToast('✅ เพิ่มลงตะกร้าแล้ว!');
-  setTimeout(()=>{window.location.href='index.html';},1500);
+  setTimeout(()=>{window.location.href='cart.html';},800);
 };
 
 let STAMP_GOAL = 10;
