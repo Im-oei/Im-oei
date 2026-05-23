@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>เข้าสู่ระบบ - อิ่มเอ๋ย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800;900&family=Prompt:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{height:100%;}
+body{
+  min-height:100%;
+  font-family:'Sarabun',sans-serif;
+  color:#2B2B2B;
+  -webkit-font-smoothing:antialiased;
+  background:#FEF3E2;
+  overflow-x:hidden;
+}
+
+/* ════════════════════════════════════════
+   PAGE LAYOUT
+════════════════════════════════════════ */
+.page{
+  width:100%;
+  min-height:100vh;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ════════════════════════════════════════
+   TOP HERO AREA — เต็มจอทุกขนาดหน้าจอ
+════════════════════════════════════════ */
+.hero-area{
+  position:relative;
+  width:100%;
+  height:320px;
+  flex-shrink:0;
+  overflow:hidden;
+}
+@media(min-width:600px){ .hero-area{ height:400px; } }
+@media(min-width:900px){ .hero-area{ height:480px; } }
+@media(min-width:1200px){ .hero-area{ height:520px; } }
+
+/* รูปอาหารเต็มพื้นที่ — crop จากตรงกลาง */
+.hero-food-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center center;
+  display:block;
+}
+
+/* gradient ล่างสุดให้ card blend ลงมา */
+.hero-grad{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    to bottom,
+    rgba(254,243,226,0)   0%,
+    rgba(254,243,226,0)   50%,
+    rgba(254,243,226,0.6) 80%,
+    rgba(254,243,226,1)   100%
+  );
+  z-index:1;
+}
+
+/* warm overlay เพื่อให้สีกลมกับ brand */
+.hero-tint{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    135deg,
+    rgba(255,159,28,0.18) 0%,
+    rgba(255,159,28,0)    60%
+  );
+  z-index:1;
+}
+
+/* ── brand block บนซ้าย ── */
+.hero-brand{
+  position:absolute;
+  top:0; left:0; right:0;
+  padding:20px 20px 0;
+  z-index:3;
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+}
+.hero-logo{
+  width:80px; height:80px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid rgba(255,255,255,0.9);
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  flex-shrink:0;
+  background:linear-gradient(135deg,#FF9F1C,#E8870A);
+}
+.hero-logo-fallback{
+  width:80px; height:80px; border-radius:50%;
+  background:linear-gradient(135deg,#FF9F1C,#E8870A);
+  border:3px solid rgba(255,255,255,0.9);
+  display:flex; align-items:center; justify-content:center;
+  font-size:38px; flex-shrink:0;
+}
+.hero-title-block{padding-top:6px;}
+.hero-brand-th{
+  font-family:'Prompt',sans-serif;
+  font-size:36px; font-weight:900;
+  color:#fff;
+  text-shadow:0 2px 16px rgba(120,60,0,0.4);
+  line-height:1;
+  letter-spacing:-0.5px;
+}
+.hero-brand-sub{
+  font-size:13px; font-weight:700;
+  color:rgba(255,255,255,0.95);
+  margin-top:4px;
+  text-shadow:0 1px 6px rgba(0,0,0,0.25);
+}
+.hero-brand-sub em{color:#FFE082; font-style:normal;}
+
+/* ── feature icons ── */
+.hero-feats{
+  position:absolute;
+  bottom:58px; left:20px;
+  z-index:3;
+  display:flex; gap:20px;
+}
+.hero-feat{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.feat-box{
+  width:50px; height:50px; border-radius:14px;
+  background:rgba(255,255,255,0.22);
+  backdrop-filter:blur(10px);
+  border:1.5px solid rgba(255,255,255,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px;
+}
+.feat-lbl{
+  font-size:10px; font-weight:800; color:#fff;
+  text-shadow:0 1px 5px rgba(0,0,0,0.22);
+  white-space:nowrap;
+}
+
+/* ── Card center wrapper บน desktop ── */
+.card-center{
+  display:flex;
+  justify-content:center;
+  background:#FEF3E2;
+  flex:1;
+}
+
+/* ════════════════════════════════════════
+   LOGIN CARD
+════════════════════════════════════════ */
+.login-card{
+  width:100%;
+  max-width:520px;
+  position:relative;
+  z-index:5;
+  background:#fff;
+  border-radius:28px 28px 0 0;
+  padding:28px 20px 16px;
+  box-shadow:0 -4px 30px rgba(0,0,0,0.09);
+}
+
+/* lock badge */
+.lock-badge{
+  width:58px; height:58px; border-radius:50%;
+  background:linear-gradient(135deg,#FFF3D6,#FFE4A0);
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 14px;
+  font-size:26px;
+  box-shadow:0 4px 18px rgba(255,159,28,0.22);
+}
+.card-title{
+  font-family:'Prompt',sans-serif;
+  font-size:20px; font-weight:900;
+  text-align:center; color:#1E1E1E;
+  margin-bottom:4px;
+}
+.card-sub{
+  font-size:13px; color:#9B8E82;
+  text-align:center; margin-bottom:22px; font-weight:500;
+}
+
+/* error */
+.err-box{
+  background:#FEF2F2; border:1.5px solid #FCA5A5;
+  border-radius:12px; padding:11px 15px;
+  font-size:13px; font-weight:600; color:#DC2626;
+  margin-bottom:14px; display:none;
+}
+
+/* ── LINE button ── */
+.line-btn{
+  width:100%; height:64px; padding:0 18px;
+  border-radius:18px; border:none;
+  background:#06C755;
+  display:flex; align-items:center; gap:14px;
+  cursor:pointer;
+  box-shadow:0 6px 28px rgba(6,199,85,0.38);
+  position:relative; overflow:hidden;
+  margin-bottom:14px;
+  transition:transform .15s, box-shadow .15s;
+}
+.line-btn::before{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,transparent 55%);
+  pointer-events:none;
+}
+.line-btn:active{transform:scale(0.975); box-shadow:0 3px 14px rgba(6,199,85,0.28);}
+.line-logo{
+  width:42px; height:42px; border-radius:12px;
+  background:rgba(255,255,255,0.18);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.line-texts{display:flex; flex-direction:column; flex:1;}
+.line-main{font-family:'Prompt',sans-serif; font-size:17px; font-weight:800; color:#fff; line-height:1.1;}
+.line-sub{font-size:11.5px; font-weight:600; color:rgba(255,255,255,0.85); margin-top:2px;}
+.line-arrow{
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(255,255,255,0.2);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:18px; flex-shrink:0; font-weight:700;
+}
+
+/* ── benefits bar ── */
+.benefits{
+  background:#F0FFF4; border:1.5px solid #BBF7D0;
+  border-radius:16px; padding:13px 8px;
+  display:flex; justify-content:space-around;
+  margin-bottom:20px;
+}
+.ben{display:flex; flex-direction:column; align-items:center; gap:3px;}
+.ben-ico{font-size:20px;}
+.ben-t{font-size:11.5px; font-weight:800; color:#166534;}
+.ben-d{font-size:10px; color:#6B7280; font-weight:500;}
+
+/* ── or divider ── */
+.or-div{
+  display:flex; align-items:center; gap:12px; margin-bottom:14px;
+}
+.or-div::before,.or-div::after{content:''; flex:1; height:1.5px; background:#F0E8DF;}
+.or-div span{font-size:12.5px; font-weight:700; color:#B0A09A;}
+
+/* ── option rows ── */
+.opt{
+  width:100%; background:#fff;
+  border:1.5px solid #EDE5DC; border-radius:16px;
+  padding:0 15px; height:66px;
+  display:flex; align-items:center; gap:13px;
+  cursor:pointer;
+  transition:border-color .18s, background .18s;
+  margin-bottom:10px;
+}
+.opt:active{background:#FFF8EE; border-color:#F59E0B;}
+.opt-ico{
+  width:40px; height:40px; border-radius:12px;
+  background:linear-gradient(135deg,#FFF3E0,#FFE4A8);
+  display:flex; align-items:center; justify-content:center;
+  font-size:21px; flex-shrink:0;
+}
+.opt-txt{flex:1;}
+.opt-t{font-size:14px; font-weight:800; color:#1E1E1E; line-height:1.2;}
+.opt-d{font-size:11px; color:#A09890; margin-top:2px; font-weight:500;}
+.opt-arr{color:#C4BDB8; font-size:20px; flex-shrink:0; font-weight:700;}
+
+/* collapse */
+.collapse{overflow:hidden; max-height:0; opacity:0; transition:max-height .32s ease,opacity .25s ease;}
+.collapse.open{max-height:400px; opacity:1;}
+.collapse-inner{padding:6px 0 10px;}
+.f-lbl{font-size:12px; font-weight:700; color:#9B9B9B; margin-bottom:7px; display:block;}
+.f-inp{
+  width:100%; border:2px solid #EDE5DC; border-radius:14px;
+  padding:13px 16px; font-family:'Sarabun',sans-serif;
+  font-size:15px; color:#2B2B2B; outline:none;
+  transition:all .2s; background:#FAFAF8;
+}
+.f-inp:focus{border-color:#F59E0B; box-shadow:0 0 0 4px rgba(245,158,11,0.12); background:#fff;}
+.f-inp::placeholder{color:#C4C4C4;}
+.f-hint{font-size:11px; color:#C4C4C4; margin-top:6px; text-align:center;}
+.sub-btn{
+  width:100%; padding:14px; border-radius:14px; border:none;
+  background:linear-gradient(135deg,#F59E0B,#D97706);
+  font-family:'Prompt',sans-serif; font-size:15px; font-weight:800; color:#fff;
+  cursor:pointer; margin-top:12px;
+  box-shadow:0 4px 18px rgba(245,158,11,0.38);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:transform .15s;
+}
+.sub-btn:active{transform:scale(0.97);}
+.sub-btn:disabled{opacity:.6; cursor:not-allowed;}
+
+/* pwd toggle */
+.pwd-wrap{position:relative; margin-bottom:12px;}
+.pwd-eye{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; padding:4px; color:#BBB;
+}
+
+/* admin link */
+.admin-link{
+  margin-top:10px; padding-top:10px;
+  border-top:1.5px solid #F5EFEA; text-align:center;
+}
+.admin-btn{
+  background:none; border:none; font-family:'Sarabun',sans-serif;
+  font-size:12px; font-weight:700; color:#C4C4C4; cursor:pointer; padding:4px 8px;
+}
+
+/* privacy */
+.privacy{
+  text-align:center; font-size:11.5px; color:#B0A09A;
+  margin-top:16px; display:flex; align-items:center;
+  justify-content:center; gap:5px; font-weight:600;
+}
+
+/* ════════════════════════════════════════
+   BOTTOM SECTION (ส้มมน + ปุ่มกลับ)
+════════════════════════════════════════ */
+.bottom-area{
+  background:#FEF3E2;
+  position:relative; overflow:hidden;
+  flex:1;
+}
+
+/* ลวดลายฟองส้มมุมล่าง */
+.bottom-area::before{
+  content:'';
+  position:absolute;
+  bottom:-60px; left:-60px;
+  width:220px; height:220px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,159,28,0.18) 0%,rgba(255,159,28,0) 70%);
+  pointer-events:none;
+}
+.bottom-area::after{
+  content:'';
+  position:absolute;
+  bottom:-40px; right:-50px;
+  width:180px; height:180px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,159,28,0.14) 0%,rgba(255,159,28,0) 70%);
+  pointer-events:none;
+}
+
+.back-wrap{padding:14px 20px 44px; position:relative; z-index:1;}
+.back-btn{
+  width:100%; padding:15px; border-radius:16px;
+  border:2px solid #EDE5DC; background:#fff;
+  font-family:'Sarabun',sans-serif; font-size:14px; font-weight:800;
+  color:#A09890; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:all .2s;
+}
+.back-btn:active{border-color:#F59E0B; color:#F59E0B;}
+
+/* ════════════════════════════════════════
+   LOADING / TOAST / OTP
+════════════════════════════════════════ */
+.loading-overlay{
+  position:fixed; inset:0; background:rgba(254,243,226,0.88);
+  display:none; align-items:center; justify-content:center; z-index:999;
+}
+.loading-overlay.show{display:flex;}
+.spinner{
+  width:48px; height:48px; border-radius:50%;
+  border:4px solid #FFE4A0; border-top-color:#F59E0B;
+  animation:spin .75s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{
+  position:fixed; bottom:32px; left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:rgba(30,30,30,0.94); color:#fff;
+  padding:12px 26px; border-radius:9999px;
+  font-size:13px; font-weight:700; opacity:0;
+  transition:all .28s; z-index:1000; white-space:nowrap;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* OTP sheet */
+.otp-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.55);
+  z-index:700; display:none; align-items:flex-end; justify-content:center;
+}
+.otp-overlay.show{display:flex;}
+.otp-sheet{
+  width:100%; max-width:480px; background:#fff;
+  border-radius:28px 28px 0 0; padding:28px 22px 44px;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.18);
+  animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.otp-title{font-family:'Prompt',sans-serif; font-size:20px; font-weight:800; color:#2B2B2B; text-align:center; margin-bottom:6px;}
+.otp-sub{font-size:13px; color:#9B9B9B; text-align:center; margin-bottom:20px;}
+.otp-field{
+  display:flex; align-items:center; gap:10px;
+  border:2px solid #EDE5DC; border-radius:14px;
+  padding:4px 14px; margin-bottom:14px; background:#FAFAF8;
+}
+.otp-prefix{font-size:15px; font-weight:700; color:#9B9B9B; flex-shrink:0;}
+.otp-input{flex:1; border:none; background:transparent; outline:none; font-family:'Sarabun',sans-serif; font-size:16px; font-weight:700; color:#2B2B2B; padding:12px 0;}
+.otp-code{
+  width:100%; border:2px solid #EDE5DC; border-radius:14px;
+  padding:16px; font-family:'Prompt',sans-serif; font-size:28px; font-weight:800;
+  color:#2B2B2B; text-align:center; letter-spacing:12px; outline:none;
+  background:#FAFAF8; margin-bottom:14px;
+}
+.otp-code:focus{border-color:#F59E0B;}
+.otp-btn{
+  width:100%; padding:15px; border-radius:14px; border:none;
+  background:linear-gradient(135deg,#F59E0B,#D97706);
+  font-family:'Prompt',sans-serif; font-size:15px; font-weight:800;
+  color:#fff; cursor:pointer; margin-bottom:10px;
+  box-shadow:0 4px 16px rgba(245,158,11,0.35); transition:transform .15s;
+}
+.otp-btn:active{transform:scale(0.97);}
+.otp-btn:disabled{opacity:.55; cursor:not-allowed;}
+.otp-skip{
+  width:100%; background:none; border:none;
+  font-family:'Sarabun',sans-serif; font-size:13px; font-weight:700;
+  color:#C4C4C4; cursor:pointer; padding:8px; text-decoration:underline;
+}
+.otp-hint{font-size:13px; color:#666; text-align:center; margin-bottom:14px; line-height:1.5;}
+.otp-err{font-size:13px; font-weight:700; color:#EF4444; text-align:center; margin-top:8px; min-height:20px;}
+#recaptcha-container{margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ══ HERO AREA ══ -->
+  <div class="hero-area">
+    <!-- รูปอาหารเต็มพื้นที่ -->
+    <img class="hero-food-img" src="hero.webp" alt="อาหาร"
+      onerror="this.style.background='linear-gradient(135deg,#FBBF24 0%,#F59E0B 60%,#D97706 100%)';this.style.display='block'">
+    <div class="hero-tint"></div>
+    <div class="hero-grad"></div>
+
+    <!-- Brand ซ้ายบน -->
+    <div class="hero-brand">
+      <img src="logo.webp" class="hero-logo" alt="โลโก้"
+        onerror="this.outerHTML='<div class=&quot;hero-logo-fallback&quot;>🍱</div>'">
+      <div class="hero-title-block">
+        <div class="hero-brand-th">อิ่มเอ๋ย</div>
+        <div class="hero-brand-sub">อร่อยง่ายๆ <em>ใกล้บ้านคุณ</em></div>
+      </div>
+    </div>
+
+    <!-- Feature icons ใต้ brand -->
+    <div class="hero-feats">
+      <div class="hero-feat">
+        <div class="feat-box">🍱</div>
+        <div class="feat-lbl">เมนูหลากหลาย</div>
+      </div>
+      <div class="hero-feat">
+        <div class="feat-box">😋</div>
+        <div class="feat-lbl">อร่อยทุกเมนู</div>
+      </div>
+      <div class="hero-feat">
+        <div class="feat-box">⚡</div>
+        <div class="feat-lbl">จัดส่งไว</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LOGIN CARD + BOTTOM — centered on desktop ══ -->
+  <div class="card-center">
+  <div style="width:100%;max-width:520px;display:flex;flex-direction:column;">
+
+  <!-- ══ LOGIN CARD ══ -->
+  <div class="login-card">
+    <div class="lock-badge">🔐</div>
+    <div class="card-title">เข้าสู่ระบบก่อนสั่งอาหาร</div>
+    <div class="card-sub">เพื่อความสะดวกและสิทธิพิเศษมากมาย ⭐</div>
+    <div class="err-box" id="error-box"><span id="error-msg"></span></div>
+
+    <!-- LINE -->
+    <button class="line-btn" onclick="lineLogin()">
+      <div class="line-logo">
+        <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M20 8C13.373 8 8 12.477 8 18c0 3.674 2.387 6.896 5.996 8.787-.247.899-.895 3.25-.976 3.636-.1.449.165.443.347.322.143-.096 2.276-1.546 3.196-2.17.787.112 1.607.17 2.437.17C26.627 28.745 32 24.27 32 18c0-5.523-5.373-10-12-10zm-5.5 13.25h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 1 0V20.25H14.5a.5.5 0 0 1 0 1zm2 0a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 1 0v5.5zm5.25 0a.5.5 0 0 1-.867.34l-2.633-3.59v3.25a.5.5 0 0 1-1 0v-5.5a.5.5 0 0 1 .867-.34l2.633 3.59V15.75a.5.5 0 0 1 1 0v5.5zm3.75 0h-2.75a.5.5 0 0 1-.5-.5v-5.5a.5.5 0 0 1 .5-.5H25.5a.5.5 0 0 1 0 1H23.5V17.5H25.5a.5.5 0 0 1 0 1H23.5V20.25H25.5a.5.5 0 0 1 0 1z" fill="white"/>
+        </svg>
+      </div>
+      <div class="line-texts">
+        <span class="line-main">เข้าสู่ระบบด้วย LINE</span>
+        <span class="line-sub">สะดวก รวดเร็ว ไม่ต้องกรอกอะไรเพิ่ม</span>
+      </div>
+      <div class="line-arrow">›</div>
+    </button>
+
+    <!-- Benefits -->
+    <div class="benefits">
+      <div class="ben"><span class="ben-ico">✅</span><span class="ben-t">ใช้ง่าย</span><span class="ben-d">เข้าใช้งานปลอดภัย</span></div>
+      <div class="ben"><span class="ben-ico">🔔</span><span class="ben-t">แจ้งเตือนออเดอร์</span><span class="ben-d">ไม่พลาดทุกสถานะ</span></div>
+      <div class="ben"><span class="ben-ico">⭐</span><span class="ben-t">สะสมแต้ม</span><span class="ben-d">แลกรางวัลสุดพิเศษ</span></div>
+    </div>
+
+    <div class="or-div"><span>หรือ</span></div>
+
+    <!-- Phone OTP -->
+    <div class="opt" onclick="document.getElementById('otp-overlay').classList.add('show')">
+      <div class="opt-ico">📱</div>
+      <div class="opt-txt">
+        <div class="opt-t">เข้าสู่ระบบด้วยเบอร์มือถือ</div>
+        <div class="opt-d">รับรหัส OTP เพื่อเข้าสู่ระบบ</div>
+      </div>
+      <span class="opt-arr">›</span>
+    </div>
+
+    <!-- Guest -->
+    <div class="opt" id="guest-row" onclick="toggleGuest()">
+      <div class="opt-ico">👤</div>
+      <div class="opt-txt">
+        <div class="opt-t">สั่งอาหารแบบไม่เข้าสู่ระบบ</div>
+        <div class="opt-d">สำหรับลูกค้าที่ต้องการสั่งอาหารเท่านั้น</div>
+      </div>
+      <span class="opt-arr" id="guest-arr">›</span>
+    </div>
+    <div class="collapse" id="guest-form">
+      <div class="collapse-inner">
+        <label class="f-lbl">👤 ชื่อของคุณ</label>
+        <input class="f-inp" id="cust-name-1" type="text" placeholder="เช่น สมชาย, นิสา" maxlength="30"
+          onkeydown="if(event.key==='Enter')customerLogin()">
+        <p class="f-hint">ไม่ต้องใส่เบอร์ — แต่จะไม่ได้แต้มสะสม</p>
+        <button class="sub-btn" onclick="customerLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          เริ่มสั่งอาหาร
+        </button>
+      </div>
+    </div>
+
+    <!-- Privacy -->
+    <div class="privacy">🔒 เราไม่เปิดเผยข้อมูลส่วนตัวของคุณ</div>
+
+    <!-- Admin toggle -->
+    <div class="admin-link">
+      <button class="admin-btn" onclick="toggleAdmin()">🔑 เข้าระบบแอดมิน</button>
+    </div>
+    <div class="collapse" id="admin-form">
+      <div class="collapse-inner">
+        <label class="f-lbl">📧 อีเมลผู้ดูแล</label>
+        <input class="f-inp" id="admin-email" type="email" placeholder="admin@example.com"
+          style="margin-bottom:12px"
+          onkeydown="if(event.key==='Enter')document.getElementById('admin-password').focus()">
+        <div class="pwd-wrap">
+          <label class="f-lbl">🔒 รหัสผ่าน</label>
+          <input class="f-inp" id="admin-password" type="password" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter')adminLogin()">
+          <button class="pwd-eye" id="admin-eye" onclick="toggleAdminPwd()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button class="sub-btn" id="admin-btn" onclick="adminLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          เข้าสู่ระบบแอดมิน
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BOTTOM ══ -->
+  <div class="bottom-area">
+    <div class="back-wrap">
+      <button class="back-btn" onclick="window.location.href='index.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        กลับหน้าหลัก
+      </button>
+    </div>
+  </div>
+  </div><!-- /inner -->
+  </div><!-- /card-center -->
+
+</div><!-- /page -->
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<!-- OTP Modal -->
+<div class="otp-overlay" id="otp-overlay">
+  <div class="otp-sheet">
+    <div class="otp-title">📱 ยืนยันเบอร์โทรศัพท์</div>
+    <div class="otp-sub" id="otp-sub">เพื่อดูออเดอร์และสะสมแต้มของคุณ</div>
+    <div id="otp-step1">
+      <div class="otp-field">
+        <span class="otp-prefix">+66</span>
+        <input class="otp-input" id="otp-phone" type="tel" maxlength="10" placeholder="0812345678" inputmode="numeric">
+      </div>
+      <div id="recaptcha-container"></div>
+      <button class="otp-btn" id="otp-send-btn" onclick="otpSendCode()">ส่ง OTP</button>
+      <button class="otp-skip" onclick="otpSkip()">ข้ามไปก่อน</button>
+    </div>
+    <div id="otp-step2" style="display:none">
+      <div class="otp-hint" id="otp-sent-hint"></div>
+      <input class="otp-code" id="otp-code" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" inputmode="numeric">
+      <button class="otp-btn" id="otp-verify-btn" onclick="otpVerify()">ยืนยัน OTP</button>
+      <button class="otp-skip" onclick="otpResend()">ส่งรหัสใหม่</button>
+    </div>
+    <div class="otp-err" id="otp-error"></div>
+  </div>
+</div>
+
+<script>
+function lineLogin(){ window._mod_lineLogin && window._mod_lineLogin(); }
+function toggleGuest(){
+  var f=document.getElementById('guest-form');
+  var a=document.getElementById('guest-arr');
+  var o=f.classList.toggle('open');
+  if(a) a.textContent=o?'∨':'›';
+}
+function toggleAdmin(){ document.getElementById('admin-form').classList.toggle('open'); }
+function toggleAdminPwd(){ window._mod_toggleAdminPwd && window._mod_toggleAdminPwd(); }
+function adminLogin(){ window._mod_adminLogin && window._mod_adminLogin(); }
+function customerLogin(){ window._mod_customerLogin && window._mod_customerLogin(); }
+function otpSendCode(){ window._mod_otpSendCode && window._mod_otpSendCode(); }
+function otpVerify(){ window._mod_otpVerify && window._mod_otpVerify(); }
+function otpSkip(){ window._mod_otpSkip && window._mod_otpSkip(); }
+function otpResend(){ window._mod_otpResend && window._mod_otpResend(); }
+</script>
+<script type="module" src="js/login.module.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</body>
+</html>

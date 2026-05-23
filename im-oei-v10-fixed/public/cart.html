@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>อิ่มเอ๋ย Im-Oei</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="back-btn" href="index.html">‹</a>
+  <h2>ตะกร้าของฉัน</h2>
+  <span class="clear-btn" onclick="clearCart()" title="ล้างตะกร้า">🗑️</span>
+</div>
+
+<!-- PREORDER INDICATOR -->
+<div class="preorder-indicator" id="preorder-indicator">
+  <span>📅</span>
+  <span id="preorder-date-text">สั่งล่วงหน้าวันพรุ่งนี้</span>
+  <button class="cancel-pre" onclick="cancelPreorder()">ยกเลิก</button>
+</div>
+
+<div id="cart-body" class="pb-footer"></div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+
+  <script src="js/cart.js"></script>
+  <script type="module" src="js/cart.module.js"></script>
+</body>
+</html>
