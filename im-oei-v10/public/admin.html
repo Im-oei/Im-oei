@@ -483,9 +483,10 @@
   }
   #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
   #app-loader .al-logo {
-    width: 88px; height: 88px; border-radius: 24px;
-    object-fit: cover;
+    width: 88px; height: 88px; min-width: 88px; min-height: 88px; max-width: 88px; max-height: 88px;
+    border-radius: 24px; object-fit: cover;
     animation: alPulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
   }
   @keyframes alPulse {
     0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
@@ -501,9 +502,10 @@
   }
   #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
   #app-loader .al-logo {
-    width: 88px; height: 88px; border-radius: 24px;
-    object-fit: cover;
+    width: 88px; height: 88px; min-width: 88px; min-height: 88px; max-width: 88px; max-height: 88px;
+    border-radius: 24px; object-fit: cover;
     animation: alPulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
   }
   @keyframes alPulse {
     0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
