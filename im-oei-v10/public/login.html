@@ -429,9 +429,55 @@ body{
 .otp-hint{font-size:13px; color:#666; text-align:center; margin-bottom:14px; line-height:1.5;}
 .otp-err{font-size:13px; font-weight:700; color:#EF4444; text-align:center; margin-top:8px; min-height:20px;}
 #recaptcha-container{margin-bottom:10px;}
-</style>
+
+  /* ===== FULL-SCREEN LOADING OVERLAY ===== */
+  #app-loader {
+    position: fixed; inset: 0; z-index: 99999;
+    background: linear-gradient(160deg, #FFF9F0 0%, #FFE9B0 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  #app-loader.hide {
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  #app-loader img {
+    width: 88px; height: 88px; border-radius: 24px;
+    object-fit: cover;
+    box-shadow: 0 8px 32px rgba(255,140,0,0.25);
+    animation: loaderPulse 1.2s ease-in-out infinite;
+  }
+  #app-loader .loader-dots {
+    display: flex; gap: 8px;
+  }
+  #app-loader .loader-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #FFC107;
+    animation: loaderBounce 1.2s ease-in-out infinite;
+  }
+  #app-loader .loader-dots span:nth-child(2) { animation-delay: 0.2s; background: #FF8C00; }
+  #app-loader .loader-dots span:nth-child(3) { animation-delay: 0.4s; background: #FF6B00; }
+  #app-loader .loader-text {
+    font-family: 'Prompt', sans-serif; font-size: 14px;
+    color: #B8860B; font-weight: 600; letter-spacing: 0.5px;
+  }
+  @keyframes loaderPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(255,140,0,0.25); }
+    50% { transform: scale(1.07); box-shadow: 0 12px 40px rgba(255,140,0,0.4); }
+  }
+  @keyframes loaderBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(-8px); opacity: 1; }
+  }
+  </style>
 </head>
 <body>
+<div id="app-loader">
+  <img src="logo.webp" alt="อิ่มเอ๋ย">
+  <div class="loader-dots"><span></span><span></span><span></span></div>
+  <div class="loader-text">กำลังโหลด...</div>
+</div>
 
 <div class="page">
 
@@ -626,5 +672,17 @@ function otpResend(){ window._mod_otpResend && window._mod_otpResend(); }
 </script>
 <script type="module" src="js/login.module.js"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<script>
+  // Hide loader when page is ready
+  (function(){
+    function hideLoader(){
+      var el = document.getElementById('app-loader');
+      if(el){ el.classList.add('hide'); setTimeout(function(){ el.remove(); }, 450); }
+    }
+    if(document.readyState === 'complete') { setTimeout(hideLoader, 400); }
+    else { window.addEventListener('load', function(){ setTimeout(hideLoader, 400); }); }
+  })();
+</script>
 </body>
 </html>

@@ -15,6 +15,11 @@
 <meta name="robots" content="noindex,nofollow">
 </head>
 <body style="background:#F7F3EE;padding-bottom:80px;">
+<div id="app-loader">
+  <img src="logo.webp" alt="อิ่มเอ๋ย">
+  <div class="loader-dots"><span></span><span></span><span></span></div>
+  <div class="loader-text">กำลังโหลด...</div>
+</div>
 
 <div class="profile-hero">
   <a class="profile-back" href="index.html">
@@ -207,5 +212,17 @@
 
   <script src="js/orders.js" defer></script>
   <script type="module" src="js/orders.module.js" defer></script>
+
+<script>
+  // Hide loader when page is ready
+  (function(){
+    function hideLoader(){
+      var el = document.getElementById('app-loader');
+      if(el){ el.classList.add('hide'); setTimeout(function(){ el.remove(); }, 450); }
+    }
+    if(document.readyState === 'complete') { setTimeout(hideLoader, 400); }
+    else { window.addEventListener('load', function(){ setTimeout(hideLoader, 400); }); }
+  })();
+</script>
 </body>
 </html>
