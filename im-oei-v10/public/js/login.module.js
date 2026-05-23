@@ -117,7 +117,7 @@ async function handleLiffLogin() {
 
     localStorage.setItem('imkum_user', JSON.stringify(lineUser));
     if (resolvedRole === 'admin' || resolvedRole === 'owner') {
-      sessionStorage.setItem('imkum_admin_auth', '1');
+      localStorage.setItem('imkum_admin_auth', '1');
 
       // 🔐 FIX: ออก Firebase Custom Token แล้ว signIn → Firestore rules ผ่าน
       // เดิม: LINE admin ไม่มี Firebase Auth → request.auth = null
@@ -245,7 +245,7 @@ window._mod_adminLogin = window.adminLogin = async function(){
       if(adminSnap.exists()) role = adminSnap.data().role || 'admin';
     } catch(e) { console.warn('admins read:', e.message); }
     localStorage.setItem('imkum_user', JSON.stringify({ role, name: userCred.user.displayName || email.split('@')[0], email, uid, loginAt: Date.now() }));
-    sessionStorage.setItem('imkum_admin_auth','1');
+    localStorage.setItem('imkum_admin_auth','1');
     showToast(role==='owner' ? '👑 ยินดีต้อนรับ เจ้าของร้าน!' : '🧑‍🍳 ยินดีต้อนรับ แอดมิน!');
     setTimeout(()=>window.location.href='admin.html', 700);
   } catch(e) {

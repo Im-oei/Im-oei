@@ -25,25 +25,25 @@ function esc(s) {
 }
 
 function checkAuth() {
-  if (!sessionStorage.getItem(ADMIN_KEY)) {
+  if (!localStorage.getItem(ADMIN_KEY)) {
     window.location.href = 'index.html'; return false;
   }
   try {
-    const u = JSON.parse(sessionStorage.getItem('imkum_user') || 'null');
-    if (!u) { sessionStorage.clear(); window.location.href = 'index.html'; return false; }
+    const u = JSON.parse(localStorage.getItem('imkum_user') || 'null');
+    if (!u) { localStorage.removeItem('imkum_admin_auth'); localStorage.removeItem('imkum_user'); window.location.href = 'index.html'; return false; }
     if (u.loginAt && (Date.now() - u.loginAt > SESSION_MAX)) {
-      sessionStorage.clear();
+      localStorage.removeItem('imkum_admin_auth'); localStorage.removeItem('imkum_user');
       window.location.href = 'index.html'; return false;
     }
     // ตรวจ admin role — ต้องเป็น admin หรือ owner เท่านั้น
     if (u.role !== 'admin' && u.role !== 'owner') {
-      sessionStorage.clear();
+      localStorage.removeItem('imkum_admin_auth'); localStorage.removeItem('imkum_user');
       window.location.href = 'index.html'; return false;
     }
-  } catch(e) { sessionStorage.clear(); window.location.href = 'index.html'; return false; }
+  } catch(e) { localStorage.removeItem('imkum_admin_auth'); localStorage.removeItem('imkum_user'); window.location.href = 'index.html'; return false; }
   return true;
 }
-function getUser(){ try{ return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
+function getUser(){ try{ return JSON.parse(localStorage.getItem('imkum_user')||'null'); }catch(e){ return null; } }
 function getCurrentRole(){ const u=getUser(); return u?u.role:'admin'; }
 
 // ซ่อน/แสดง UI ตาม role
@@ -109,7 +109,7 @@ if (checkAuth()) {
   // โหลดชื่อ admin จาก session
   (function() {
     try {
-      const u = JSON.parse(sessionStorage.getItem('imkum_user') || '{}');
+      const u = JSON.parse(localStorage.getItem('imkum_user') || '{}');
       const name = u.name || u.email || 'Admin';
       const role = u.role || 'admin';
       const label = role === 'owner' ? '👑 ' + name : name;

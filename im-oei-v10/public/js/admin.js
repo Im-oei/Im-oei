@@ -228,7 +228,7 @@ function toggleUserMenu() {
 }
 
 async function adminLogout() {
-  sessionStorage.removeItem('imkum_admin_auth');
+  localStorage.removeItem('imkum_admin_auth');
   sessionStorage.removeItem('imkum_user');
   localStorage.removeItem('imkum_name');
   try {
