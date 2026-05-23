@@ -145,8 +145,10 @@ async function handleLiffLogin() {
     }
     localStorage.setItem('imkum_name', lineUser.name);
     localStorage.setItem('imkum_line_picture', lineUser.picture || '');
-    localStorage.removeItem('imkum_cart');
-    localStorage.removeItem('imkum_cart_prices');
+    if (sessionStorage.getItem('imkum_return_to') !== 'cart.html') {
+      localStorage.removeItem('imkum_cart');
+      localStorage.removeItem('imkum_cart_prices');
+    }
 
     const welcomeMsg = resolvedRole === 'owner' ? '👑 ยินดีต้อนรับ เจ้าของร้าน!' :
                        resolvedRole === 'admin'  ? '🧑‍🍳 ยินดีต้อนรับ แอดมิน!' :
@@ -299,8 +301,10 @@ window._mod_customerLogin = window.customerLogin = async function(){
       role: 'customer', name, guestId, loginAt: Date.now()
     }));
     localStorage.setItem('imkum_name', name);
-    localStorage.removeItem('imkum_cart');
-    localStorage.removeItem('imkum_cart_prices');
+    if (sessionStorage.getItem('imkum_return_to') !== 'cart.html') {
+      localStorage.removeItem('imkum_cart');
+      localStorage.removeItem('imkum_cart_prices');
+    }
 
     showLoading(false);
     showToast('✅ ยินดีต้อนรับ ' + name + '!');

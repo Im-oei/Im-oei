@@ -6,11 +6,11 @@ import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDo
 import { FIREBASE_CONFIG, VAPID_PUBLIC_KEY } from "../config.js";
 
 const sess = localStorage.getItem('imkum_user');
-if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
+if(!sess){ sessionStorage.setItem('imkum_return_to','orders.html'); window.location.href='login.html'; throw new Error('no auth'); }
 const user = JSON.parse(sess);
 // ตรวจ session expiry 8 ชั่วโมง
 if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-  localStorage.removeItem("imkum_user"); window.location.href='login.html'; throw new Error('session expired');
+  localStorage.removeItem("imkum_user"); sessionStorage.setItem('imkum_return_to','orders.html'); window.location.href='login.html'; throw new Error('session expired');
 }
 if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html'; throw new Error('wrong role'); }
 
@@ -1175,11 +1175,9 @@ async function renderRealtimeOrders() {
 
       const reorderBtn = card.querySelector('.stream-reorder-btn');
       reorderBtn.onclick = () => {
-        localStorage.setItem(
-          'imkum_cart',
-          JSON.stringify(order.items || [])
-        );
-
+        const cartObj = {};
+        (order.items || []).forEach(i => { if (i.id) cartObj[i.id] = (cartObj[i.id] || 0) + (i.qty || 1); });
+        localStorage.setItem('imkum_cart', JSON.stringify(cartObj));
         window.location.href = 'cart.html';
       };
 

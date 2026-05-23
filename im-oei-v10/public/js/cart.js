@@ -271,6 +271,6 @@ window.placeOrder = window.checkout;
 
 renderCart();
 
-function showCartLoginPrompt(){ window.location.href = 'login.html'; }
+function showCartLoginPrompt(){ sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }
 function closeCartLogin(){ /* deprecated */ }
 function submitCartLogin(){ /* deprecated */ }
