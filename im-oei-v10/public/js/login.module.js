@@ -56,9 +56,10 @@ async function initLiff() {
     await liff.init({ liffId: LIFF_ID });
     window._liffInited = true;
 
-    // Auto-login: ถ้า LIFF isLoggedIn() แต่ยังไม่มี imkum_user session → handle ทันที
-    // (LIFF อาจล้าง URL params ก่อนที่จะเช็ค ทำให้ cameFromLiff = false ทั้งที่เพิ่ง redirect กลับมา)
-    if (liff.isLoggedIn() && !localStorage.getItem('imkum_user')) {
+    // Auto-login เฉพาะเมื่อ redirect กลับมาจาก LINE login (มี flag ใน sessionStorage)
+    const cameFromLine = sessionStorage.getItem('liff_login_pending') === '1';
+    if (liff.isLoggedIn() && cameFromLine) {
+      sessionStorage.removeItem('liff_login_pending');
       await handleLiffLogin();
     }
   } catch (e) {
@@ -201,7 +202,8 @@ window._mod_lineLogin = window.lineLogin = async function() {
     if (liff.isLoggedIn()) {
       await handleLiffLogin();
     } else {
-      // redirect ไป LINE login จริง
+      // set flag ก่อน redirect → initLiff จะรู้ว่ากลับมาจาก LINE login
+      sessionStorage.setItem('liff_login_pending', '1');
       liff.login({ redirectUri: window.location.href });
     }
   } catch (e) {
