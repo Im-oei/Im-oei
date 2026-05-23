@@ -163,8 +163,16 @@ window.checkout = async function() {
   const userSess = localStorage.getItem('imkum_user');
   const userObj = userSess ? JSON.parse(userSess) : null;
   // ต้องมี identity อย่างใดอย่างหนึ่ง: phone, lineUserId, หรือ guestId
-  const hasIdentity = userObj && (userObj.phone || userObj.lineUserId || userObj.guestId);
-  if (!hasIdentity) { window.location.href = 'login.html'; return; }
+  // ถ้าไม่มี session ให้สร้าง guest session อัตโนมัติ (ไม่ต้อง login)
+  if (!userObj || (!userObj.phone && !userObj.lineUserId && !userObj.guestId)) {
+    const guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+    const guest = { role: 'guest', name: '', guestId, loginAt: Date.now() };
+    localStorage.setItem('imkum_user', JSON.stringify(guest));
+    // reload userObj
+    var userObjNew = guest;
+    Object.assign(userObj || {}, userObjNew);
+    if (!userObj) { window.location.href = 'login.html'; return; }
+  }
 
   var nameEl = document.getElementById('name-input');
   var customerName = (nameEl ? nameEl.value : '').trim();
