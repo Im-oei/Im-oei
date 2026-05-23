@@ -1,4 +1,0 @@
-Im-Oei V6.1 Stable
-- Admin dialog fallback fixes
-- Error handler
-- Stable export package
