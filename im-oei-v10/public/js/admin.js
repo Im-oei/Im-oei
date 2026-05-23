@@ -17,6 +17,7 @@ function doLogout() {
   localStorage.removeItem('imkum_notif_dismissed');
   localStorage.removeItem('imkum_preorder');
   localStorage.removeItem('imkum_preorder_date');
+  localStorage.removeItem('imkum_return_to');
   window.location.href = 'index.html';
 }
 

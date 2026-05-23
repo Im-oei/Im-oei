@@ -3,18 +3,18 @@
 // ===== AUTH CHECK =====
 (function(){
   var sess = localStorage.getItem('imkum_user');
-  if(!sess){ sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; return; }
+  if(!sess){ localStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; return; }
   try {
     var user = JSON.parse(sess);
     if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-      localStorage.removeItem("imkum_user"); sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; return;
+      localStorage.removeItem("imkum_user"); localStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; return;
     }
     if(user.role === 'admin' || user.role === 'owner'){
       window.location.href = 'admin.html'; return;
     }
     if(user.name) localStorage.setItem('imkum_name', user.name);
     if(user.phone) localStorage.setItem('imkum_phone', user.phone);
-  } catch(e) { localStorage.removeItem("imkum_user"); sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }
+  } catch(e) { localStorage.removeItem("imkum_user"); localStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }
 })();
 
 // ===== PREORDER =====
@@ -271,6 +271,6 @@ window.placeOrder = window.checkout;
 
 renderCart();
 
-function showCartLoginPrompt(){ sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }
+function showCartLoginPrompt(){ localStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }
 function closeCartLogin(){ /* deprecated */ }
 function submitCartLogin(){ /* deprecated */ }

@@ -145,7 +145,7 @@ async function handleLiffLogin() {
     }
     localStorage.setItem('imkum_name', lineUser.name);
     localStorage.setItem('imkum_line_picture', lineUser.picture || '');
-    if (sessionStorage.getItem('imkum_return_to') !== 'cart.html') {
+    if (localStorage.getItem('imkum_return_to') !== 'cart.html') {
       localStorage.removeItem('imkum_cart');
       localStorage.removeItem('imkum_cart_prices');
     }
@@ -175,8 +175,8 @@ async function handleLiffLogin() {
       }
     } catch(e) { console.warn('phone check:', e.message); }
 
-    const _returnTo1 = sessionStorage.getItem('imkum_return_to') || 'index.html';
-    sessionStorage.removeItem('imkum_return_to');
+    const _returnTo1 = localStorage.getItem('imkum_return_to') || 'index.html';
+    localStorage.removeItem('imkum_return_to');
     setTimeout(() => window.location.href = _returnTo1, 800);
   } catch (e) {
     showError('เข้าสู่ระบบ LINE ไม่สำเร็จ: ' + e.message);
@@ -301,15 +301,15 @@ window._mod_customerLogin = window.customerLogin = async function(){
       role: 'customer', name, guestId, loginAt: Date.now()
     }));
     localStorage.setItem('imkum_name', name);
-    if (sessionStorage.getItem('imkum_return_to') !== 'cart.html') {
+    if (localStorage.getItem('imkum_return_to') !== 'cart.html') {
       localStorage.removeItem('imkum_cart');
       localStorage.removeItem('imkum_cart_prices');
     }
 
     showLoading(false);
     showToast('✅ ยินดีต้อนรับ ' + name + '!');
-    const _returnTo2 = sessionStorage.getItem('imkum_return_to') || 'index.html';
-    sessionStorage.removeItem('imkum_return_to');
+    const _returnTo2 = localStorage.getItem('imkum_return_to') || 'index.html';
+    localStorage.removeItem('imkum_return_to');
     setTimeout(() => window.location.href = _returnTo2, 800);
 
   } catch(e){
@@ -329,8 +329,8 @@ try {
   if(sess){
     const user = JSON.parse(sess);
     if(Date.now()-(user.loginAt||0) < 8*60*60*1000){
-      const _returnTo3 = sessionStorage.getItem('imkum_return_to') || 'index.html';
-      sessionStorage.removeItem('imkum_return_to');
+      const _returnTo3 = localStorage.getItem('imkum_return_to') || 'index.html';
+      localStorage.removeItem('imkum_return_to');
       window.location.href = user.role==='customer' ? _returnTo3 : 'admin.html';
     } else {
       localStorage.removeItem('imkum_user');

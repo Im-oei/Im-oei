@@ -171,7 +171,7 @@ window.checkout = async function() {
     // reload userObj
     var userObjNew = guest;
     Object.assign(userObj || {}, userObjNew);
-    if (!userObj) { sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; return; }
+    if (!userObj) { localStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; return; }
   }
 
   var nameEl = document.getElementById('name-input');
@@ -324,7 +324,7 @@ window.checkout = async function() {
     var msg = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
     if (e.code === 'permission-denied') {
       msg = '❌ ไม่มีสิทธิ์สั่งซื้อ กรุณาเข้าสู่ระบบใหม่';
-      setTimeout(function(){ sessionStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }, 1500);
+      setTimeout(function(){ localStorage.setItem('imkum_return_to','cart.html'); window.location.href = 'login.html'; }, 1500);
     } else if (e.code === 'unavailable' || !navigator.onLine) {
       msg = '❌ ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ';
     } else if (e.message) {
