@@ -56,12 +56,9 @@ async function initLiff() {
     await liff.init({ liffId: LIFF_ID });
     window._liffInited = true;
 
-    // Auto-login เฉพาะเมื่อ redirect กลับมาจาก LINE (มี liff.state ใน URL)
-    // ไม่ auto-login ถ้าแค่เปิดหน้า login ปกติ เพื่อไม่ขัด guest login
-    const params = new URLSearchParams(window.location.search);
-    const cameFromLiff = params.has('liff.state') || params.has('code') || params.has('state');
-
-    if (liff.isLoggedIn() && cameFromLiff) {
+    // Auto-login: ถ้า LIFF isLoggedIn() แต่ยังไม่มี imkum_user session → handle ทันที
+    // (LIFF อาจล้าง URL params ก่อนที่จะเช็ค ทำให้ cameFromLiff = false ทั้งที่เพิ่ง redirect กลับมา)
+    if (liff.isLoggedIn() && !localStorage.getItem('imkum_user')) {
       await handleLiffLogin();
     }
   } catch (e) {
