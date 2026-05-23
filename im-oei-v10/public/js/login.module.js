@@ -57,9 +57,9 @@ async function initLiff() {
     window._liffInited = true;
 
     // Auto-login เฉพาะเมื่อ redirect กลับมาจาก LINE login (มี flag ใน sessionStorage)
-    const cameFromLine = sessionStorage.getItem('liff_login_pending') === '1';
+    const cameFromLine = localStorage.getItem('liff_login_pending') === '1';
     if (liff.isLoggedIn() && cameFromLine) {
-      sessionStorage.removeItem('liff_login_pending');
+      localStorage.removeItem('liff_login_pending');
       await handleLiffLogin();
     }
   } catch (e) {
@@ -203,7 +203,7 @@ window._mod_lineLogin = window.lineLogin = async function() {
       await handleLiffLogin();
     } else {
       // set flag ก่อน redirect → initLiff จะรู้ว่ากลับมาจาก LINE login
-      sessionStorage.setItem('liff_login_pending', '1');
+      localStorage.setItem('liff_login_pending', '1');
       liff.login({ redirectUri: window.location.href });
     }
   } catch (e) {
