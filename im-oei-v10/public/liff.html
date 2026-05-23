@@ -153,6 +153,17 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
         <div class="feature"><div class="feature-icon">🔔</div><div class="feature-title">แจ้งเตือน</div><div class="feature-sub">ผ่าน LINE</div></div>
       </div>
       <div class="form-group">
+        <label class="form-label">😊 ชื่อเล่น / ชื่อที่ต้องการให้เรียก</label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">👤</span>
+          <input type="text" class="form-input" id="nickname-input"
+            placeholder="เช่น น้องนุ่น, คุณวรานนท์"
+            maxlength="30"
+            onkeydown="if(event.key==='Enter')document.getElementById('phone-input').focus()">
+        </div>
+        <div class="phone-hint">* ชื่อที่แสดงในออเดอร์และใบเสร็จ (ไม่กรอกจะใช้ชื่อ LINE)</div>
+      </div>
+      <div class="form-group">
         <label class="form-label">📞 เบอร์มือถือ</label>
         <div class="phone-input-wrap">
           <span class="phone-prefix">+66</span>

@@ -1,3 +1,4 @@
+const LINE_OA_TOKEN = 'MIfafKd1RxoUErArTPMtN7Bnp3X5cM6iqkYczR+8ltyIJbtKHzklDZgYOwoEex1MFHetb4WqCDnjgVd6q63tey73o6MHCbz50gx24P0LA6VQIbgQURj0hJB8RySu2VO9kY4GX2fCNLa029xgMkp23wdB04t89/1O/w1cDnyilFU=';
 
 // cart.html — ES module (Firebase)
 
@@ -82,6 +83,77 @@ async function ensureAuth() {
 
 // ====== CHECKOUT via Firestore ตรงๆ (ไม่ใช้ Cloud Function) ======
 let _isCheckingOut = false; // guard กัน double-submit
+async function notifyLineOA(order) {
+  try {
+    const orderId = '#' + order.orderId.slice(0,8).toUpperCase();
+    const customerLine = (order.customerName || 'ไม่ระบุ') + (order.customerPhone ? '  📞 ' + order.customerPhone : '');
+    const itemsBody = (order.items || []).map(i => ({
+      type: 'box', layout: 'horizontal', margin: 'sm',
+      contents: [
+        { type: 'text', text: i.name + ' ×' + i.qty, size: 'sm', color: '#555555', flex: 4, wrap: true },
+        { type: 'text', text: i.subtotal + ' ฿', size: 'sm', color: '#FF8C00', flex: 2, align: 'end', weight: 'bold' }
+      ]
+    }));
+
+    const flexMsg = {
+      type: 'flex', altText: '🛎️ ออเดอร์ใหม่ ' + orderId,
+      contents: {
+        type: 'bubble',
+        hero: order.firstImageUrl ? {
+          type: 'image', url: order.firstImageUrl,
+          size: 'full', aspectRatio: '20:13', aspectMode: 'cover'
+        } : undefined,
+        header: {
+          type: 'box', layout: 'vertical',
+          backgroundColor: '#FF8C00', paddingAll: '16px',
+          contents: [
+            { type: 'text', text: '🛎️ ออเดอร์ใหม่!', color: '#ffffff', size: 'xl', weight: 'bold' },
+            { type: 'text', text: orderId, color: '#ffe0b2', size: 'sm', margin: 'xs' }
+          ]
+        },
+        body: {
+          type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '16px',
+          contents: [
+            { type: 'box', layout: 'baseline', spacing: 'sm', contents: [
+              { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'xs' },
+              { type: 'text', text: customerLine, size: 'sm', color: '#333', flex: 5, wrap: true }
+            ]},
+            { type: 'separator', margin: 'md' },
+            { type: 'box', layout: 'horizontal', margin: 'md', contents: [
+              { type: 'text', text: '⏰', size: 'sm', flex: 1 },
+              { type: 'text', text: 'รับ ' + (order.pickupTime || '07:30') + ' น.', size: 'sm', color: '#333', flex: 5 }
+            ]},
+            { type: 'box', layout: 'horizontal', contents: [
+              { type: 'text', text: '📍', size: 'sm', flex: 1 },
+              { type: 'text', text: order.pickupLocationName || '-', size: 'sm', color: '#333', flex: 5, wrap: true }
+            ]},
+            { type: 'separator', margin: 'md' },
+            ...itemsBody,
+            { type: 'separator', margin: 'md' },
+            { type: 'box', layout: 'horizontal', margin: 'md', contents: [
+              { type: 'text', text: 'รวมทั้งหมด', size: 'sm', color: '#333', weight: 'bold', flex: 3 },
+              { type: 'text', text: order.total + ' บาท', size: 'lg', color: '#FF8C00', weight: 'bold', flex: 3, align: 'end' }
+            ]}
+          ]
+        },
+        footer: {
+          type: 'box', layout: 'vertical', paddingAll: '12px',
+          contents: [{
+            type: 'button', style: 'primary', color: '#FF8C00',
+            action: { type: 'uri', label: '📋 ดูออเดอร์ในระบบ', uri: 'https://im-oei.web.app/admin.html' }
+          }]
+        }
+      }
+    };
+
+    await fetch('https://api.line.me/v2/bot/message/broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + LINE_OA_TOKEN },
+      body: JSON.stringify({ messages: [flexMsg] })
+    });
+  } catch(e) { console.warn('LINE OA notify:', e.message); }
+}
+
 window.checkout = async function() {
   if (_isCheckingOut) { showToast('กำลังดำเนินการ กรุณารอสักครู่...'); return; }
   if (!navigator.onLine) { showToast('❌ ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ'); return; }
@@ -225,6 +297,19 @@ window.checkout = async function() {
       localStorage.removeItem('imkum_preorder');
       localStorage.removeItem('imkum_preorder_date');
     }
+    // แจ้ง LINE OA เมื่อมีออเดอร์ใหม่
+    const firstItem = verifiedItems[0];
+    const firstMenuObj = firstItem ? ALL_ITEMS.find(m => m.id === firstItem.id) : null;
+    notifyLineOA({
+      orderId: orderRef.id,
+      customerName,
+      customerPhone: phone,
+      pickupTime,
+      pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation || '',
+      items: verifiedItems,
+      total,
+      firstImageUrl: firstMenuObj?.imageUrl || null,
+    }).catch(() => {});
     window.location.href = 'success.html';
   } catch(e) {
     console.error('checkout error:', e);

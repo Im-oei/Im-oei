@@ -91,6 +91,7 @@ function saveUserSession(name, phone, userId, pictureUrl) {
 // กดยืนยันเบอร์มือถือ → บันทึกตรงลง Firestore
 window.submitPhone = async function() {
   const phone = document.getElementById("phone-input").value.trim();
+  const nickname = (document.getElementById("nickname-input")?.value || "").trim();
   if (!phone || phone.length < 9) { showToast("กรุณากรอกเบอร์มือถือให้ครบ"); return; }
   if (!/^0[6-9]\d{8}$/.test(phone)) { showToast("รูปแบบเบอร์ไม่ถูกต้อง (ต้องเริ่มด้วย 06-09)"); return; }
   if (!lineProfile) { showToast("เกิดข้อผิดพลาด กรุณาลองใหม่"); return; }
@@ -98,12 +99,13 @@ window.submitPhone = async function() {
   showLoading(true);
   try {
     const { userId, displayName, pictureUrl } = lineProfile;
+    const saveName = nickname || displayName || "";
     const now = serverTimestamp();
 
-    // เขียนตรง Firestore (ไม่ต้องผ่าน Functions)
     await setDoc(doc(db, "lineUsers", userId), {
       userId,
-      displayName: displayName || "",
+      displayName: saveName,
+      nickname: nickname || "",
       phone,
       pictureUrl: pictureUrl || "",
       linkedAt: now,
@@ -115,7 +117,7 @@ window.submitPhone = async function() {
       updatedAt: now,
     });
 
-    saveUserSession(displayName, phone, userId, pictureUrl);
+    saveUserSession(saveName, phone, userId, pictureUrl);
 
     const sp = document.getElementById("success-phone");
     if (sp) sp.textContent = phone;

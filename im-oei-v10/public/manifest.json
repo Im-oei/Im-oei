@@ -1,7 +1,7 @@
 {
-  "name": "อิ่มอิ่ม ทุกเช้า",
-  "short_name": "อิ่มอิ่ม",
-  "description": "สั่งอาหารเช้ากับอิ่มอิ่ม ทุกเช้า",
+  "name": "Im-oei อิ่มเอ๋ย",
+  "short_name": "Im-oei",
+  "description": "สั่งอาหารเช้ากับ Im-oei อิ่มเอ๋ย",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#FFC107",
