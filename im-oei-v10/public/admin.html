@@ -490,11 +490,910 @@
     0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
     50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
   }
+  
+  #app-loader {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #FFF9F0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  }
+  #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  #app-loader .al-logo {
+    width: 88px; height: 88px;
+    border-radius: 24px; object-fit: cover;
+    animation: alPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes alPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
+  }
   </style>
 <meta name="robots" content="noindex,nofollow">
 </head>
 <body>
-<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div></div>
+<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div>
+<script>
+(function(){
+  const token = localStorage.getItem('imoei_admin_token');
+  if(!token){
+    console.warn('Admin access check active');
+  }
+})();
+</script>
+
+<noscript>ระบบนี้ต้องเปิด JavaScript เพื่อทำงาน</noscript>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-img">🍱</div>
+    <div class="logo-text">
+      <div class="name">อิ่มเอ้ย - IM OEI</div>
+      <span class="badge">Admin ✓</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="#" onclick="switchTab('dashboard',this);return false">
+      <span class="icon">🏠</span> แดชบอร์ด
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('orders',this);return false">
+      <span class="icon">📋</span> ออเดอร์
+      <span class="badge-count" id="nav-orders-badge">0</span>
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('menu',this);return false">
+      <span class="icon">🍽️</span> เมนู
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('banners',this);return false">
+      <span class="icon">📢</span> แบนเนอร์
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('customers',this);return false">
+      <span class="icon">👥</span> ลูกค้า
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('loyalty',this);return false">
+      <span class="icon">🎁</span> แต้ม &amp; Loyalty
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('stats',this);return false">
+      <span class="icon">📊</span> สถิติ &amp; รายงาน
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('store',this);return false">
+      <span class="icon">🏪</span> จัดการร้านค้า
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('settings',this);return false">
+      <span class="icon">⚙️</span> ตั้งค่า
+    </a>
+    <a class="nav-item" href="qr.html" target="_blank" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px">
+      <span class="icon">📲</span> QR Code ร้าน
+    </a>
+  </nav>
+
+</aside>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="เมนู">☰</button>
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="global-search" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" onclick="toggleNotifications()" style="cursor:pointer">🔔<div class="dot" id="notif-badge" style="display:none">0</div></div>
+      <div class="user-chip" onclick="toggleUserMenu()" style="cursor:pointer;position:relative;">
+        <div class="user-avatar" style="background:#fed7aa;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+        <div class="user-info">
+          <div class="uname" id="admin-display-name">Admin</div>
+          <div class="ustatus" id="admin-display-status">● ออนไลน์</div>
+        </div>
+        <span style="color:#9ca3af;font-size:11px;">▼</span>
+        <div id="user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);min-width:160px;z-index:2000;overflow:hidden;">
+          <div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;">
+            <div style="font-size:12px;color:#6b7280;">เข้าสู่ระบบในฐานะ</div>
+            <div style="font-size:13px;font-weight:700;color:#1f2937;" id="user-dropdown-name">Admin</div>
+          </div>
+          <button onclick="event.stopPropagation();adminLogout()" style="width:100%;text-align:left;padding:12px 16px;border:none;background:none;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:#ef4444;cursor:pointer;display:flex;align-items:center;gap:8px;">
+            🚪 ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+  <!-- ======== PANEL: DASHBOARD ======== -->
+  <div id="panel-dashboard" class="panel active">
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <h1>แดชบอร์ด</h1>
+          <p>ภาพรวมการขายและข้อมูลสำคัญของร้าน</p>
+        </div>
+        <div class="date-badge">📅 5 พฤษภาคม 2567</div>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-cards">
+      <div class="stat-card primary" onclick="switchTab('stats')" style="cursor:pointer">
+        <div class="stat-icon">🛍️</div>
+        <div class="stat-body">
+          <div class="label">ยอดขายวันนี้</div>
+          <div class="value" id="sum-revenue">—</div>
+          <div class="change" id="sum-revenue-change" style="color:rgba(255,255,255,0.85)">กำลังโหลด...</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">📦</div>
+        <div class="stat-body">
+          <div class="label" onclick="switchTab('orders')" style="cursor:pointer">ออเดอร์วันนี้</div>
+          <div class="value" id="sum-total-orders" style="color:var(--green)">—</div>
+          <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">🕐</div>
+        <div class="stat-body">
+          <div class="label" onclick="switchTab('orders')" style="cursor:pointer">กำลังทำ</div>
+          <div class="value" id="sum-pending" style="color:var(--blue)">—</div>
+          <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">✅</div>
+        <div class="stat-body">
+          <div class="label" onclick="switchTab('orders')" style="cursor:pointer">เสร็จแล้ว</div>
+          <div class="value" id="sum-done" style="color:var(--purple)">—</div>
+          <div class="change" style="color:var(--text-sub)">ออเดอร์</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow">👥</div>
+        <div class="stat-body">
+          <div class="label" onclick="switchTab('customers')" style="cursor:pointer">ลูกค้าทั้งหมด</div>
+          <div class="value" id="sum-customers" style="color:var(--yellow)">—</div>
+          <div class="change" style="color:var(--text-sub)">คน</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART + ORDERS + NOTIF ROW -->
+    <div class="grid-row grid-chart-row">
+      <!-- CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">กราฟยอดขาย</div>
+          <button class="chart-period-btn">7 วันที่ผ่านมา ▾</button>
+        </div>
+        <canvas id="salesChart" height="130"></canvas>
+      </div>
+
+      <!-- RECENT ORDERS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">ออเดอร์ล่าสุด</div>
+          <div class="card-link" onclick="switchTab('orders')">ดูทั้งหมด</div>
+        </div>
+        <div id="dashboard-recent-orders">
+          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">แจ้งเตือน</div>
+          <div class="card-link" onclick="switchTab('orders')">ดูทั้งหมด</div>
+        </div>
+        <div id="dashboard-notifications">
+          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">กำลังโหลด...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="grid-row grid-bottom-row">
+      <!-- CHANNELS DONUT -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">ช่องทางการขาย</div>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut-center">
+            <canvas id="donutChart"></canvas>
+            <div class="donut-total">
+              <div class="total-num" id="donut-total-num">—</div>
+              <div class="total-label">ออเดอร์รวม</div>
+            </div>
+          </div>
+          <div class="channel-list" id="donut-channel-list">
+            <div style="color:var(--text-sub);font-size:12px;">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW CUSTOMERS -->
+      <div class="card new-customer-card">
+        <div class="card-header">
+          <div class="card-title">ลูกค้าใหม่ (7 วัน)</div>
+        </div>
+        <div class="customer-count" id="new-customers-count">—</div>
+        <div class="customer-change" id="new-customers-change" style="color:var(--text-sub)">กำลังโหลด...</div>
+        <div class="avatar-group" id="new-customers-avatars"></div>
+      </div>
+
+      <!-- LATEST REVIEW -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">รีวิวล่าสุด</div>
+          <div class="card-link" onclick="switchTab('stats')">ดูทั้งหมด</div>
+        </div>
+        <div id="dashboard-latest-review">
+          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <!-- TOP MENUS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">เมนูขายดีวันนี้</div>
+          <div class="card-link" onclick="switchTab('menu')">ดูทั้งหมด</div>
+        </div>
+        <div id="dashboard-top-menus">
+          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">กำลังโหลด...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-dashboard -->
+
+  <!-- ======== PANEL: ORDERS ======== -->
+  <div id="panel-orders" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>📋 ออเดอร์</h1><p>จัดการออเดอร์ทั้งหมดแบบ Realtime</p></div>
+      </div>
+    </div>
+    <div id="notif-permission-bar" style="display:none">
+      🔔 อนุญาตการแจ้งเตือนเพื่อรับแจ้งออเดอร์ใหม่
+      <button onclick="requestNotifPermission()">อนุญาต</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="checkbox" id="notif-sound-toggle" onchange="saveSoundPref()"> 🔊 เสียงแจ้งเตือน
+      </label>
+      <span id="realtime-status" style="font-size:12px;color:var(--text-sub)"></span>
+    </div>
+    <div class="filter-chips">
+      <button class="filter-chip active" onclick="filterOrders('all',this)">ทั้งหมด</button>
+      <button class="filter-chip" onclick="filterOrders('pending',this)">🟡 รอรับ</button>
+      <button class="filter-chip" onclick="filterOrders('preparing',this)">🔵 กำลังทำ</button>
+      <button class="filter-chip" onclick="filterOrders('ready',this)">🟢 พร้อมรับ</button>
+      <button class="filter-chip" onclick="filterOrders('done',this)">✅ เสร็จแล้ว</button>
+      <button class="filter-chip" onclick="filterOrders('cancelled',this)">❌ ยกเลิก</button>
+    </div>
+    <div id="orders-list"></div>
+  </div><!-- /panel-orders -->
+
+  <!-- ======== PANEL: MENU ======== -->
+  <div id="panel-menu" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>🍽️ เมนูอาหาร</h1><p>จัดการรายการเมนูและหมวดหมู่</p></div>
+        <button class="btn-primary" onclick="openAddItem()">+ เพิ่มเมนู</button>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">รายการเมนูทั้งหมด</div>
+      <div id="menu-admin-list"><div style="text-align:center;padding:20px;color:var(--text-sub)">กำลังโหลด...</div></div>
+    </div>
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-title" style="margin:0">หมวดหมู่</div>
+        <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="window.openAddCategory()">+ เพิ่มหมวด</button>
+      </div>
+      <div id="cat-admin-list">
+      </div>
+    </div>
+  </div>
+    <!-- Modal: Add/Edit Menu Item -->
+    <div id="modal-edit" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-edit-title">เพิ่มเมนู</h3>
+          <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+        </div>
+        <input type="hidden" id="edit-item-id">
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อเมนู *</label><input id="edit-name" placeholder="เช่น ข้าวมันไก่"></div>
+          <div class="form-group"><label>ราคา (บาท) *</label><input id="edit-price" type="number" placeholder="0"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>หมวดหมู่</label>
+            <select id="edit-catkey"><option value="other">อื่นๆ</option></select>
+          </div>
+          <div class="form-group"><label>Emoji</label><input id="edit-emoji" placeholder="🍽️"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px"><label>คำอธิบาย</label><textarea id="edit-desc" placeholder="รายละเอียดเมนู..."></textarea></div>
+        <div class="form-group" style="margin-bottom:12px"><label>URL รูปภาพ</label>
+          <input id="edit-image-url" placeholder="https://..." oninput="previewEditImg()">
+          <div style="margin-top:8px">
+            <label style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#FFC107,#F5A623);color:#3E2000;padding:9px 16px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px">
+              📷 เลือกรูปจากเครื่อง
+              <input type="file" accept="image/*" style="display:none" onchange="uploadItemPhoto(this)">
+            </label>
+            <span id="edit-img-upload-status" style="font-size:12px;color:#999;margin-left:8px"></span>
+          </div>
+          <img id="edit-img-preview" style="display:none;max-width:100%;border-radius:8px;margin-top:8px" alt="">
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal('modal-edit')">ยกเลิก</button>
+          <button class="btn-primary" onclick="saveMenuItem()">💾 บันทึก</button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal: Image -->
+    <div id="modal-image" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>🖼️ อัปโหลดรูปเมนู</h3>
+          <button class="modal-close" onclick="closeModal('modal-image')">✕</button>
+        </div>
+        <input type="hidden" id="img-item-id">
+        <div class="form-group" style="margin-bottom:12px"><label>URL รูปภาพ</label>
+          <input id="img-url-input" placeholder="https://..." oninput="previewImgModal()">
+        </div>
+        <div style="margin-bottom:12px"><label class="btn-secondary" style="cursor:pointer;display:inline-block">📷 เลือกจากเครื่อง
+          <input type="file" accept="image/*" style="display:none" onchange="quickUploadPhoto(this)">
+        </label></div>
+        <img id="img-modal-preview" style="display:none;max-width:100%;border-radius:8px;margin-bottom:12px" alt="">
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal('modal-image')">ยกเลิก</button>
+          <button class="btn-primary" onclick="saveItemImage()">💾 บันทึกรูป</button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal: Category -->
+    <div id="modal-category" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-cat-title">เพิ่มหมวดหมู่</h3>
+          <button class="modal-close" onclick="closeModal('modal-category')">✕</button>
+        </div>
+        <input type="hidden" id="cat-edit-key">
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อหมวดหมู่ *</label><input id="cat-name" placeholder="เช่น ข้าว"></div>
+          <div class="form-group"><label>Key (ภาษาอังกฤษ)</label><input id="cat-key" placeholder="rice"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Emoji</label><input id="cat-emoji" placeholder="🍚"></div>
+          <div class="form-group"><label>ลำดับ</label><input id="cat-sort" type="number" placeholder="1"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal('modal-category')">ยกเลิก</button>
+          <button class="btn-primary" onclick="saveCategoryItem()">💾 บันทึก</button>
+        </div>
+      </div>
+  </div>
+  <!-- ======== PANEL: BANNERS ======== -->
+  <div id="panel-banners" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>📢 แบนเนอร์</h1><p>จัดการแบนเนอร์และโปรโมชัน</p></div>
+        <button class="btn-primary" onclick="openAddBanner()">+ เพิ่มแบนเนอร์</button>
+      </div>
+    </div>
+    <div class="section-card">
+      <div id="banners-list"><div style="text-align:center;padding:20px;color:var(--text-sub)">กำลังโหลด...</div></div>
+    </div>
+    <!-- Modal: Banner -->
+    <div id="modal-banner" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-banner-title">เพิ่มแบนเนอร์</h3>
+          <button class="modal-close" onclick="closeModal('modal-banner')">✕</button>
+        </div>
+        <input type="hidden" id="banner-edit-id">
+        <div class="form-group" style="margin-bottom:12px"><label>ชื่อแบนเนอร์</label><input id="banner-title" oninput="previewBannerModal()"></div>
+        <div class="form-group" style="margin-bottom:12px"><label>คำอธิบาย</label><input id="banner-subtitle" oninput="previewBannerModal()"></div>
+        <div class="form-row">
+          <div class="form-group"><label>ประเภท</label>
+            <select id="banner-type" onchange="previewBannerModal()">
+              <option value="slider">🖼️ Slider</option>
+              <option value="promo">🎉 โปรโมชัน</option>
+              <option value="gradient">🌅 Gradient</option>
+              <option value="announcement">📢 ประกาศ</option>
+              <option value="sale">🔥 Flash Sale</option>
+            </select>
+          </div>
+          <div class="form-group"><label>ขนาด</label>
+            <select id="banner-size" onchange="previewBannerModal();updateSizeGuide()">
+              <option value="small">เล็ก</option><option value="medium" selected>กลาง</option>
+              <option value="large">ใหญ่</option><option value="full">เต็มจอ</option>
+            </select>
+            <div id="size-guide" style="font-size:11px;color:#F5A623;font-weight:700;margin-top:4px"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>ตำแหน่ง</label>
+            <select id="banner-position" onchange="previewBannerModal()">
+              <option value="hero">📍 Hero (บนสุด)</option>
+              <option value="mid">📢 กลางหน้า</option>
+              <option value="bottom">⬇️ ล่างสุด</option>
+            </select>
+          </div>
+          <div class="form-group"><label>ลำดับ</label><input id="banner-order" type="number" value="1"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:8px"><label>URL รูปภาพ</label>
+          <input id="banner-img-url" placeholder="https://..." oninput="previewBannerModal()">
+        </div>
+        <div style="margin-bottom:12px"><label class="btn-secondary" style="cursor:pointer;display:inline-block;font-size:12px;padding:6px 12px">📷 อัปโหลดจากเครื่อง
+          <input type="file" accept="image/*" style="display:none" onchange="uploadBannerModal(this)">
+        </label></div>
+        <div id="banner-preview-box" style="border-radius:10px;overflow:hidden;margin-bottom:12px;position:relative;background:#f3f4f6;height:180px">
+          <div id="banner-preview-bg" style="position:absolute;inset:0"></div>
+          <img id="banner-modal-preview" style="display:none;width:100%;height:100%;object-fit:cover" alt="">
+          <div id="banner-preview-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;color:#ccc">🖼️</div>
+          <div id="banner-preview-badge" style="position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700"></div>
+          <div style="position:absolute;bottom:8px;left:8px;right:8px">
+            <div id="banner-preview-title" style="font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);font-size:14px"></div>
+            <div id="banner-preview-sub" style="color:rgba(255,255,255,.85);font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.4)"></div>
+          </div>
+        </div>
+        <div id="banner-preview-info" style="font-size:11px;color:var(--text-sub);margin-bottom:12px"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:14px">
+          <input type="checkbox" id="banner-active" checked> เปิดใช้งาน
+        </label>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal('modal-banner')">ยกเลิก</button>
+          <button class="btn-primary" onclick="saveBannerItem()">💾 บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-banners -->
+
+  <!-- ======== PANEL: CUSTOMERS ======== -->
+  <div id="panel-customers" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>👥 ลูกค้า</h1><p>ข้อมูลลูกค้าและประวัติการสั่ง</p></div>
+        <button class="btn-primary" onclick="openAddCustomer()">+ เพิ่มลูกค้า</button>
+      </div>
+    </div>
+    <div class="section-card">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="ltab-btn active" id="tab-line-btn" onclick="switchCustTab('line')">LINE ลูกค้า</button>
+        <button class="ltab-btn" id="tab-manual-btn" onclick="switchCustTab('manual')">ลูกค้าทั้งหมด</button>
+        <input id="cust-search" placeholder="🔍 ค้นชื่อ/เบอร์/ID" oninput="filterCustomers()"
+          style="flex:1;min-width:160px;padding:7px 12px;border:1px solid var(--border);border-radius:20px;font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)">
+      </div>
+      <div id="customers-list"><div style="text-align:center;padding:20px;color:var(--text-sub)">กำลังโหลด...</div></div>
+    </div>
+    <!-- Modal: Customer -->
+    <div id="modal-customer" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-customer-title">เพิ่มลูกค้า</h3>
+          <button class="modal-close" onclick="closeModal('modal-customer')">✕</button>
+        </div>
+        <input type="hidden" id="cust-edit-id">
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อ *</label><input id="cust-name" placeholder="ชื่อลูกค้า"></div>
+          <div class="form-group"><label>เบอร์โทร</label><input id="cust-phone" placeholder="08x-xxx-xxxx"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px"><label>ที่อยู่</label><textarea id="cust-address" placeholder="ที่อยู่จัดส่ง..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>แต้มสะสม</label><input id="cust-points" type="number" value="0"></div>
+          <div class="form-group"><label>User ID (LINE)</label><input id="cust-userid" placeholder="Uxxxxxxxx"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px"><label>หมายเหตุ</label><input id="cust-note" placeholder="บันทึกเพิ่มเติม"></div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal('modal-customer')">ยกเลิก</button>
+          <button class="btn-primary" onclick="saveCustomer()">💾 บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-customers -->
+
+  <!-- ======== PANEL: LOYALTY ======== -->
+  <div id="panel-loyalty" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>🎁 แต้มสะสม & Loyalty</h1><p>ระบบแต้มและรางวัลสำหรับลูกค้า</p></div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <button class="ltab-btn active" id="ltab-config" onclick="switchLoyaltyTab('config')">⚙️ ตั้งค่าแต้ม</button>
+      <button class="ltab-btn" id="ltab-rewards" onclick="switchLoyaltyTab('rewards')">🎁 รางวัล</button>
+      <button class="ltab-btn" id="ltab-tiers" onclick="switchLoyaltyTab('tiers')">🏅 ระดับสมาชิก</button>
+      <button class="ltab-btn" id="ltab-history" onclick="switchLoyaltyTab('history')">📜 ประวัติ</button>
+    </div>
+
+    <!-- Tab: Config -->
+    <div id="lpanel-config" class="section-card">
+      <div class="section-title">⚙️ ตั้งค่าระบบแต้ม</div>
+      <div class="form-row">
+        <div class="form-group"><label>เป้าหมายแต้ม (stamp goal)</label><input id="stamp-goal" type="number" value="10"></div>
+        <div class="form-group"><label>แต้มต่อ 1 บาท</label><input id="points-per-baht" type="number" value="20"></div>
+        <div class="form-group"><label>แต้มหมดอายุ (วัน, 0 = ไม่หมด)</label><input id="points-expiry-days" type="number" value="0"></div>
+      </div>
+      <button class="btn-primary" onclick="saveStampConfig()">💾 บันทึกการตั้งค่า</button>
+
+      <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
+        <div class="section-title">🔍 ตรวจสอบแต้มลูกค้า</div>
+        <div class="form-row" style="align-items:flex-end">
+          <div class="form-group"><label>เบอร์โทรลูกค้า</label><input id="stamp-phone-input" placeholder="08x-xxx-xxxx"></div>
+          <button class="btn-primary" style="height:36px" onclick="lookupStamp()">ค้นหา</button>
+        </div>
+        <div id="stamp-result"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Rewards -->
+    <div id="lpanel-rewards" class="section-card" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-title" style="margin:0">🎁 รางวัลทั้งหมด</div>
+        <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="openAddReward()">+ เพิ่มรางวัล</button>
+      </div>
+      <div id="rewards-list"></div>
+    </div>
+
+    <!-- Tab: Tiers -->
+    <div id="lpanel-tiers" class="section-card" style="display:none">
+      <div class="section-title">🏅 ระดับสมาชิก</div>
+      <div class="form-row">
+        <div class="form-group"><label>Bronze - ชื่อ</label><input id="tier-bronze-name" value="Bronze"></div>
+        <div class="form-group"><label>แต้มขั้นต่ำ</label><input id="tier-bronze-min" type="number" value="0"></div>
+        <div class="form-group"><label>แต้มสูงสุด</label><input id="tier-bronze-max" type="number" value="999"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Silver - ชื่อ</label><input id="tier-silver-name" value="Silver"></div>
+        <div class="form-group"><label>แต้มขั้นต่ำ</label><input id="tier-silver-min" type="number" value="1000"></div>
+        <div class="form-group"><label>แต้มสูงสุด</label><input id="tier-silver-max" type="number" value="4999"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Gold - ชื่อ</label><input id="tier-gold-name" value="Gold"></div>
+        <div class="form-group"><label>แต้มขั้นต่ำ</label><input id="tier-gold-min" type="number" value="5000"></div>
+        <div class="form-group"><label>แต้มสูงสุด</label><input id="tier-gold-max" type="number" value="9999999"></div>
+      </div>
+      <button class="btn-primary" onclick="saveTierConfig()">💾 บันทึก Tier</button>
+    </div>
+
+    <!-- Tab: History -->
+    <div id="lpanel-history" class="section-card" style="display:none">
+      <div class="section-title">📜 ประวัติการใช้แต้ม</div>
+      <p style="color:var(--text-sub);font-size:13px">ฟีเจอร์นี้จะแสดงประวัติการแลกแต้มในเร็วๆ นี้</p>
+    </div>
+
+    <!-- Modal: Reward -->
+    <div id="modal-reward" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-reward-title">เพิ่มรางวัล</h3>
+          <button class="modal-close" onclick="closeModal('modal-reward')">✕</button>
+        </div>
+        <input type="hidden" id="reward-edit-id">
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อรางวัล *</label><input id="reward-name" placeholder="เช่น เครื่องดื่มฟรี"></div>
+          <div class="form-group"><label>Emoji</label><input id="reward-emoji" placeholder="🎁"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px"><label>คำอธิบาย</label><input id="reward-desc" placeholder="รายละเอียดรางวัล"></div>
+        <div class="form-group" style="margin-bottom:12px"><label>แต้มที่ต้องใช้</label><input id="reward-cost" type="number" value="100"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:14px">
+          <input type="checkbox" id="reward-active" checked> เปิดใช้งาน
+        </label>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal('modal-reward')">ยกเลิก</button>
+          <button class="btn-primary" onclick="saveReward()">💾 บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-loyalty -->
+
+  <!-- ======== PANEL: STATS ======== -->
+  <div id="panel-stats" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>📊 สถิติ & รายงาน</h1><p>วิเคราะห์ยอดขายและพฤติกรรมลูกค้า</p></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="exportOrdersCSV()">📥 Export CSV</button>
+        </div>
+      </div>
+    </div>
+    <div class="period-tabs">
+      <button class="period-btn active" id="period-today" onclick="setStatsPeriod('today')">วันนี้</button>
+      <button class="period-btn" id="period-week" onclick="setStatsPeriod('week')">7 วัน</button>
+      <button class="period-btn" id="period-month" onclick="setStatsPeriod('month')">เดือนนี้</button>
+      <button class="period-btn" id="period-year" onclick="setStatsPeriod('year')">ปีนี้</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-value" id="kpi-revenue">—</div><div class="kpi-label">รายได้รวม</div><div class="kpi-vs" id="kpi-revenue-vs"></div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi-orders">—</div><div class="kpi-label">จำนวนออเดอร์</div><div class="kpi-vs" id="kpi-orders-vs"></div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi-avg">—</div><div class="kpi-label" id="kpi-avg-sub">เฉลี่ยต่อออเดอร์</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi-customers">—</div><div class="kpi-label" id="kpi-customers-sub">ลูกค้า</div></div>
+    </div>
+    <div class="stats-two-col">
+      <div class="section-card">
+        <div class="section-title">📈 แนวโน้มรายได้ <span id="trend-subtitle" style="font-size:11px;color:var(--text-sub);font-weight:400"></span></div>
+        <div id="monthly-revenue-chart"></div>
+        <div style="margin-top:12px">
+          <select id="revenue-year-select" onchange="renderStats()" style="border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:'Sarabun',sans-serif;font-size:12px"></select>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">📊 สถานะออเดอร์</div>
+        <div id="stats-status-breakdown" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+      </div>
+    </div>
+    <div class="stats-two-col">
+      <div class="section-card">
+        <div class="section-title">🍽️ เมนูขายดี</div>
+        <div id="stats-chart"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">⏰ ช่วงเวลาขายดี</div>
+        <div id="stats-time"></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">⭐ คะแนนรีวิว</div>
+      <div id="stats-ratings"></div>
+    </div>
+  </div><!-- /panel-stats -->
+
+  <!-- ======== PANEL: STORE MANAGEMENT ======== -->
+  <div id="panel-store" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>🏪 จัดการร้านค้า</h1><p>ตั้งค่าการรับออเดอร์และจุดรับอาหาร</p></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">🚦 สถานะร้าน</div>
+      <div class="store-toggle-row">
+        <label class="switch">
+          <input type="checkbox" id="store-open-toggle" onchange="toggleStore()">
+          <span class="slider"></span>
+        </label>
+        <span id="store-status-label" style="font-size:15px;font-weight:700">เปิดร้าน</span>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">⏰ เวลารับออเดอร์</div>
+      <div class="form-row">
+        <div class="form-group"><label>ปิดรับออเดอร์ (เช่น 20:00)</label><input id="set-cutoff" type="time" value="20:00"></div>
+        <div class="form-group"><label>เริ่มรับ Pickup</label><input id="set-pickup-start" type="time" value="07:30"></div>
+        <div class="form-group"><label>สิ้นสุดรับ Pickup</label><input id="set-pickup-end" type="time" value="09:30"></div>
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">💾 บันทึกเวลา</button>
+    </div>
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-title" style="margin:0">📍 จุดรับอาหาร</div>
+        <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="addPickupLocation()">+ เพิ่มจุด</button>
+      </div>
+      <div id="pickup-locations-list"></div>
+      <div style="background:#F9F9F9;border-radius:14px;padding:16px;margin-top:12px;border:1.5px dashed #E0E0E0">
+        <div style="font-size:13px;font-weight:700;color:#666;margin-bottom:12px">➕ เพิ่มจุดรับใหม่</div>
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อจุดรับ *</label><input id="new-pickup-name" placeholder="เช่น ป้อมยาม SCG"></div>
+          <div class="form-group"><label>ไอคอน (Emoji)</label><input id="new-pickup-icon" placeholder="📍" maxlength="4" value="📍"></div>
+        </div>
+        <div class="form-group"><label>คำอธิบาย</label><input id="new-pickup-desc" placeholder="เช่น หน้าประตูทางเข้าหลัก"></div>
+        <div class="form-group"><label>ลิงก์ Google Maps</label><input id="new-pickup-map" placeholder="https://maps.google.com/?q=..."></div>
+        <button class="btn-primary" style="margin-top:4px" onclick="addPickupLocation()">➕ เพิ่มจุดรับ</button>
+      </div>
+      <button class="btn-primary" style="margin-top:12px" onclick="savePickupLocations()">💾 บันทึกจุดรับทั้งหมด</button>
+    </div>
+    <div class="section-card">
+      <div class="section-title">🗓️ สั่งล่วงหน้า</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:12px">
+        <input type="checkbox" id="preorder-enabled" checked> เปิดระบบสั่งล่วงหน้า
+      </label>
+      <button class="btn-primary" onclick="savePreorderSetting()">💾 บันทึก</button>
+    </div>
+  </div><!-- /panel-store -->
+
+  <!-- ======== PANEL: SETTINGS ======== -->
+  <div id="panel-settings" class="panel">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>⚙️ ตั้งค่า</h1><p>ข้อมูลร้านและการตั้งค่าระบบ</p></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">🏷️ ข้อมูลร้าน</div>
+      <div class="form-row">
+        <div class="form-group"><label>ชื่อร้าน</label><input id="set-store-name" placeholder="อิ่มเอ้ย"></div>
+        <div class="form-group"><label>แท็กไลน์</label><input id="set-store-tagline" placeholder="ร้านอาหารอร่อย"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px"><label>ชื่อแท็บเบราว์เซอร์</label><input id="set-site-title" placeholder="อิ่มเอ้ย"></div>
+      <button class="btn-primary" onclick="saveStoreName()">💾 บันทึกชื่อร้าน</button>
+    </div>
+    <div class="section-card">
+      <div class="section-title">🖼️ โลโก้ร้าน</div>
+      <div class="form-group" style="margin-bottom:10px"><label>URL โลโก้</label>
+        <input id="set-hero-logo-url" placeholder="https://..." oninput="previewHeroLogo()">
+      </div>
+      <div style="margin-bottom:10px"><label class="btn-secondary" style="cursor:pointer;display:inline-block;font-size:12px;padding:6px 12px">📷 อัปโหลดจากเครื่อง
+        <input type="file" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
+      </label></div>
+      <img id="hero-logo-preview-img" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border);margin-bottom:10px" alt="">
+      <img id="brand-logo-preview" style="display:none" alt="">
+      <br><button class="btn-primary" onclick="saveHeroLogo()">💾 บันทึกโลโก้</button>
+    </div>
+    <div class="section-card">
+      <div class="section-title">🌅 รูป Hero Banner</div>
+      <div class="form-group" style="margin-bottom:10px"><label>URL รูป Banner</label>
+        <input id="set-banner-url" placeholder="https://..." oninput="previewBanner()">
+      </div>
+      <div style="margin-bottom:10px"><label class="btn-secondary" style="cursor:pointer;display:inline-block;font-size:12px;padding:6px 12px">📷 อัปโหลดจากเครื่อง
+        <input type="file" accept="image/*" style="display:none" onchange="uploadBrandHero(this)">
+      </label></div>
+      <img id="banner-preview-img" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-bottom:10px" alt="">
+      <br><button class="btn-primary" onclick="saveBanner()">💾 บันทึก Banner</button>
+    </div>
+    <div class="section-card">
+      <div class="section-title">🔐 เปลี่ยนรหัสผ่าน</div>
+      <div class="form-row">
+        <div class="form-group"><label>รหัสผ่าน Admin ใหม่</label><input id="set-admin-password" type="password" placeholder="ใหม่"></div>
+        <div class="form-group"><label>รหัสผ่าน Owner ใหม่</label><input id="set-owner-password" type="password" placeholder="ใหม่"></div>
+      </div>
+      <button class="btn-primary" onclick="savePasswords()">💾 เปลี่ยนรหัสผ่าน</button>
+    </div>
+    <div class="section-card" style="border-color:#ef4444">
+      <div class="section-title" style="color:#b91c1c">⚠️ Danger Zone</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-danger" onclick="openDangerDialog('completed')">🗑️ ลบออเดอร์ที่เสร็จแล้ว</button>
+        <button class="btn-danger" onclick="openDangerDialog('all')">💣 ลบออเดอร์ทั้งหมด</button>
+        <button class="btn-danger" onclick="openDangerDialog('rating')">⭐ รีเซ็ตรีวิว</button>
+        <button class="btn-danger" onclick="openDangerDialog('reset')">🔥 รีเซ็ตข้อมูลทั้งหมด</button>
+      </div>
+    </div>
+  </div><!-- /panel-settings -->
+
+  <!-- ======== NOTIFICATIONS SLIDE PANEL ======== -->
+  <div class="notif-panel-overlay" id="notif-overlay" onclick="toggleNotifications()"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <h3>🔔 การแจ้งเตือน</h3>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" style="font-size:11px;padding:4px 10px" onclick="clearNotifications()">ล้างทั้งหมด</button>
+        <button class="modal-close" onclick="toggleNotifications()">✕</button>
+      </div>
+    </div>
+    <div class="notif-panel-body" id="notif-list">
+      <div style="padding:24px;text-align:center;color:#999;font-size:13px">ยังไม่มีการแจ้งเตือน</div>
+    </div>
+  </div>
+
+  <!-- ======== GLOBAL: LOADING ======== -->
+  <div id="loading">⏳</div>
+
+  <!-- ======== GLOBAL: CONFIRM DIALOG ======== -->
+  <div class="confirm-dialog-overlay" id="confirm-dialog-overlay">
+    <div class="confirm-dialog-box">
+      <div class="cd-icon-wrap" id="cd-icon-wrap"><span id="cd-icon">❓</span></div>
+      <div class="cd-title" id="cd-title">ยืนยัน?</div>
+      <div class="cd-desc" id="cd-desc"></div>
+      <div class="cd-buttons">
+        <button class="cd-cancel" onclick="closeConfirmDialog()">ยกเลิก</button>
+        <button id="cd-confirm-btn" onclick="window._confirmDialogResolve(true)">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== GLOBAL: DANGER DIALOG ======== -->
+  <div class="danger-dialog-overlay" id="danger-dialog-overlay">
+    <div class="danger-dialog-box">
+      <div class="dd-icon-wrap" id="dd-icon-wrap"><span id="dd-icon">⚠️</span></div>
+      <div class="dd-title" id="dd-title">การกระทำนี้ไม่สามารถย้อนกลับได้</div>
+      <div class="dd-desc" id="dd-desc"></div>
+      <div class="dd-input-wrap" id="dd-input-wrap" style="display:none">
+        <label class="dd-input-label" id="dd-input-label">พิมพ์เพื่อยืนยัน</label>
+        <input class="dd-input" id="dd-input" placeholder="">
+      </div>
+      <div class="dd-buttons">
+        <button class="dd-cancel" onclick="closeDangerDialog()">ยกเลิก</button>
+        <button class="dd-confirm-btn" id="dd-confirm-btn" onclick="confirmDangerAction()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+  <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
+</div><!-- /main -->
+
+<script>
+// Sales Line Chart — initialized with empty data, updated by admin.module.js
+function createSalesChart() {
+  const canvas = document.getElementById('salesChart');
+  if (!canvas) return;
+  if (window.salesChart && typeof window.salesChart.destroy === 'function') { window.salesChart.destroy(); }
+  window.salesChart = null;
+  const ctx = canvas.getContext('2d');
+  window.salesChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'รายได้ (บาท)',
+        data: [],
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249,115,22,0.08)',
+        tension: 0.4, fill: true, pointRadius: 4,
+        pointBackgroundColor: '#f97316',
+      },
+      {
+        label: 'ออเดอร์',
+        data: [],
+        borderColor: '#fb923c',
+        backgroundColor: 'rgba(251,146,60,0.05)',
+        tension: 0.4, fill: false, pointRadius: 4,
+        borderDash: [4,3],
+        pointBackgroundColor: '#fb923c',
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: true, labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 12, padding: 10 } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11 } } },
+      y: { grid: { color: '#f3f4f6' }, ticks: { font: { family: 'Sarabun', size: 11 } } }
+    }
+  }
+  });
+}
+if (typeof Chart !== 'undefined') createSalesChart();
+
+// Donut Chart — initialized empty, updated by admin.module.js
+function createDonutChart() {
+  const canvas = document.getElementById('donutChart');
+  if (!canvas) return;
+  if (window.donutChart && typeof window.donutChart.destroy === 'function') { window.donutChart.destroy(); }
+  window.donutChart = null;
+  const ctx2 = canvas.getContext('2d');
+  window.donutChart = new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    labels: ['รับที่ร้าน','เดลิเวอรี่','เช็คเมตี'],
+    datasets: [{ data: [0,0,0], backgroundColor: ['#f97316','#10b981','#f59e0b'], borderWidth: 0 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true, cutout: '68%',
+    plugins: { legend: { display: false } }
+  }
+  });
+}
+if (typeof Chart !== 'undefined') createDonutChart();
+</script>
+<div id="toast-container"></div>
+  <script type="module" src="js/admin.module.js"></script>
+  <script src="js/admin.js" defer></script>
+
+<script>
+window.addEventListener('error',function(e){
+ console.log('Global admin fallback active');
+});
+document.addEventListener('DOMContentLoaded',()=>{
+ document.querySelectorAll('[data-close-modal]').forEach(btn=>{
+   btn.addEventListener('click',()=>{
+     const modal=btn.closest('.modal');
+     if(modal){modal.style.display='none';document.body.style.overflow='auto';}
+   });
+ });
+});
+</script>
+
 <script>
 (function(){
   function hideLoader(){
