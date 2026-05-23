@@ -4,8 +4,8 @@ function showLogoutModal(){ document.getElementById('logout-modal').classList.ad
 function closeLogoutModal(){ document.getElementById('logout-modal').classList.remove('open'); }
 function confirmLogout(){
   // ล้าง session
-  sessionStorage.removeItem('imkum_user');
-  sessionStorage.removeItem('imkum_admin_auth');
+  localStorage.removeItem('imkum_user');
+  localStorage.removeItem('imkum_admin_auth');
   // ล้างตะกร้าและข้อมูลผู้ใช้ทั้งหมด — ไม่จำ session เมื่อ logout
   localStorage.removeItem('imkum_cart');
   localStorage.removeItem('imkum_phone');

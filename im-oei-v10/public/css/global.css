@@ -330,3 +330,6 @@ html, body {
   animation:spin .75s linear infinite;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* ป้องกัน iOS zoom เมื่อ focus input */
+input, textarea, select { font-size: 16px !important; }

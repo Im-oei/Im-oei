@@ -117,7 +117,7 @@ async function handleLiffLogin() {
     }
     lineUser.role = resolvedRole;
 
-    sessionStorage.setItem('imkum_user', JSON.stringify(lineUser));
+    localStorage.setItem('imkum_user', JSON.stringify(lineUser));
     if (resolvedRole === 'admin' || resolvedRole === 'owner') {
       sessionStorage.setItem('imkum_admin_auth', '1');
 
@@ -168,7 +168,7 @@ async function handleLiffLogin() {
       if (custSnap.exists() && custSnap.data().phone) {
         lineUser.phone = custSnap.data().phone;
         lineUser.phoneVerified = true;
-        sessionStorage.setItem('imkum_user', JSON.stringify(lineUser));
+        localStorage.setItem('imkum_user', JSON.stringify(lineUser));
         alreadyHasPhone = true;
       }
     } catch(e) { console.warn('phone check:', e.message); }
@@ -241,7 +241,7 @@ window._mod_adminLogin = window.adminLogin = async function(){
       const adminSnap = await getDoc(doc(db, 'admins', uid));
       if(adminSnap.exists()) role = adminSnap.data().role || 'admin';
     } catch(e) { console.warn('admins read:', e.message); }
-    sessionStorage.setItem('imkum_user', JSON.stringify({ role, name: userCred.user.displayName || email.split('@')[0], email, uid, loginAt: Date.now() }));
+    localStorage.setItem('imkum_user', JSON.stringify({ role, name: userCred.user.displayName || email.split('@')[0], email, uid, loginAt: Date.now() }));
     sessionStorage.setItem('imkum_admin_auth','1');
     showToast(role==='owner' ? '👑 ยินดีต้อนรับ เจ้าของร้าน!' : '🧑‍🍳 ยินดีต้อนรับ แอดมิน!');
     setTimeout(()=>window.location.href='admin.html', 700);
@@ -293,7 +293,7 @@ window._mod_customerLogin = window.customerLogin = async function(){
       }, { merge: true });
     } catch(e) { console.warn('guest customer upsert:', e.message); }
 
-    sessionStorage.setItem('imkum_user', JSON.stringify({
+    localStorage.setItem('imkum_user', JSON.stringify({
       role: 'customer', name, guestId, loginAt: Date.now()
     }));
     localStorage.setItem('imkum_name', name);
@@ -317,18 +317,18 @@ window._mod_customerLogin = window.customerLogin = async function(){
 // ─── Session check + LIFF init ────────────────────────────────────────────
 
 try {
-  const sess = sessionStorage.getItem('imkum_user');
+  const sess = localStorage.getItem('imkum_user');
   if(sess){
     const user = JSON.parse(sess);
     if(Date.now()-(user.loginAt||0) < 8*60*60*1000){
       window.location.href = user.role==='customer' ? 'index.html' : 'admin.html';
     } else {
-      sessionStorage.clear();
+      localStorage.removeItem('imkum_user');
     }
   }
   const savedName = localStorage.getItem('imkum_name')||'';
   if(savedName) document.getElementById('cust-name-1').value=savedName;
-} catch(e){ sessionStorage.clear(); }
+} catch(e){ localStorage.removeItem('imkum_user'); }
 
 // โหลด LIFF SDK แล้ว init
 const liffScript = document.createElement('script');

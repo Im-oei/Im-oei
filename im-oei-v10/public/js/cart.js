@@ -2,19 +2,19 @@
 
 // ===== AUTH CHECK =====
 (function(){
-  var sess = sessionStorage.getItem('imkum_user');
+  var sess = localStorage.getItem('imkum_user');
   if(!sess){ window.location.href = 'login.html'; return; }
   try {
     var user = JSON.parse(sess);
     if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-      sessionStorage.clear(); window.location.href = 'login.html'; return;
+      localStorage.removeItem("imkum_user"); window.location.href = 'login.html'; return;
     }
     if(user.role === 'admin' || user.role === 'owner'){
       window.location.href = 'admin.html'; return;
     }
     if(user.name) localStorage.setItem('imkum_name', user.name);
     if(user.phone) localStorage.setItem('imkum_phone', user.phone);
-  } catch(e) { sessionStorage.clear(); window.location.href = 'login.html'; }
+  } catch(e) { localStorage.removeItem("imkum_user"); window.location.href = 'login.html'; }
 })();
 
 // ===== PREORDER =====
@@ -139,7 +139,7 @@ function generateTimeSlots(start, end, nextDay) {
 }
 
 function getStampInfo() {
-  var u; try { u = JSON.parse(sessionStorage.getItem('imkum_user')||'null'); } catch { u = null; }
+  var u; try { u = JSON.parse(localStorage.getItem('imkum_user')||'null'); } catch { u = null; }
   if (!u || !u.phone) return null;
   var key = 'imkum_stamps_' + u.phone;
   try { var s = JSON.parse(localStorage.getItem(key) || '{"count":0,"total":0}'); return s; } catch { return null; }
@@ -155,7 +155,7 @@ function renderCart(){
 
   var slots = generateTimeSlots(STORE_SETTINGS.pickupStart||'07:00', STORE_SETTINGS.pickupEnd||'08:00', isPreorder);
   var timeHTML = slots.map(function(s){ return '<option value="'+s.val+'">'+s.label+' น.</option>'; }).join('');
-  var savedName = (function(){ try { var u=JSON.parse(sessionStorage.getItem('imkum_user')||'null'); return (u&&u.name)||localStorage.getItem('imkum_name')||''; } catch(e){ return localStorage.getItem('imkum_name')||''; } })();
+  var savedName = (function(){ try { var u=JSON.parse(localStorage.getItem('imkum_user')||'null'); return (u&&u.name)||localStorage.getItem('imkum_name')||''; } catch(e){ return localStorage.getItem('imkum_name')||''; } })();
 
   var stampInfo = getStampInfo();
   var stampHTML = '';
@@ -208,7 +208,7 @@ function renderCart(){
   var pickupLabel = isPreorder ? '📅 เวลารับอาหาร (พรุ่งนี้)' : '🕐 เวลารับอาหาร';
   html += stampHTML +
     '<div class="note-section" style="padding-top:14px"><label>ชื่อผู้สั่ง</label><input type="text" class="name-input" id="name-input" placeholder="กรอกชื่อของคุณ" value="'+savedName+'"></div>'+
-    '<div class="note-section" style="padding-top:0"><label>📞 เบอร์โทรศัพท์</label><input type="tel" class="name-input" id="phone-cart-input" inputmode="numeric" maxlength="10" placeholder="0812345678" value="'+(function(){try{var u=JSON.parse(sessionStorage.getItem('imkum_user')||'{}');return u.phone||'';}catch(e){return '';}})()+'"></div>'+
+    '<div class="note-section" style="padding-top:0"><label>📞 เบอร์โทรศัพท์</label><input type="tel" class="name-input" id="phone-cart-input" inputmode="numeric" maxlength="10" placeholder="0812345678" value="'+(function(){try{var u=JSON.parse(localStorage.getItem('imkum_user')||'{}');return u.phone||'';}catch(e){return '';}})()+'"></div>'+
     '<div class="pickup-row" style="flex-direction:column;align-items:flex-start;gap:8px;padding:14px 16px">'+
       '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:700">'+pickupLabel+'</span></div>'+
       '<select class="pickup-select" id="pickup-select">'+timeHTML+'</select>'+

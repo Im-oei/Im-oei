@@ -53,7 +53,7 @@ async function syncMenu() {
 
   // Sync stamp จาก Firestore เมื่อ login
   try {
-    const userSess = sessionStorage.getItem('imkum_user');
+    const userSess = localStorage.getItem('imkum_user');
     const userObj = userSess ? JSON.parse(userSess) : null;
     const phone = userObj && userObj.phone;
     const lineUserId = userObj && userObj.lineUserId;
@@ -88,7 +88,7 @@ window.checkout = async function() {
   var total = getTotal();
   if (!total) { showToast('ไม่มีสินค้าในตะกร้า'); return; }
 
-  const userSess = sessionStorage.getItem('imkum_user');
+  const userSess = localStorage.getItem('imkum_user');
   const userObj = userSess ? JSON.parse(userSess) : null;
   // ต้องมี identity อย่างใดอย่างหนึ่ง: phone, lineUserId, หรือ guestId
   const hasIdentity = userObj && (userObj.phone || userObj.lineUserId || userObj.guestId);
@@ -115,7 +115,7 @@ window.checkout = async function() {
   // บันทึกเบอร์ลง session ถ้ากรอกใหม่
   if (phone && phone !== userObj.phone) {
     userObj.phone = phone;
-    sessionStorage.setItem('imkum_user', JSON.stringify(userObj));
+    localStorage.setItem('imkum_user', JSON.stringify(userObj));
   }
   const lineUserId = userObj.lineUserId || '';
   const guestId = userObj.guestId || '';
@@ -172,7 +172,7 @@ window.checkout = async function() {
 
     // ── upsert ข้อมูลลูกค้า ──
     try {
-      const u = (() => { try { return JSON.parse(sessionStorage.getItem('imkum_user')||'null'); } catch(e){ return null; } })();
+      const u = (() => { try { return JSON.parse(localStorage.getItem('imkum_user')||'null'); } catch(e){ return null; } })();
       const custId = lineUserId ? ('line_' + lineUserId) : (phone ? 'phone_' + phone : 'guest_' + guestId);
       await setDoc(doc(db, 'customers', custId), {
         name: customerName,

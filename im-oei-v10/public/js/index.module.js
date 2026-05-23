@@ -26,6 +26,28 @@ function buildPromoSlider(banners) {
   if (banners.length > 1) {
     if (sliderTimer) clearInterval(sliderTimer);
     sliderTimer = setInterval(() => goTo(idx + 1), 3500);
+
+    // swipe gesture
+    const slidesEl = document.getElementById('promo-slides');
+    let _sx = 0;
+    slidesEl.addEventListener('touchstart', e => { _sx = e.touches[0].clientX; }, { passive: true });
+    slidesEl.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - _sx;
+      if (Math.abs(dx) > 40) {
+        clearInterval(sliderTimer);
+        goTo(dx < 0 ? idx + 1 : idx - 1);
+        sliderTimer = setInterval(() => goTo(idx + 1), 3500);
+      }
+    }, { passive: true });
+
+    // กด dot หยุด auto แล้วเริ่มใหม่
+    wrap.querySelectorAll('.promo-dot').forEach((d, i) => {
+      d.addEventListener('click', () => {
+        clearInterval(sliderTimer);
+        goTo(i);
+        sliderTimer = setInterval(() => goTo(idx + 1), 3500);
+      });
+    });
   }
 }
 

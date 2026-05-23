@@ -53,3 +53,6 @@ html,body{min-height:100%;background:var(--bg);font-family:'Sarabun',sans-serif;
   --primary-light: #FFF3E0; --primary-glow: rgba(255,159,28,0.28);
   --bg: #FFF9F2; --bg-card: #FFFFFF; --text: #2B2B2B;
 }
+
+/* ป้องกัน iOS zoom เมื่อ focus input */
+input, textarea, select { font-size: 16px !important; }

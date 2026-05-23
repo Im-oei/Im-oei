@@ -72,3 +72,6 @@
 }
 .stamp-earn-box .icon { font-size:24px; }
 .stamp-earn-box .text { font-size:13px; color:#fff; font-weight:700; }
+
+/* ป้องกัน iOS zoom เมื่อ focus input */
+input, textarea, select { font-size: 16px !important; }

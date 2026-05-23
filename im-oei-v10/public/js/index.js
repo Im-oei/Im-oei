@@ -43,9 +43,9 @@ if (localStorage.getItem('imkum_preorder') === '1') {
 // ====== USER ======
 function getUser(){
   try {
-    const u = JSON.parse(sessionStorage.getItem('imkum_user')||'null');
+    const u = JSON.parse(localStorage.getItem('imkum_user')||'null');
     if (u && u.loginAt && (Date.now() - u.loginAt > 8*60*60*1000)) {
-      sessionStorage.clear(); return null; // หมดอายุ
+      localStorage.removeItem("imkum_user"); return null; // หมดอายุ
     }
     return u;
   } catch(e){ return null; }
@@ -53,7 +53,7 @@ function getUser(){
 // ====== ADMIN STORE BAR ======
 function initAdminBar() {
   try {
-    var u = JSON.parse(sessionStorage.getItem('imkum_user') || 'null');
+    var u = JSON.parse(localStorage.getItem('imkum_user') || 'null');
     if (!u || (u.role !== 'admin' && u.role !== 'owner')) return;
     var bar = document.getElementById('admin-store-bar');
     if (bar) bar.style.display = 'flex';
@@ -221,8 +221,26 @@ function showToast(msg){
   setTimeout(function(){t.classList.remove('show');},2200);
 }
 function foodImg(item){
-  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy" onerror="this.style.display=\'none\'">';
+  if(item.imageUrl) return '<img src="'+item.imageUrl+'" alt="'+item.name+'" loading="lazy" onclick="viewImg(\''+item.imageUrl+'\',\''+item.name+'\')" style="cursor:zoom-in" onerror="this.style.display=\'none\'">';
   return '<span style="font-size:32px">'+(item.emoji||'🍽️')+'</span>';
+}
+
+// Light box ดูรูปเมนู
+function viewImg(url, name){
+  var ov = document.getElementById('img-lightbox');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'img-lightbox';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+    ov.innerHTML = '<img id="img-lightbox-img" style="max-width:100%;max-height:80vh;border-radius:16px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,0.5)">'
+      + '<div id="img-lightbox-name" style="color:#fff;font-family:Prompt,sans-serif;font-size:16px;font-weight:700;margin-top:14px;text-align:center"></div>'
+      + '<div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:6px">แตะเพื่อปิด</div>';
+    ov.addEventListener('click', function(){ ov.style.display='none'; });
+    document.body.appendChild(ov);
+  }
+  document.getElementById('img-lightbox-img').src = url;
+  document.getElementById('img-lightbox-name').textContent = name;
+  ov.style.display = 'flex';
 }
 function buildTabs(){
   var wrap=document.getElementById('cat-tabs');

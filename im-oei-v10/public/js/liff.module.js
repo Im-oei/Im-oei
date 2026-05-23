@@ -80,7 +80,7 @@ async function initLiff() {
 
 function saveUserSession(name, phone, userId, pictureUrl) {
   const userData = { role: "customer", name, phone, lineUserId: userId, photoURL: pictureUrl || null, loginAt: Date.now() };
-  sessionStorage.setItem("imkum_user", JSON.stringify(userData));
+  localStorage.setItem("imkum_user", JSON.stringify(userData));
   localStorage.setItem("imkum_phone", phone);
   localStorage.setItem("imkum_name", name);
   localStorage.setItem("imkum_userId", userId);

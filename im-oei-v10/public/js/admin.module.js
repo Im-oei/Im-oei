@@ -809,6 +809,19 @@ window.openEditBanner = function(id) {
   document.getElementById('modal-banner').classList.add('show');
 };
 
+window.updateSizeGuide = function() {
+  const guide = document.getElementById('size-guide');
+  if (!guide) return;
+  const map = {
+    small:  '📐 แนะนำ: 800 × 200 px (สัดส่วน 4:1)',
+    medium: '📐 แนะนำ: 1200 × 400 px (สัดส่วน 3:1)',
+    large:  '📐 แนะนำ: 1200 × 500 px (สัดส่วน 2.4:1)',
+    full:   '📐 แนะนำ: 1440 × 600 px (สัดส่วน 2.4:1)',
+  };
+  const sel = document.getElementById('banner-size');
+  guide.textContent = sel ? (map[sel.value] || '') : '';
+};
+
 window.previewBannerModal = function() {
   const url = document.getElementById('banner-img-url').value;
   const img = document.getElementById('banner-modal-preview');

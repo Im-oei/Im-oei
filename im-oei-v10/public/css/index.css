@@ -546,3 +546,6 @@ body.view-list .card .price-tag { font-size:clamp(13px,3.4vw,15px) !important; }
 .cart-bounce {
   animation: cartBounce 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }
+
+/* ป้องกัน iOS zoom เมื่อ focus input */
+input, textarea, select { font-size: 16px !important; }

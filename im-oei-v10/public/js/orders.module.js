@@ -5,12 +5,12 @@ import { getFirestore, collection, query, where, getDocs, onSnapshot, doc, getDo
 // auth/functions imports removed — ใช้ simple phone input แทน OTP
 import { FIREBASE_CONFIG, VAPID_PUBLIC_KEY } from "../config.js";
 
-const sess = sessionStorage.getItem('imkum_user');
+const sess = localStorage.getItem('imkum_user');
 if(!sess){ window.location.href='login.html'; throw new Error('no auth'); }
 const user = JSON.parse(sess);
 // ตรวจ session expiry 8 ชั่วโมง
 if(user.loginAt && (Date.now() - user.loginAt > 8*60*60*1000)){
-  sessionStorage.clear(); window.location.href='login.html'; throw new Error('session expired');
+  localStorage.removeItem("imkum_user"); window.location.href='login.html'; throw new Error('session expired');
 }
 if(user.role==='admin'||user.role==='owner'){ window.location.href='admin.html'; throw new Error('wrong role'); }
 
@@ -99,7 +99,7 @@ window.ordersPhoneConfirm = async function() {
   // อัปเดต session
   user.phone = phone;
   user.phoneVerified = true;
-  sessionStorage.setItem('imkum_user', JSON.stringify(user));
+  localStorage.setItem('imkum_user', JSON.stringify(user));
   // บันทึกลง lineUsers ถ้าเป็นลูกค้า LINE
   if (user.lineUserId) {
     try {
@@ -139,10 +139,10 @@ function formatPhone(p){
 (function(){
   const span = document.getElementById('phone-text');
   if(!span) return;
-  // อ่าน phone จาก sessionStorage ใหม่เสมอ (อาจถูกอัพเดตจาก cart)
+  // อ่าน phone จาก localStorage ใหม่เสมอ (อาจถูกอัพเดตจาก cart)
   function refreshPhone() {
     try {
-      const latest = JSON.parse(sessionStorage.getItem('imkum_user') || '{}');
+      const latest = JSON.parse(localStorage.getItem('imkum_user') || '{}');
       span.textContent = formatPhone(latest.phone || user.phone);
     } catch(e) { span.textContent = formatPhone(user.phone); }
   }

@@ -2,63 +2,128 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>อิ่มเอ๋ย Im-Oei</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สั่งซื้อสำเร็จ — อิ่มเอ๋ย</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#FFE8B0 100%);font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+
+/* HERO */
+.hero{width:100%;background:linear-gradient(135deg,#FF8C00,#FFC107);padding:36px 20px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:48px;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 100%);border-radius:50% 50% 0 0 / 100% 100% 0 0}
+.confetti{font-size:36px;margin-bottom:10px;animation:bounce 0.6s ease-out}
+.hero-title{font-family:'Prompt',sans-serif;font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.hero-sub{font-size:14px;color:rgba(255,255,255,0.9);font-weight:600;margin-top:6px}
+@keyframes bounce{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+
+/* CARD */
+.card{background:#fff;border-radius:24px;padding:22px 20px;box-shadow:0 8px 32px rgba(255,140,0,0.12);width:calc(100% - 32px);max-width:420px;margin-top:-24px;position:relative;z-index:1}
+.card+.card{margin-top:14px}
+
+/* ORDER INFO */
+.order-id{font-family:'Prompt',sans-serif;font-size:22px;font-weight:800;color:#E65100;text-align:center;margin-bottom:16px;letter-spacing:1px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #FFF3E0}
+.info-row:last-child{border-bottom:none}
+.info-key{font-size:13px;color:#999;font-weight:600}
+.info-val{font-size:13px;font-weight:800;color:#2C2C2C;text-align:right;max-width:60%}
+.info-val.orange{color:#E65100}
+.location-val{color:#1565C0!important}
+
+/* ITEMS */
+.items-title{font-size:11px;font-weight:800;color:#999;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+.item-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #F5EDE0}
+.item-row:last-child{border-bottom:none}
+.item-qty{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;flex-shrink:0}
+.item-name{font-size:13px;font-weight:700;color:#2C2C2C;flex:1;margin:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-price{font-size:13px;font-weight:800;color:#E65100;flex-shrink:0}
+.total-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:2px solid #F5EDE0}
+.total-label{font-size:14px;font-weight:700;color:#888}
+.total-val{font-size:22px;font-weight:800;color:#E65100;font-family:'Prompt',sans-serif}
+
+/* STAMP */
+.stamp-box{background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:18px;padding:16px;text-align:center;color:#fff}
+.stamp-icon{font-size:32px;margin-bottom:6px}
+.stamp-text{font-size:15px;font-weight:800}
+.stamp-sub{font-size:12px;opacity:0.85;margin-top:4px}
+
+/* PREORDER */
+.preorder-box{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:18px;padding:14px;text-align:center;color:#fff;font-size:13px;font-weight:700}
+
+/* BUTTONS */
+.btn-wrap{display:flex;flex-direction:column;gap:10px;width:calc(100%-32px);max-width:420px;padding:0 16px}
+.btn-main{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:16px;font-family:'Prompt',sans-serif;font-size:15px;font-weight:800;text-decoration:none;transition:transform 0.15s}
+.btn-main:active{transform:scale(0.97)}
+.btn-primary{background:linear-gradient(135deg,#FFC107,#FF8C00);color:#3E2000;box-shadow:0 4px 16px rgba(255,140,0,0.35)}
+.btn-secondary{background:#fff;color:#666;border:2px solid #E8E8E8}
+.btn-ghost{background:none;border:none;font-size:12px;color:#bbb;padding:8px;cursor:pointer;text-decoration:underline;font-family:'Sarabun',sans-serif}
+.note{font-size:12px;color:#bbb;text-align:center;padding:4px 0}
+</style>
 </head>
 <body>
-<div class="success">
-  <div class="success-confetti">🎉 🎊 🎉</div>
 
-  <!-- LOGO -->
-  <div style="margin-bottom:16px;animation:fadeDown 0.5s ease-out;">
-    <img src="logo.webp" alt="อิ่มเอ๋ย"
-      style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #FFC107;box-shadow:0 4px 18px rgba(255,193,7,0.35);"
-      onerror="this.style.display='none'">
+<div class="hero">
+  <div class="confetti">🎉</div>
+  <div class="hero-title">สั่งซื้อสำเร็จ!</div>
+  <div class="hero-sub">ขอบคุณที่อุดหนุนนะคะ 😊</div>
+</div>
+
+<!-- ORDER ID -->
+<div class="card" style="margin-top:-24px">
+  <div class="order-id" id="s-id">#??????</div>
+
+  <div class="info-row">
+    <span class="info-key">ชื่อผู้สั่ง</span>
+    <span class="info-val" id="s-name">-</span>
   </div>
-
-  <h2 style="margin-top:0;">สั่งซื้อสำเร็จ! 🎉</h2>
-  <p>ขอบคุณที่อุดหนุนนะคะ 😊</p>
-
-  <div class="order-summary-card">
-    <div class="summary-row"><span class="key">เลขที่ออเดอร์</span><span class="val" id="s-id">-</span></div>
-    <div class="summary-row"><span class="key">ชื่อผู้สั่ง</span><span class="val" id="s-name">-</span></div>
-    <div class="summary-row"><span class="key">เวลารับอาหาร</span><span class="val" id="s-time">07:30 น.</span></div>
-    <div class="summary-row" id="s-location-row" style="display:none"><span class="key">📍 จุดรับอาหาร</span><span class="val" id="s-location" style="color:#1565C0;font-weight:800">-</span></div>
-    <div class="summary-row" id="s-date-row"><span class="key">วันที่สั่ง</span><span class="val" id="s-date">-</span></div>
-
-    <!-- รายการที่สั่ง -->
-    <div id="s-items-wrap" style="display:none;margin-top:12px;border-top:1.5px dashed #F0E8D8;padding-top:12px;">
-      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">รายการที่สั่ง</div>
-      <div id="s-items-list"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1.5px solid #F0E8D8;">
-        <span style="font-size:13px;font-weight:700;color:#888;">ยอดรวมทั้งหมด</span>
-        <span class="val orange" id="s-total" style="font-size:20px;">0 บาท</span>
-      </div>
-    </div>
-    <!-- fallback ถ้าไม่มีรายการ -->
-    <div id="s-total-row" class="summary-row"><span class="key">ยอดรวม</span><span class="val orange" id="s-total-simple">0 บาท</span></div>
+  <div class="info-row">
+    <span class="info-key">⏰ เวลารับอาหาร</span>
+    <span class="info-val" id="s-time">07:30 น.</span>
   </div>
-
-  <!-- STAMP EARN -->
-  <div id="stamp-msg-box" style="display:none;background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:14px;padding:14px 16px;margin:14px 0;color:#fff;font-weight:700;font-size:14px;text-align:center"></div>
-
-  <!-- PREORDER NOTICE -->
-  <div id="preorder-notice" style="display:none;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px;padding:12px 16px;margin:10px 0;color:#fff;font-size:13px;font-weight:700;text-align:center"></div>
-
-  <p class="success-note">เราจะเตรียมอาหารให้พร้อม<br>รอรับได้ตามเวลาที่เลือกไว้เลยค่ะ</p>
-
-  <div class="success-btns">
-    <a class="btn-primary" id="btn-status" href="orders.html">📋 ดูสถานะออเดอร์</a>
-    <a class="btn-secondary" href="index.html">🛒 สั่งเพิ่มอีก</a>
+  <div class="info-row" id="s-location-row" style="display:none">
+    <span class="info-key">📍 จุดรับอาหาร</span>
+    <span class="info-val location-val" id="s-location">-</span>
   </div>
-  <div style="margin-top:10px;text-align:center">
-    <a href="index.html" style="font-size:12px;color:#aaa;text-decoration:none">← กลับหน้าหลัก</a>
+  <div class="info-row" id="s-date-row">
+    <span class="info-key">📅 วันที่สั่ง</span>
+    <span class="info-val" id="s-date">-</span>
   </div>
 </div>
 
+<!-- ITEMS -->
+<div class="card" id="s-items-card" style="display:none">
+  <div class="items-title">รายการที่สั่ง</div>
+  <div id="s-items-list"></div>
+  <div class="total-row">
+    <span class="total-label">ยอดรวมทั้งหมด</span>
+    <span class="total-val" id="s-total">0 บาท</span>
+  </div>
+</div>
 
-  <script src="js/success.js"></script>
+<!-- STAMP -->
+<div class="card" id="stamp-card" style="display:none">
+  <div class="stamp-box">
+    <div class="stamp-icon">⭐</div>
+    <div class="stamp-text" id="stamp-text"></div>
+    <div class="stamp-sub" id="stamp-sub"></div>
+  </div>
+</div>
+
+<!-- PREORDER -->
+<div class="card" id="preorder-card" style="display:none">
+  <div class="preorder-box" id="preorder-text"></div>
+</div>
+
+<!-- BUTTONS -->
+<div style="height:20px"></div>
+<div class="btn-wrap">
+  <a class="btn-main btn-primary" id="btn-status" href="orders.html">📋 ดูสถานะออเดอร์</a>
+  <a class="btn-main btn-secondary" href="index.html">🛒 สั่งเพิ่มอีก</a>
+</div>
+<div style="margin-top:12px;text-align:center">
+  <a href="index.html" class="btn-ghost">← กลับหน้าหลัก</a>
+</div>
+
+<script src="js/success.js"></script>
 </body>
 </html>
