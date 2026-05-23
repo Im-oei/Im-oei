@@ -62,36 +62,15 @@ service cloud.firestore {
 
     // ─── CUSTOMERS ────────────────────────────────────────────────────────────
     match /customers/{customerId} {
-      // อ่าน: admin หรือเจ้าของ (phone/lineId/guestId)
       allow read: if isFirebaseAdmin()
-        || (request.auth != null && request.auth.token.phone_number == customerId)
-        || (request.auth != null && request.auth.uid == customerId)
-        || customerId.matches('^guest_.*')
-        || customerId.matches('^line_.*');
-
-      // สร้าง: phone customer (มี phone field ถูกต้อง), LINE user (line_xxx), guest (guest_xxx)
-      allow create: if (
-          // Phone customer
-          request.resource.data.keys().hasAll(['phone'])
-          && isValidPhone(request.resource.data.phone)
-          && request.resource.data.phone == customerId
-        ) || (
-          // LINE user — customerId ขึ้นต้นด้วย line_ และมี lineId field
-          customerId.matches('^line_.*')
-          && request.resource.data.keys().hasAny(['lineId', 'source'])
-        ) || (
-          // Guest user — customerId ขึ้นต้นด้วย guest_
-          customerId.matches('^guest_.*')
-          && request.resource.data.keys().hasAny(['guestId', 'source'])
-        );
-
-      // อัปเดต: admin, เจ้าของ phone, LINE user เจ้าของตัวเอง, guest
+        || (request.auth != null
+          && request.auth.token.phone_number == customerId);
+      allow create: if request.resource.data.keys().hasAll(['phone'])
+        && isValidPhone(request.resource.data.phone)
+        && request.resource.data.phone == customerId;
       allow update: if isFirebaseAdmin()
-        || (request.auth != null && request.auth.token.phone_number == customerId)
-        || (request.auth != null && request.auth.uid == customerId)
-        || customerId.matches('^line_.*')
-        || customerId.matches('^guest_.*');
-
+        || (request.auth != null
+          && request.auth.token.phone_number == customerId);
       allow delete: if isFirebaseAdmin();
     }
 

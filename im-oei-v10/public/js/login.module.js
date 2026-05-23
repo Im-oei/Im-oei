@@ -329,9 +329,20 @@ try {
   if(sess){
     const user = JSON.parse(sess);
     if(Date.now()-(user.loginAt||0) < 8*60*60*1000){
+      // มี session ที่ยังใช้ได้ → แสดง banner ให้เลือก: ดำเนินการต่อ หรือ เปลี่ยนบัญชี
       const _returnTo3 = localStorage.getItem('imkum_return_to') || 'index.html';
-      localStorage.removeItem('imkum_return_to');
-      window.location.href = user.role==='customer' ? _returnTo3 : 'admin.html';
+      const banner = document.createElement('div');
+      banner.id = 'session-resume-banner';
+      banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:10000;background:linear-gradient(135deg,#FFF8E1,#FFE082);padding:16px 20px;box-shadow:0 2px 12px rgba(0,0,0,0.15);font-family:'Prompt',sans-serif;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;";
+      const name = user.name || 'คุณ';
+      const roleLabel = user.role === 'owner' ? '👑 เจ้าของร้าน' : user.role === 'admin' ? '🧑‍🍳 แอดมิน' : '👤 ' + name;
+      banner.innerHTML = `
+        <div style="font-size:14px;font-weight:700;color:#3E2000;">🔄 ยังคงล็อกอินอยู่ในชื่อ <span style="color:#B8860B">${roleLabel}</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="(function(){document.getElementById('session-resume-banner').remove();window.location.href='${_returnTo3}';})()" style="background:linear-gradient(135deg,#FFC107,#F5A623);border:none;border-radius:10px;padding:8px 18px;font-family:'Prompt',sans-serif;font-size:13px;font-weight:800;color:#3E2000;cursor:pointer;">ดำเนินการต่อ</button>
+          <button onclick="(function(){localStorage.removeItem('imkum_user');localStorage.removeItem('imkum_admin_auth');document.getElementById('session-resume-banner').remove();})()" style="background:#fff;border:2px solid #FFC107;border-radius:10px;padding:8px 18px;font-family:'Prompt',sans-serif;font-size:13px;font-weight:700;color:#666;cursor:pointer;">เปลี่ยนบัญชี</button>
+        </div>`;
+      document.body.appendChild(banner);
     } else {
       localStorage.removeItem('imkum_user');
     }
