@@ -258,22 +258,109 @@ function filterCat(key,el){
   buildMenuList();
 }
 function onSearch(val){currentSearch=val.toLowerCase().trim();buildMenuList();}
+// ====== FEATURED CAROUSEL (Phase 4: auto-scroll + swipe) ======
+var _featTimer = null;
+var _featIdx   = 0;
+
 function buildFeatured(){
-  var row=document.getElementById('featured-row');
-  row.innerHTML='';
-  FEATURED_IDS.forEach(function(fid){
-    var item=ALL_ITEMS.filter(function(i){return i.id===fid;})[0];
-    if(!item||item.hidden) return;
-    row.innerHTML+=
-      '<div class="featured-card">'+
-        '<div class="badge">BEST</div>'+
-        '<div class="fc-img">'+foodImg(item)+'</div>'+
-        '<div class="fc-info">'+
-          '<div class="fc-name">'+item.name+'</div>'+
-          '<div class="fc-price">'+item.price+' บาท</div>'+
-        '</div>'+
-        '<button class="fc-add" onclick="add(\''+item.id+'\')">+</button>'+
-      '</div>';
+  var wrap = document.getElementById('featured-row');
+  if (!wrap) return;
+
+  var items = FEATURED_IDS.map(function(fid){
+    return ALL_ITEMS.filter(function(i){ return i.id===fid; })[0];
+  }).filter(function(i){ return i && !i.hidden; });
+
+  if (!items.length) { wrap.innerHTML=''; return; }
+
+  // สร้าง cards
+  var cards = items.map(function(item){
+    return '<div class="featured-card">'+
+      '<div class="badge">BEST</div>'+
+      '<div class="fc-img">'+foodImg(item)+'</div>'+
+      '<div class="fc-info">'+
+        '<div class="fc-name">'+item.name+'</div>'+
+        '<div class="fc-price">'+item.price+' บาท</div>'+
+      '</div>'+
+      '<button class="fc-add" onclick="add(\''+item.id+'\')">+</button>'+
+    '</div>';
+  }).join('');
+
+  // dots
+  var dots = items.map(function(_,i){
+    return '<div class="fc-dot'+(i===0?' active':'')+'"></div>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<div class="fc-track" id="fc-track">'+cards+'</div>'+
+    (items.length > 1 ? '<div class="fc-dots" id="fc-dots">'+dots+'</div>' : '');
+
+  if (items.length <= 1) return;
+
+  var track   = document.getElementById('fc-track');
+  var dotsEl  = document.getElementById('fc-dots');
+  _featIdx = 0;
+
+  function goTo(n) {
+    _featIdx = (n + items.length) % items.length;
+    // scroll to card
+    var card = track.children[_featIdx];
+    if (card) {
+      track.scrollTo({ left: card.offsetLeft - 16, behavior: 'smooth' });
+    }
+    // update dots
+    var dotEls = dotsEl.children;
+    for (var i=0; i<dotEls.length; i++) {
+      dotEls[i].classList.toggle('active', i === _featIdx);
+    }
+  }
+
+  // auto-scroll ทุก 3.5 วิ
+  if (_featTimer) clearInterval(_featTimer);
+  _featTimer = setInterval(function(){ goTo(_featIdx + 1); }, 3500);
+
+  // swipe touch
+  var _sx = 0, _sy = 0;
+  track.addEventListener('touchstart', function(e){
+    _sx = e.touches[0].clientX;
+    _sy = e.touches[0].clientY;
+  }, { passive: true });
+  track.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - _sx;
+    var dy = e.changedTouches[0].clientY - _sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      clearInterval(_featTimer);
+      goTo(dx < 0 ? _featIdx + 1 : _featIdx - 1);
+      _featTimer = setInterval(function(){ goTo(_featIdx + 1); }, 3500);
+    }
+  }, { passive: true });
+
+  // swipe mouse (desktop)
+  var _mx = 0, _dragging = false;
+  track.addEventListener('mousedown', function(e){ _mx = e.clientX; _dragging = true; });
+  track.addEventListener('mouseup', function(e){
+    if (!_dragging) return; _dragging = false;
+    var dx = e.clientX - _mx;
+    if (Math.abs(dx) > 40) {
+      clearInterval(_featTimer);
+      goTo(dx < 0 ? _featIdx + 1 : _featIdx - 1);
+      _featTimer = setInterval(function(){ goTo(_featIdx + 1); }, 3500);
+    }
+  });
+  track.addEventListener('mouseleave', function(){ _dragging = false; });
+
+  // dot click
+  Array.prototype.forEach.call(dotsEl.children, function(d, i){
+    d.addEventListener('click', function(){
+      clearInterval(_featTimer);
+      goTo(i);
+      _featTimer = setInterval(function(){ goTo(_featIdx + 1); }, 3500);
+    });
+  });
+
+  // pause on hover
+  track.addEventListener('mouseenter', function(){ clearInterval(_featTimer); });
+  track.addEventListener('mouseleave', function(){
+    _featTimer = setInterval(function(){ goTo(_featIdx + 1); }, 3500);
   });
 }
 function buildMenuList(){

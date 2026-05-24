@@ -128,8 +128,48 @@
 .section-title span { font-size:18px; font-weight:800; color:#2B2B2B; font-family:'Prompt',sans-serif; }
 
 /* ─── FEATURED ROW ─── */
-.featured-row { display:flex; gap:14px; padding:0 16px 18px; overflow-x:auto; scrollbar-width:none; }
-.featured-row::-webkit-scrollbar { display:none; }
+.featured-row {
+  position: relative;
+  padding: 0 0 6px;
+  overflow: hidden;
+}
+
+/* ── Carousel Track ── */
+.fc-track {
+  display: flex;
+  gap: 14px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
+}
+.fc-track:active { cursor: grabbing; }
+.fc-track::-webkit-scrollbar { display: none; }
+.fc-track .featured-card { scroll-snap-align: start; }
+
+/* ── Dots ── */
+.fc-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 10px;
+}
+.fc-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,159,28,0.25);
+  transition: background 0.25s, transform 0.25s, width 0.25s;
+  cursor: pointer;
+}
+.fc-dot.active {
+  background: #FF9F1C;
+  width: 18px;
+  border-radius: 4px;
+  transform: scaleY(1.1);
+}
 .featured-card {
   flex-shrink:0; width:148px;
   background:#fff; border-radius:var(--r-lg,24px);

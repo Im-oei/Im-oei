@@ -110,7 +110,11 @@ service cloud.firestore {
         && request.resource.data.star is int
         && request.resource.data.star >= 1
         && request.resource.data.star <= 5;
-      allow update: if isFirebaseAdmin();
+      // Phase 4 fix: setDoc ต้องการ update permission ด้วย (กรณีรีวิวซ้ำ/แก้ไข)
+      allow update: if isFirebaseAdmin()
+        || (request.resource.data.star is int
+          && request.resource.data.star >= 1
+          && request.resource.data.star <= 5);
       allow delete: if isFirebaseAdmin();
     }
 
