@@ -215,6 +215,14 @@ function renderCart(){
     '</div>'+
     buildLocationSection()+
     '<div class="note-section"><label>หมายเหตุ (ถ้ามี)</label><textarea id="note-input" rows="3" maxlength="200" placeholder="เช่น ไม่ใส่พริก, เพิ่มผัก"></textarea></div>'+
+    '<div style="padding:12px 16px;border-top:1px solid #f3f4f6;">'+
+      '<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">🎟 รหัสคูปองส่วนลด</div>'+
+      '<div style="display:flex;gap:8px;">'+
+        '<input id="coupon-input" type="text" placeholder="กรอกรหัสคูปอง" style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:13px;text-transform:uppercase;">'+
+        '<button onclick="applyCoupon()" style="background:linear-gradient(135deg,#FF8C00,#FFC107);border:none;border-radius:10px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;color:#3E2000;cursor:pointer;white-space:nowrap;">ใช้คูปอง</button>'+
+      '</div>'+
+      '<div id="coupon-result" style="margin-top:8px;display:none;"></div>'+
+    '</div>'+
     '<div class="total-row"><span class="total-label">รวมทั้งหมด</span><span><span class="total-amount" id="cart-total">'+getTotal()+'</span><span class="total-unit">บาท</span></span></div>'+
     '<div class="confirm-btn-wrap"><button class="confirm-btn" onclick="checkout()">ยืนยันการสั่งซื้อ</button></div>';
   body.innerHTML=html;

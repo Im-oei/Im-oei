@@ -433,25 +433,26 @@ body{
   #app-loader {
     position: fixed; inset: 0; z-index: 99999;
     background: #FFF9F0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
   }
   #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  #app-loader .al-logo {
-    width: 88px; height: 88px;
-    border-radius: 24px;
-    object-fit: cover;
+  #app-loader .al-box {
+    width: 80px; height: 80px; border-radius: 22px;
+    background: linear-gradient(135deg, #FF8C00, #FFC107);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
     animation: alPulse 1.4s ease-in-out infinite;
+    box-shadow: 0 4px 20px rgba(255,140,0,0.3);
   }
   @keyframes alPulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
-    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
+    0%,100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,140,0,0.3); }
+    50% { transform: scale(1.08); box-shadow: 0 4px 30px rgba(255,140,0,0.5); }
   }
   </style>
 </head>
 <body>
-<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div></div>
+<div id="app-loader"><div class="al-box">🍱</div></div></div>
 
 <div class="page">
 

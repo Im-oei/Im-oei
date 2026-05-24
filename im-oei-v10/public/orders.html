@@ -15,7 +15,7 @@
 <meta name="robots" content="noindex,nofollow">
 </head>
 <body style="background:#F7F3EE;padding-bottom:80px;">
-<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div></div>
+<div id="app-loader"><div class="al-box">🍱</div></div></div>
 
 <div class="profile-hero">
   <a class="profile-back" href="index.html">
@@ -129,6 +129,28 @@
       <span class="sec-header-count" id="history-count" style="display:none">0</span>
     </div>
   </div>
+
+  <!-- ── History Filter / Search Bar ── -->
+  <div id="history-filter-bar" style="display:none;padding:0 16px 12px;gap:8px;flex-direction:column;">
+    <div style="position:relative;">
+      <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:0.45" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5D3A00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="history-search" type="search" placeholder="ค้นหาเมนู หรือ #ID..." autocomplete="off"
+        style="width:100%;box-sizing:border-box;padding:10px 12px 10px 36px;border-radius:14px;border:1.5px solid #F0E0C8;background:#fff;font-family:'Sarabun',sans-serif;font-size:14px;color:#3E2000;outline:none;"
+        oninput="filterHistory()">
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+      <button class="hf-chip active" data-status="all"    onclick="setHistoryFilter('all')">ทั้งหมด</button>
+      <button class="hf-chip"        data-status="done"   onclick="setHistoryFilter('done')">✅ รับแล้ว</button>
+      <button class="hf-chip"        data-status="cancelled" onclick="setHistoryFilter('cancelled')">❌ ยกเลิก</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button onclick="exportHistoryCSV()" style="background:none;border:1.5px solid #D4A96A;border-radius:10px;padding:6px 14px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;color:#7B3F00;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        ดาวน์โหลด CSV
+      </button>
+    </div>
+  </div>
+
   <div id="history-wrap"></div>
   <button class="show-more-btn" id="show-more-btn" style="display:none" onclick="showAllHistory()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>

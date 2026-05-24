@@ -188,6 +188,54 @@ exports.onOrderCreate = functions.region("asia-northeast1").firestore
 
     await batch.commit();
     console.log(`onOrderCreate: orderId=${snap.id}, stamps+${earned} for ${phone}`);
+
+    // ─── แจ้ง admin ผ่าน LINE ───────────────────────────────────────────────
+    try {
+      const token = functions.config().line?.token;
+      if (token) {
+        // ดึง lineUserId ของ admin ทุกคนจาก admins collection
+        const adminsSnap = await db.collection('admins').where('lineUserId', '!=', null).get();
+        if (!adminsSnap.empty) {
+          const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+          const orderData = snap.data();
+          const itemsSummary = (orderData.items || [])
+            .map(i => `• ${i.name} x${i.qty} = ${i.subtotal} บาท`).join('\n');
+          const msg = [
+            '🛍️ ออเดอร์ใหม่! #' + snap.id.slice(-6).toUpperCase(),
+            '👤 ' + (orderData.customerName || 'ไม่ระบุ'),
+            '⏰ รับ ' + (orderData.pickupTime || '07:30') + ' น.',
+            '📍 ' + (orderData.pickupLocationName || orderData.pickupLocation || '-'),
+            '─────────────────',
+            itemsSummary,
+            '─────────────────',
+            '💰 รวม ' + orderData.total + ' บาท',
+          ].join('\n');
+
+          const pushPromises = adminsSnap.docs.map(adminDoc => {
+            const adminLineId = adminDoc.data().lineUserId;
+            return fetch('https://api.line.me/v2/bot/message/push', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                to: adminLineId,
+                messages: [{ type: 'text', text: msg }],
+              }),
+            }).catch(e => console.warn('notify admin LINE failed:', e.message));
+          });
+          await Promise.all(pushPromises);
+          console.log(`onOrderCreate: notified ${adminsSnap.size} admin(s) via LINE`);
+        } else {
+          console.log('onOrderCreate: no admin with LINE linked');
+        }
+      } else {
+        console.log('onOrderCreate: LINE token not set, skip admin notify');
+      }
+    } catch(e) {
+      console.error('onOrderCreate: admin LINE notify error:', e.message);
+    }
   });
 
 // ─── 2. sendLineMessage: Callable Function (ป้องกัน public spam) ──────────
@@ -847,4 +895,93 @@ exports.validateAndCreateOrderHTTP = functions
       console.error(e);
       res.status(500).json({ error: e.message });
     }
+  });
+  });
+
+// ─── processPushJobs (Phase 4): onDocumentCreated → ส่ง Web Push ──────────────
+// trigger: เมื่อ admin เขียน pushJobs/{jobId} ใหม่
+exports.processPushJobs = functions
+  .region('asia-northeast1')
+  .firestore.document('pushJobs/{jobId}')
+  .onCreate(async (snap, context) => {
+    const job = snap.data();
+    if (!job || job.done) return null; // กันซ้ำ
+
+    const { orderId, status, title, body, url } = job;
+
+    try {
+      // 1) หา order เพื่อดึง phone / lineUserId
+      const orderSnap = await db.collection('orders').doc(orderId).get();
+      if (!orderSnap.exists) {
+        console.warn(`processPushJobs: order ${orderId} not found`);
+        await snap.ref.update({ done: true, error: 'order_not_found' });
+        return null;
+      }
+      const order = orderSnap.data();
+      const pushId = order.customerPhone || order.lineUserId;
+      if (!pushId) {
+        await snap.ref.update({ done: true, error: 'no_push_id' });
+        return null;
+      }
+
+      // 2) หา push subscription
+      const subSnap = await db.collection('pushSubscriptions').doc(pushId).get();
+      if (!subSnap.exists) {
+        console.log(`processPushJobs: no subscription for ${pushId}`);
+        await snap.ref.update({ done: true, error: 'no_subscription' });
+        return null;
+      }
+      const subData = subSnap.data().subscription;
+      if (!subData || !subData.endpoint) {
+        await snap.ref.update({ done: true, error: 'invalid_subscription' });
+        return null;
+      }
+
+      // 3) ส่ง Web Push ผ่าน web-push library (ต้อง set VAPID keys ใน config)
+      // NOTE: ต้องติดตั้ง web-push: npm install web-push --save (ใน functions/)
+      // และ set firebase functions:config:set vapid.public="..." vapid.private="..." vapid.subject="mailto:..."
+      let webpush;
+      try {
+        webpush = require('web-push');
+      } catch(e) {
+        // web-push ยังไม่ได้ติดตั้ง — ใช้ fetch ส่ง raw Web Push แทนไม่ได้
+        // log แจ้งให้ developer ทราบ แล้ว mark done เพื่อไม่ retry
+        console.error('processPushJobs: web-push not installed. Run: npm install web-push --save');
+        await snap.ref.update({ done: true, error: 'web_push_not_installed' });
+        return null;
+      }
+
+      const vapidPublic  = process.env.VAPID_PUBLIC  || functions.config().vapid?.public;
+      const vapidPrivate = process.env.VAPID_PRIVATE || functions.config().vapid?.private;
+      const vapidSubject = process.env.VAPID_SUBJECT || functions.config().vapid?.subject || 'mailto:admin@im-oei.com';
+
+      if (!vapidPublic || !vapidPrivate) {
+        console.error('processPushJobs: VAPID keys not configured');
+        await snap.ref.update({ done: true, error: 'vapid_not_configured' });
+        return null;
+      }
+
+      webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
+
+      const payload = JSON.stringify({
+        title: title || 'อิ่มเอ๋ย 🍱',
+        body: body || 'สถานะออเดอร์เปลี่ยนแล้ว',
+        icon: '/logo.webp',
+        tag: `order-${orderId}`,
+        url: url || `/orders.html?highlight=${orderId}`
+      });
+
+      await webpush.sendNotification(subData, payload);
+      console.log(`processPushJobs: sent push to ${pushId} for order ${orderId} → ${status}`);
+      await snap.ref.update({ done: true, sentAt: admin.firestore.FieldValue.serverTimestamp() });
+    } catch(e) {
+      console.error('processPushJobs error:', e.message);
+      // endpoint หมดอายุ (410) → ลบ subscription
+      if (e.statusCode === 410 || e.statusCode === 404) {
+        const pushId = (await db.collection('orders').doc(orderId).get()).data()?.customerPhone;
+        if (pushId) await db.collection('pushSubscriptions').doc(pushId).delete();
+      }
+      await snap.ref.update({ done: true, error: e.message });
+    }
+    return null;
   });

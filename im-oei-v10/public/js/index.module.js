@@ -105,6 +105,21 @@ async function syncFirestore(){
       });
     } catch(ce) { console.warn('categories load skipped:', ce.message); }
 
+    // ── Menu Cache: ใช้ cache ถ้าไม่เกิน 5 นาที ──
+    const MENU_CACHE_KEY = 'imkum_menu_cache';
+    const MENU_CACHE_TTL = 5 * 60 * 1000;
+    let usedCache = false;
+    try {
+      const cached = JSON.parse(localStorage.getItem(MENU_CACHE_KEY) || 'null');
+      if (cached && cached.ts && (Date.now() - cached.ts < MENU_CACHE_TTL) && cached.menu?.length) {
+        MENU = cached.menu;
+        ALL_ITEMS = [].concat(...MENU.map(c => c.items));
+        buildTabs(); buildFeatured(); buildMenuList(); render();
+        usedCache = true;
+        console.log('[Menu] loaded from cache');
+      }
+    } catch(ce) {}
+
     const mSnap=await getDocs(collection(db,'menu'));
     if(!mSnap.empty){
       const catMap={};
@@ -121,6 +136,8 @@ async function syncFirestore(){
       });
       MENU=Object.values(catMap).sort((a,b)=>(a.sortOrder||99)-(b.sortOrder||99));
       ALL_ITEMS=[].concat(...MENU.map(c=>c.items));
+      // บันทึก cache
+      try { localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ ts: Date.now(), menu: MENU })); } catch(e) {}
       buildTabs(); buildFeatured(); buildMenuList(); render();
     }
 
@@ -153,3 +170,21 @@ syncFirestore();
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').catch(()=>{});
 }
+
+// ===== REFERRAL SYSTEM =====
+(async function initReferral() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  if (ref) {
+    localStorage.setItem('imkum_referral', ref);
+    // บันทึก referral click ใน Firestore
+    try {
+      const { getFirestore, doc, setDoc, increment } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const db2 = getFirestore();
+      await setDoc(doc(db2, 'referrals', ref), {
+        clicks: increment(1),
+        lastClickAt: new Date(),
+      }, { merge: true });
+    } catch(e) {}
+  }
+})();

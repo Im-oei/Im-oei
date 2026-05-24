@@ -475,44 +475,27 @@
   #app-loader {
     position: fixed; inset: 0; z-index: 99999;
     background: #FFF9F0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
   }
   #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  #app-loader .al-logo {
-    width: 88px; height: 88px;
-    border-radius: 24px;
-    object-fit: cover;
+  #app-loader .al-box {
+    width: 80px; height: 80px; border-radius: 22px;
+    background: linear-gradient(135deg, #FF8C00, #FFC107);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
     animation: alPulse 1.4s ease-in-out infinite;
+    box-shadow: 0 4px 20px rgba(255,140,0,0.3);
   }
   @keyframes alPulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
-    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
-  }
-  
-  #app-loader {
-    position: fixed; inset: 0; z-index: 99999;
-    background: #FFF9F0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-  }
-  #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  #app-loader .al-logo {
-    width: 88px; height: 88px;
-    border-radius: 24px; object-fit: cover;
-    animation: alPulse 1.4s ease-in-out infinite;
-  }
-  @keyframes alPulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
-    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
+    0%,100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,140,0,0.3); }
+    50% { transform: scale(1.08); box-shadow: 0 4px 30px rgba(255,140,0,0.5); }
   }
   </style>
 <meta name="robots" content="noindex,nofollow">
 </head>
 <body>
-<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div>
+<div id="app-loader"><div class="al-box">🍱</div></div>
 <script>
 (function(){
   const token = localStorage.getItem('imoei_admin_token');
@@ -527,9 +510,9 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-img">🍱</div>
+    <img src="icon-192.png" style="width:40px;height:40px;border-radius:12px;object-fit:cover;flex-shrink:0;">
     <div class="logo-text">
-      <div class="name">อิ่มเอ้ย - IM OEI</div>
+      <div class="name">อิ่มเอ๋ย Im-oei</div>
       <span class="badge">Admin ✓</span>
     </div>
   </div>
@@ -565,6 +548,12 @@
     <a class="nav-item" href="qr.html" target="_blank" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px">
       <span class="icon">📲</span> QR Code ร้าน
     </a>
+    <a class="nav-item" href="#" onclick="switchTab('backend',this);return false;">
+      <span class="icon">💻</span> Backend
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('coupons',this);return false;">
+      <span class="icon">🎟</span> คูปอง
+    </a>
   </nav>
 
 </aside>
@@ -577,12 +566,17 @@
   <!-- TOPBAR -->
   <header class="topbar">
     <button class="hamburger" onclick="toggleSidebar()" aria-label="เมนู">☰</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <img src="icon-192.png" style="width:32px;height:32px;border-radius:9px;object-fit:cover;">
+      <span style="font-family:'Prompt',sans-serif;font-size:14px;font-weight:700;color:#3E2000;white-space:nowrap;">อิ่มเอ๋ย Im-oei</span>
+    </div>
     <div class="search-box">
       <span>🔍</span>
       <input type="text" id="global-search" placeholder="ค้นหาเมนู, ออเดอร์, ลูกค้า..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
     </div>
     <div class="topbar-right">
       <div class="notif-btn" onclick="toggleNotifications()" style="cursor:pointer">🔔<div class="dot" id="notif-badge" style="display:none">0</div></div>
+      <button onclick="adminLogout()" style="background:#fff0f0;border:1.5px solid #fca5a5;border-radius:10px;padding:6px 14px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff0f0'">🚪 ออกจากระบบ</button>
       <div class="user-chip" onclick="toggleUserMenu()" style="cursor:pointer;position:relative;">
         <div class="user-avatar" style="background:#fed7aa;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
         <div class="user-info">
@@ -1103,7 +1097,8 @@
       <div class="page-header-row">
         <div><h1>📊 สถิติ & รายงาน</h1><p>วิเคราะห์ยอดขายและพฤติกรรมลูกค้า</p></div>
         <div style="display:flex;gap:8px">
-          <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="exportOrdersCSV()">📥 Export CSV</button>
+          <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="exportOrdersCSV()">📥 CSV</button>
+          <button class="btn-secondary" style="font-size:12px;padding:6px 12px;background:linear-gradient(135deg,#217346,#2e7d32);color:#fff;border:none;" onclick="exportOrdersExcel()">📊 Excel</button>
         </div>
       </div>
     </div>
@@ -1112,6 +1107,17 @@
       <button class="period-btn" id="period-week" onclick="setStatsPeriod('week')">7 วัน</button>
       <button class="period-btn" id="period-month" onclick="setStatsPeriod('month')">เดือนนี้</button>
       <button class="period-btn" id="period-year" onclick="setStatsPeriod('year')">ปีนี้</button>
+    </div>
+    
+    <!-- เมนูขายดีรายเดือน -->
+    <div class="section-card" style="margin-top:16px;">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>🏆 เมนูขายดีเดือนนี้</span>
+        <button onclick="renderTopMenuChart()" style="font-size:12px;background:none;border:none;color:#FF8C00;cursor:pointer;font-weight:700;">🔄 รีเฟรช</button>
+      </div>
+      <div id="top-menu-chart-wrap" style="margin-top:12px;">
+        <div style="text-align:center;color:#9ca3af;padding:20px;font-size:13px;">กด รีเฟรช เพื่อโหลดข้อมูล</div>
+      </div>
     </div>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-value" id="kpi-revenue">—</div><div class="kpi-label">รายได้รวม</div><div class="kpi-vs" id="kpi-revenue-vs"></div></div>
@@ -1153,6 +1159,33 @@
     <div class="page-header">
       <div class="page-header-row">
         <div><h1>🏪 จัดการร้านค้า</h1><p>ตั้งค่าการรับออเดอร์และจุดรับอาหาร</p></div>
+      </div>
+    </div>
+
+
+    <!-- GAS LINE Notify Setting -->
+    <div class="section-card" style="margin-bottom:16px;">
+      <div class="section-title">🔔 LINE แจ้งเตือนออเดอร์ (Google Apps Script)</div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">วาง URL จาก Google Apps Script เพื่อรับแจ้งเตือนออเดอร์ใหม่และส่งข้อความหาลูกค้าผ่าน LINE</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="gas-url-input" type="text" placeholder="https://script.google.com/macros/s/..." 
+          style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;outline:none;">
+        <button onclick="saveGasUrl()" style="background:linear-gradient(135deg,#FF8C00,#FFC107);border:none;border-radius:10px;padding:10px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#3E2000;cursor:pointer;white-space:nowrap;">💾 บันทึก</button>
+      </div>
+      <button onclick="testGasLine()" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:8px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#166534;cursor:pointer;">📤 ทดสอบส่ง LINE</button>
+    </div>
+    <!-- LINE ID Linking -->
+    <div class="section-card" style="margin-bottom:16px;">
+      <div class="section-title">🟢 เชื่อมต่อ LINE ของแอดมิน</div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">ผูก LINE ID กับบัญชีแอดมิน เพื่อรับแจ้งเตือนและแชทกับลูกค้าได้</p>
+      <div id="admin-line-status" style="margin-bottom:12px;font-size:13px;color:#6b7280;">กำลังโหลด...</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="linkAdminLine()" style="background:linear-gradient(135deg,#00B900,#00D100);border:none;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" style="width:18px;height:18px;"> เชื่อมต่อ LINE
+        </button>
+        <button onclick="unlinkAdminLine()" id="admin-unlink-btn" style="display:none;background:#fff;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;color:#ef4444;cursor:pointer;">
+          ยกเลิกการเชื่อมต่อ
+        </button>
       </div>
     </div>
     <div class="section-card">
@@ -1307,8 +1340,265 @@
     </div>
   </div>
 
+
+  <!-- ===== BACKEND PANEL ===== -->
+  <div id="panel-backend" class="panel" style="display:none">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>💻 Backend Monitor</h1><p>ตรวจสอบสถานะระบบ Firebase แบบ Realtime</p></div>
+        <button onclick="refreshBackend()" class="btn-secondary" style="display:flex;align-items:center;gap:6px;"><span id="backend-refresh-icon">🔄</span> รีเฟรช</button>
+      </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="stat-cards" style="margin-bottom:16px;">
+      <div class="stat-card primary" id="backend-firestore-card">
+        <div class="stat-icon" style="background:rgba(255,255,255,0.2);font-size:20px;">🔥</div>
+        <div class="stat-info">
+          <div class="stat-label">Firestore</div>
+          <div class="stat-value" id="backend-firestore-status">กำลังตรวจ...</div>
+        </div>
+      </div>
+      <div class="stat-card" id="backend-auth-card">
+        <div class="stat-icon blue" style="font-size:20px;">🔐</div>
+        <div class="stat-info">
+          <div class="stat-label">Auth</div>
+          <div class="stat-value" id="backend-auth-status">กำลังตรวจ...</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green" style="font-size:20px;">📖</div>
+        <div class="stat-info">
+          <div class="stat-label">Reads (session)</div>
+          <div class="stat-value" id="backend-reads">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow" style="font-size:20px;">✏️</div>
+        <div class="stat-info">
+          <div class="stat-label">Writes (session)</div>
+          <div class="stat-value" id="backend-writes">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fee2e2;font-size:20px;">❌</div>
+        <div class="stat-info">
+          <div class="stat-label">Errors (session)</div>
+          <div class="stat-value" id="backend-errors" style="color:#ef4444;">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Log Realtime -->
+    <div class="section-card" style="margin-bottom:16px;">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>📋 Order Log Realtime</span>
+        <span id="backend-order-live" style="font-size:11px;font-weight:600;color:#22c55e;display:flex;align-items:center;gap:4px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:pulse 1.5s infinite;"></span> LIVE
+        </span>
+      </div>
+      <div id="backend-order-log" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;color:#9ca3af;padding:20px;font-size:13px;">กำลังโหลด...</div>
+      </div>
+    </div>
+
+    <!-- Error Log -->
+    <div class="section-card" style="margin-bottom:16px;">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>⚠️ Error Log</span>
+        <button onclick="clearErrorLog()" style="font-size:12px;background:none;border:none;color:#9ca3af;cursor:pointer;">🗑 ล้าง</button>
+      </div>
+      <div id="backend-error-log" style="max-height:200px;overflow-y:auto;font-family:monospace;font-size:12px;color:#374151;">
+        <div style="color:#9ca3af;padding:8px;">ไม่มี error ✅</div>
+      </div>
+    </div>
+
+    <!-- Firebase Collections Info -->
+    <div class="section-card">
+      <div class="section-title">🗄️ Collections</div>
+      <div id="backend-collections" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="color:#9ca3af;font-size:13px;padding:8px;">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+
+
+    <!-- Load Test -->
+    <div class="section-card">
+      <div class="section-title">🧪 Load Test</div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">สร้าง test orders เพื่อทดสอบระบบ — ทุก order มี tag <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">isTest: true</code> ลบได้ง่าย</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <select id="load-test-count" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          <option value="10">10 orders</option>
+          <option value="50">50 orders</option>
+          <option value="100" selected>100 orders</option>
+        </select>
+        <button onclick="runLoadTest()" style="background:linear-gradient(135deg,#FF8C00,#FFC107);border:none;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#3E2000;cursor:pointer;">🚀 สร้าง Test Orders</button>
+        <button onclick="deleteTestOrders()" style="background:#fff0f0;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;">🗑 ลบ Test Orders ทั้งหมด</button>
+      </div>
+      <div id="load-test-progress" style="display:none;">
+        <div style="background:#f3f4f6;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+          <div id="load-test-bar" style="height:8px;background:linear-gradient(90deg,#FF8C00,#FFC107);width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="load-test-status" style="font-size:13px;color:#6b7280;"></div>
+      </div>
+
+    <!-- Load Test -->
+    <div class="section-card">
+      <div class="section-title">🧪 Load Test</div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">สร้าง test orders เพื่อทดสอบระบบ — ทุก order มี tag <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">isTest: true</code> ลบได้ง่าย</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <select id="load-test-count" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          <option value="10">10 orders</option>
+          <option value="50">50 orders</option>
+          <option value="100" selected>100 orders</option>
+        </select>
+        <button onclick="runLoadTest()" style="background:linear-gradient(135deg,#FF8C00,#FFC107);border:none;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#3E2000;cursor:pointer;">🚀 สร้าง Test Orders</button>
+        <button onclick="deleteTestOrders()" style="background:#fff0f0;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;">🗑 ลบ Test Orders ทั้งหมด</button>
+      </div>
+      <div id="load-test-progress" style="display:none;">
+        <div style="background:#f3f4f6;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+          <div id="load-test-bar" style="height:8px;background:linear-gradient(90deg,#FF8C00,#FFC107);width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="load-test-status" style="font-size:13px;color:#6b7280;"></div>
+      </div>
+    </div>
+
+    <!-- Bot Concurrent Test -->
+    <div class="section-card" style="margin-top:16px;">
+      <div class="section-title">🤖 Bot Test — Concurrent Users</div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">จำลอง user หลายคนสั่งพร้อมกัน เพื่อทดสอบ Firestore รับโหลดได้ไหม</p>
+      
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end;">
+        <div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">จำนวน Users</div>
+          <select id="bot-user-count" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+            <option value="3">3 users</option>
+            <option value="5">5 users</option>
+            <option value="10" selected>10 users</option>
+            <option value="20">20 users</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Orders ต่อ User</div>
+          <select id="bot-order-per-user" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+            <option value="5">5 orders</option>
+            <option value="10" selected>10 orders</option>
+            <option value="20">20 orders</option>
+          </select>
+        </div>
+        <div style="font-size:13px;color:#FF8C00;font-weight:700;padding-bottom:8px;">= <span id="bot-total-label">100</span> orders</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="runBotTest()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;">🤖 เริ่ม Bot</button>
+        <button onclick="deleteTestOrders()" style="background:#fff0f0;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 20px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;">🗑 ลบ Test Orders</button>
+      </div>
+
+      <div style="background:#f3f4f6;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+        <div id="bot-progress-bar" style="height:8px;background:linear-gradient(90deg,#7c3aed,#a855f7);width:0%;transition:width 0.2s;"></div>
+      </div>
+      <div id="bot-status" style="font-size:13px;color:#6b7280;margin-bottom:8px;"></div>
+
+      <div id="bot-log" style="max-height:240px;overflow-y:auto;background:#0f172a;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:1px;"></div>
+    </div>
+    </div>
+
+  <!-- ===== COUPON PANEL ===== -->
+  <div id="panel-coupons" class="panel" style="display:none">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>🎟 จัดการคูปอง</h1><p>สร้างและจัดการรหัสส่วนลด</p></div>
+        <button onclick="showAddCoupon()" class="btn-primary">+ เพิ่มคูปอง</button>
+      </div>
+    </div>
+
+    <!-- Add Coupon Form -->
+    <div id="coupon-form-wrap" class="section-card" style="display:none;margin-bottom:16px;">
+      <div class="section-title">➕ สร้างคูปองใหม่</div>
+      <div style="display:grid;gap:12px;margin-top:12px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">รหัสคูปอง *</div>
+            <input id="cp-code" placeholder="เช่น SAVE50" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;text-transform:uppercase;">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">ชื่อคูปอง</div>
+            <input id="cp-name" placeholder="เช่น ลด 50 บาท" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:120px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">ประเภท</div>
+            <select id="cp-type" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+              <option value="fixed">ลดเป็นบาท</option>
+              <option value="percent">ลดเป็น %</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">มูลค่า</div>
+            <input id="cp-value" type="number" placeholder="50" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">ขั้นต่ำ (บาท)</div>
+            <input id="cp-min" type="number" placeholder="0" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">ใช้ได้กี่ครั้ง</div>
+            <input id="cp-max" type="number" placeholder="100" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">วันเริ่ม</div>
+            <input id="cp-start" type="date" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">วันหมดอายุ</div>
+            <input id="cp-end" type="date" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="saveCoupon()" class="btn-primary">💾 บันทึก</button>
+          <button onclick="document.getElementById('coupon-form-wrap').style.display='none'" class="btn-secondary">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coupon List -->
+    <div class="section-card">
+      <div class="section-title">รายการคูปองทั้งหมด</div>
+      <div id="coupon-list" style="margin-top:12px;">
+        <div style="text-align:center;color:#9ca3af;padding:20px;">กำลังโหลด...</div>
+      </div>
+    </div>
+
+    <!-- Referral Links -->
+    <div class="section-card" style="margin-top:16px;">
+      <div class="section-title">🔗 Referral Links</div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">สร้างลิงก์แนะนำสำหรับแต่ละคน ติดตามได้ว่าใครพาลูกค้ามาได้กี่คน</p>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="ref-name-input" placeholder="ชื่อผู้แนะนำ เช่น สมชาย" style="flex:1;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'Sarabun',sans-serif;font-size:13px;">
+        <button onclick="generateReferralLink()" style="background:linear-gradient(135deg,#FF8C00,#FFC107);border:none;border-radius:10px;padding:10px 16px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;color:#3E2000;cursor:pointer;">🔗 สร้างลิงก์</button>
+      </div>
+      <div id="ref-result" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">ลิงก์แนะนำ:</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="ref-link-output" readonly style="flex:1;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff;">
+          <button onclick="copyRefLink()" style="padding:8px 14px;background:#16a34a;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">📋 Copy</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+        <div class="section-title" style="margin:0;">📊 สถิติ Referral</div>
+        <button onclick="loadReferralStats()" style="font-size:12px;background:none;border:none;color:#FF8C00;cursor:pointer;font-weight:700;">🔄 โหลด</button>
+      </div>
+      <div id="referral-stats" style="margin-top:8px;">
+        <div style="text-align:center;color:#9ca3af;padding:16px;font-size:13px;">กด "โหลด" เพื่อดูสถิติ</div>
+      </div>
+    </div>
+  </div>
   </div><!-- /content -->
-  <div class="footer">© 2024 อิ่มเอ้ย - IM OEI Admin Panel ❤️</div>
+  <div class="footer">© 2024 อิ่มเอ๋ย Im-oei Admin Panel ❤️</div>
 </div><!-- /main -->
 
 <script>
@@ -1403,6 +1693,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(document.readyState==='complete'){setTimeout(hideLoader,350);}
   else{window.addEventListener('load',function(){setTimeout(hideLoader,350);});}
 })();
+</script>
+<script>
+// Bot total calculator
+function updateBotTotal(){
+  const u = parseInt(document.getElementById('bot-user-count')?.value||10);
+  const o = parseInt(document.getElementById('bot-order-per-user')?.value||10);
+  const el = document.getElementById('bot-total-label');
+  if(el) el.textContent = u*o;
+}
+document.addEventListener('change', function(e){
+  if(e.target.id==='bot-user-count'||e.target.id==='bot-order-per-user') updateBotTotal();
+});
 </script>
 </body>
 </html>

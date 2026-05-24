@@ -546,7 +546,10 @@ function renderOrderCard(o, searchQuery) {
     preparing: `<button class="action-btn btn-ready" onclick="updateStatus('${o.id}','ready')">🟢 พร้อมรับ</button>
                  <button class="action-btn btn-cancel" onclick="updateStatus('${o.id}','cancelled')">❌ ยกเลิก</button>`,
     ready: `<button class="action-btn btn-done" onclick="updateStatus('${o.id}','done')">✅ รับแล้ว</button>
-               <button class="action-btn" style="background:#E8F5E9;color:#2E7D32" onclick="notifyCustomer('${o.id}','${esc(o.customerName||'').replace(/'/g,'')}','${o.pickupTime||'07:30'}')">${notifyBtnLabel}</button>
+               ${o.lineUserId
+                 ? `<button class="action-btn" style="background:#E8F5E9;color:#2E7D32" onclick="notifyCustomerLine('${o.id}','${esc(o.customerName||'').replace(/'/g,'')}','${o.pickupTime||'07:30'}','${o.lineUserId}')">💬 แจ้งลูกค้า LINE</button>`
+                 : `<button class="action-btn" style="background:#f3f4f6;color:#9ca3af;cursor:not-allowed;" disabled>💬 ไม่มี LINE ID</button>`
+               }
                ${lineBadge}`,
     done: `${lineBadge}`, cancelled: ``
   }[o.status] || '';
@@ -2338,6 +2341,25 @@ window.updateStatus = async function(id, status) {
       ready:'🟢 พร้อมรับแล้ว', done:'✅ รับอาหารแล้ว', cancelled:'❌ ยกเลิกแล้ว'
     }[status] || 'อัปเดตแล้ว');
     if (typeof window.playStatusSound === 'function') window.playStatusSound();
+
+    // Phase 4: เขียน pushJob → Cloud Function ส่ง Web Push อัตโนมัติ
+    try {
+      const statusIcon = { pending:'🟡', preparing:'🔵', ready:'🟢', done:'✅', cancelled:'❌' };
+      const statusTH   = { pending:'รอรับออเดอร์', preparing:'กำลังทำอาหาร', ready:'พร้อมรับแล้ว!', done:'รับอาหารแล้ว', cancelled:'ยกเลิกแล้ว' };
+      const icon = statusIcon[status] || '📋';
+      const title = status === 'ready' ? '🟢 อาหารพร้อมแล้ว!' : `${icon} สถานะออเดอร์อัปเดต`;
+      const body  = status === 'ready'
+        ? `ออเดอร์ #${id.slice(0,6).toUpperCase()} พร้อมรับแล้ว มาได้เลย!`
+        : `ออเดอร์ #${id.slice(0,6).toUpperCase()} → ${statusTH[status] || status}`;
+      const { addDoc, collection: fsCol } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await addDoc(fsCol(db, 'pushJobs'), {
+        orderId: id, status, title, body,
+        url: `/orders.html?highlight=${id}`,
+        createdAt: serverTimestamp(), done: false
+      });
+    } catch(pushErr) {
+      console.warn('pushJob write failed:', pushErr.message);
+    }
   } catch(e) {
     showToast('❌ อัปเดตไม่ได้: ' + (e.code || e.message));
   } finally {
@@ -2356,5 +2378,902 @@ window.deleteOrder = async function(id) {
     showToast('❌ ลบไม่ได้: ' + (e.code || e.message));
   } finally {
     showLoading(false);
+  }
+};
+
+window.openLineChat = function(lineUserId, customerName) {
+  if (!lineUserId) { alert('ลูกค้ารายนี้ไม่มี LINE ID'); return; }
+  // เปิด LINE chat หาลูกค้าโดยตรง
+  const lineId = lineUserId.replace(/^line_/, '');
+  window.open('https://line.me/ti/p/~' + lineId, '_blank');
+};
+
+// ===== LINE ID LINKING FOR ADMIN =====
+window.linkAdminLine = async function() {
+  try {
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const user = getAuth().currentUser;
+    if (!user) { showToast('❌ กรุณา login ก่อน'); return; }
+
+    // Load LIFF SDK dynamically
+    if (!window.liff) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    const LIFF_ID = '2009910221-y5bGklzJ'; // same LIFF ID as login
+    if (!window._adminLiffInited) {
+      await window.liff.init({ liffId: LIFF_ID });
+      window._adminLiffInited = true;
+    }
+
+    if (!window.liff.isLoggedIn()) {
+      localStorage.setItem('admin_line_link_pending', '1');
+      window.liff.login({ redirectUri: window.location.href });
+      return;
+    }
+
+    const profile = await window.liff.getProfile();
+    const lineUserId = profile.userId;
+    const lineDisplayName = profile.displayName;
+
+    // Save to Firestore under admins collection
+    const { getFirestore, doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const db2 = getFirestore();
+    await setDoc(doc(db2, 'admins', user.uid), {
+      lineUserId,
+      lineDisplayName,
+      email: user.email,
+      updatedAt: new Date()
+    }, { merge: true });
+
+    // Save to localStorage for quick access
+    const u = JSON.parse(localStorage.getItem('imkum_user') || '{}');
+    u.lineUserId = lineUserId;
+    localStorage.setItem('imkum_user', JSON.stringify(u));
+
+    showToast('✅ เชื่อมต่อ LINE สำเร็จ: ' + lineDisplayName);
+    renderAdminLineStatus();
+  } catch(e) {
+    showToast('❌ เชื่อมต่อ LINE ไม่ได้: ' + e.message);
+  }
+};
+
+window.unlinkAdminLine = async function() {
+  if (!confirm('ต้องการยกเลิกการเชื่อมต่อ LINE?')) return;
+  try {
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const user = getAuth().currentUser;
+    const { getFirestore, doc, updateDoc, deleteField } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const db2 = getFirestore();
+    await updateDoc(doc(db2, 'admins', user.uid), {
+      lineUserId: deleteField(),
+      lineDisplayName: deleteField()
+    });
+    const u = JSON.parse(localStorage.getItem('imkum_user') || '{}');
+    delete u.lineUserId;
+    localStorage.setItem('imkum_user', JSON.stringify(u));
+    showToast('✅ ยกเลิกการเชื่อมต่อ LINE แล้ว');
+    renderAdminLineStatus();
+  } catch(e) {
+    showToast('❌ ยกเลิกไม่ได้: ' + e.message);
+  }
+};
+
+async function renderAdminLineStatus() {
+  const el = document.getElementById('admin-line-status');
+  const unlinkBtn = document.getElementById('admin-unlink-btn');
+  if (!el) return;
+  try {
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const user = getAuth().currentUser;
+    if (!user) { el.textContent = 'กรุณา login'; return; }
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDoc(doc(getFirestore(), 'admins', user.uid));
+    if (snap.exists() && snap.data().lineUserId) {
+      const d = snap.data();
+      el.innerHTML = `<span style="color:#00B900;font-weight:700;">✅ เชื่อมต่อแล้ว: ${d.lineDisplayName || d.lineUserId}</span>`;
+      if (unlinkBtn) unlinkBtn.style.display = 'block';
+    } else {
+      el.textContent = '⚠️ ยังไม่ได้เชื่อมต่อ LINE';
+      if (unlinkBtn) unlinkBtn.style.display = 'none';
+    }
+  } catch(e) { el.textContent = 'ไม่สามารถโหลดได้'; }
+}
+
+// Auto-render when switching to store tab
+const _origSwitchTab = window.switchTab;
+window.switchTab = function(tab, el) {
+  _origSwitchTab && _origSwitchTab(tab, el);
+  if (tab === 'store') setTimeout(renderAdminLineStatus, 300);
+  if (tab === 'stats') setTimeout(() => { window.renderTopMenuChart && window.renderTopMenuChart(); }, 400);
+};
+
+// Handle LINE link redirect back
+if (localStorage.getItem('admin_line_link_pending') === '1') {
+  localStorage.removeItem('admin_line_link_pending');
+  setTimeout(() => window.linkAdminLine && window.linkAdminLine(), 1000);
+}
+
+// ===== GAS LINE NOTIFY =====
+async function getGasUrl() {
+  // อ่านจาก Firestore settings/store
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'store'));
+    return snap.exists() ? (snap.data().gasNotifyUrl || '') : '';
+  } catch(e) { return ''; }
+}
+
+async function notifyAdminNewOrder(order) {
+  const gasUrl = await getGasUrl();
+  if (!gasUrl) { console.log('GAS URL not set'); return; }
+
+  // ดึง lineUserId ของ admin ทุกคน
+  try {
+    const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const adminsSnap = await getDocs(collection(db, 'admins'));
+    const adminLineIds = adminsSnap.docs
+      .map(d => d.data().lineUserId)
+      .filter(Boolean);
+
+    if (adminLineIds.length === 0) { console.log('No admin LINE linked'); return; }
+
+    await fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        type: 'new_order',
+        adminLineIds,
+        order: {
+          id: order.id,
+          customerName: order.customerName,
+          total: order.total,
+          items: order.items,
+          pickupTime: order.pickupTime,
+          pickupLocationName: order.pickupLocationName,
+        }
+      })
+    });
+    console.log('Admin notified via GAS LINE');
+  } catch(e) {
+    console.warn('notifyAdminNewOrder error:', e.message);
+  }
+}
+
+window.notifyCustomerLine = async function(orderId, customerName, pickupTime, customerLineId) {
+  const gasUrl = await getGasUrl();
+  if (!gasUrl) { showToast('❌ ยังไม่ได้ตั้งค่า GAS URL'); return; }
+  if (!customerLineId) { showToast('❌ ลูกค้ารายนี้ไม่มี LINE ID'); return; }
+
+  try {
+    showToast('📤 กำลังส่ง LINE...');
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        type: 'notify_customer',
+        customerLineId,
+        customerName,
+        orderId,
+        pickupTime,
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✅ ส่ง LINE ให้ลูกค้าแล้ว');
+      // update order status badge
+      await updateDoc(doc(db, 'orders', orderId), {
+        lineNotifiedAt: new Date(),
+        lineNotifyStatus: 'sent'
+      });
+    } else {
+      showToast('❌ ส่งไม่ได้: ' + (data.error || ''));
+    }
+  } catch(e) {
+    showToast('❌ ส่ง LINE ไม่ได้: ' + e.message);
+  }
+};
+
+window.testGasLine = async function() {
+  const gasUrl = await getGasUrl();
+  if (!gasUrl) { showToast('❌ ยังไม่ได้ตั้งค่า GAS URL'); return; }
+  try {
+    const u = JSON.parse(localStorage.getItem('imkum_user') || '{}');
+    const lineId = u.lineUserId;
+    if (!lineId) { showToast('❌ กรุณาผูก LINE ID admin ก่อน'); return; }
+    showToast('📤 กำลังทดสอบ...');
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'test', lineId })
+    });
+    const data = await res.json();
+    showToast(data.ok ? '✅ ทดสอบสำเร็จ! เช็ค LINE ได้เลย' : '❌ ทดสอบไม่ผ่าน: ' + data.error);
+  } catch(e) {
+    showToast('❌ ทดสอบไม่ได้: ' + e.message);
+  }
+};
+
+window.saveGasUrl = async function() {
+  const url = document.getElementById('gas-url-input')?.value?.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    showToast('❌ URL ไม่ถูกต้อง ต้องขึ้นต้นด้วย https://script.google.com');
+    return;
+  }
+  try {
+    await setDoc(doc(db, 'settings', 'store'), { gasNotifyUrl: url }, { merge: true });
+    showToast('✅ บันทึก GAS URL แล้ว');
+  } catch(e) {
+    showToast('❌ บันทึกไม่ได้: ' + e.message);
+  }
+};
+
+// Load GAS URL when store tab opens
+const _origRenderStore = window.loadAndRenderPickupLocations;
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load GAS URL into input if store panel is open
+  setTimeout(async () => {
+    const inp = document.getElementById('gas-url-input');
+    if (inp) {
+      const snap = await getDoc(doc(db, 'settings', 'store'));
+      if (snap.exists() && snap.data().gasNotifyUrl) {
+        inp.value = snap.data().gasNotifyUrl;
+      }
+    }
+  }, 500);
+});
+
+// ===== BACKEND MONITOR =====
+let _backendReads = 0;
+let _backendWrites = 0;
+let _backendErrors = 0;
+let _backendErrorLog = [];
+let _backendOrderUnsub = null;
+
+window.refreshBackend = async function() {
+  const icon = document.getElementById('backend-refresh-icon');
+  if (icon) icon.style.animation = 'alSpin 0.6s linear infinite';
+  await Promise.all([
+    checkFirestoreStatus(),
+    checkAuthStatus(),
+    loadCollectionsInfo(),
+  ]);
+  if (icon) icon.style.animation = '';
+};
+
+async function checkFirestoreStatus() {
+  const el = document.getElementById('backend-firestore-status');
+  const card = document.getElementById('backend-firestore-card');
+  try {
+    const start = Date.now();
+    await getDoc(doc(db, 'settings', 'store'));
+    const ms = Date.now() - start;
+    _backendReads++;
+    updateBackendStats();
+    if (el) el.textContent = `✅ เชื่อมต่อ (${ms}ms)`;
+    if (card) card.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+  } catch(e) {
+    if (el) el.textContent = '❌ ไม่สามารถเชื่อมต่อ';
+    if (card) card.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+    logBackendError('Firestore: ' + e.message);
+  }
+}
+
+async function checkAuthStatus() {
+  const el = document.getElementById('backend-auth-status');
+  try {
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const user = getAuth().currentUser;
+    if (el) el.textContent = user ? `✅ ${user.email}` : '⚠️ ไม่มี session';
+  } catch(e) {
+    if (el) el.textContent = '❌ Auth error';
+    logBackendError('Auth: ' + e.message);
+  }
+}
+
+async function loadCollectionsInfo() {
+  const el = document.getElementById('backend-collections');
+  if (!el) return;
+  const cols = ['orders','menus','customers','banners','admins','settings','stats_daily'];
+  try {
+    const results = await Promise.all(cols.map(async col => {
+      try {
+        const { collection, getCountFromServer } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+        const snap = await getCountFromServer(collection(db, col));
+        _backendReads++;
+        return { col, count: snap.data().count };
+      } catch(e) {
+        return { col, count: '?' };
+      }
+    }));
+    updateBackendStats();
+    el.innerHTML = results.map(r => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f9fafb;border-radius:8px;">
+        <span style="font-size:13px;font-weight:600;color:#374151;">${r.col}</span>
+        <span style="font-size:13px;font-weight:700;color:#FF8C00;">${r.count} docs</span>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ef4444;font-size:13px;">โหลดไม่ได้: ' + e.message + '</div>';
+  }
+}
+
+function startOrderLogListener() {
+  if (_backendOrderUnsub) return;
+  try {
+    const { collection, query, orderBy, limit, onSnapshot } = window._firestoreImports || {};
+    // Use already-imported onSnapshot from module scope
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef, orderBy('createdAt', 'desc'), limit(20));
+    _backendOrderUnsub = onSnapshot(q, (snap) => {
+      _backendReads += snap.docs.length;
+      updateBackendStats();
+      renderOrderLog(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (e) => {
+      logBackendError('OrderLog: ' + e.message);
+    });
+  } catch(e) {
+    logBackendError('startOrderLog: ' + e.message);
+  }
+}
+
+function renderOrderLog(orders) {
+  const el = document.getElementById('backend-order-log');
+  if (!el) return;
+  if (!orders.length) { el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:20px;font-size:13px;">ยังไม่มีออเดอร์</div>'; return; }
+
+  const statusColors = { pending:'#f59e0b', preparing:'#3b82f6', ready:'#22c55e', done:'#9ca3af', cancelled:'#ef4444' };
+  const statusLabels = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'เสร็จแล้ว', cancelled:'ยกเลิก' };
+
+  el.innerHTML = orders.map(o => {
+    const time = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) : '-';
+    const color = statusColors[o.status] || '#9ca3af';
+    const label = statusLabels[o.status] || o.status;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f9fafb;border-radius:8px;border-left:3px solid ${color};">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#111;">#${o.id.slice(-6).toUpperCase()} · ${o.customerName || '-'}</div>
+        <div style="font-size:11px;color:#6b7280;">${time} · ${o.total || 0} บาท · ${o.items?.length || 0} รายการ</div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:${color};background:${color}18;padding:3px 10px;border-radius:20px;">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function logBackendError(msg) {
+  _backendErrors++;
+  _backendErrorLog.unshift(`[${new Date().toLocaleTimeString('th-TH')}] ${msg}`);
+  if (_backendErrorLog.length > 50) _backendErrorLog.pop();
+  updateBackendStats();
+  const el = document.getElementById('backend-error-log');
+  if (el) el.innerHTML = _backendErrorLog.map(e => `<div style="padding:4px 8px;border-bottom:1px solid #f3f4f6;color:#374151;">${e}</div>`).join('') || '<div style="color:#9ca3af;padding:8px;">ไม่มี error ✅</div>';
+}
+
+window.clearErrorLog = function() {
+  _backendErrors = 0;
+  _backendErrorLog = [];
+  updateBackendStats();
+  const el = document.getElementById('backend-error-log');
+  if (el) el.innerHTML = '<div style="color:#9ca3af;padding:8px;">ไม่มี error ✅</div>';
+};
+
+function updateBackendStats() {
+  const r = document.getElementById('backend-reads');
+  const w = document.getElementById('backend-writes');
+  const e = document.getElementById('backend-errors');
+  if (r) r.textContent = _backendReads;
+  if (w) w.textContent = _backendWrites;
+  if (e) e.textContent = _backendErrors;
+}
+
+// Hook into switchTab to init backend when opened
+const _switchTabOrig2 = window.switchTab;
+window.switchTab = function(tab, el) {
+  _switchTabOrig2 && _switchTabOrig2(tab, el);
+  if (tab === 'backend') {
+    const panel = document.getElementById('panel-backend');
+    if (panel) panel.style.display = 'block';
+    setTimeout(() => {
+      window.refreshBackend();
+      startOrderLogListener();
+    }, 200);
+  }
+};
+
+// ===== LOAD TEST =====
+const MENUS_TEST = [
+  { name: 'ข้าวไข่ชน ปลากระป๋อง', price: 50 },
+  { name: 'ไข่กุ้ง ปูอัด', price: 20 },
+  { name: 'ไข่ดาว โปโลน่า', price: 20 },
+  { name: 'ข้าวกล่อง น้ำจิ้มแจ่ว', price: 50 },
+  { name: 'ข้าวสไพส์แจ่ว', price: 50 },
+  { name: 'แซนวิช', price: 35 },
+  { name: 'เส้นหมี่ สปาเก็ตตี้', price: 45 },
+];
+const CUSTOMERS_TEST = [
+  { name: 'สมชาย ใจดี', phone: '0812345678', lineUserId: null },
+  { name: 'สมหญิง รักดี', phone: '0898765432', lineUserId: 'Utest001' },
+  { name: 'มานี มีสุข', phone: '0823456789', lineUserId: null },
+  { name: 'วิชัย แสงทอง', phone: '0834567890', lineUserId: 'Utest002' },
+  { name: 'นารี ดวงดี', phone: '0845678901', lineUserId: null },
+];
+const LOCATIONS_TEST = [
+  { id: 'loc_1', name: 'ป้อมยามจุด 1 SCG' },
+  { id: 'loc_2', name: 'ป้อมยามจุด 3 SCG (หน้าร้าน)' },
+];
+const TIMES_TEST = ['06:30','07:00','07:30','08:00','08:30'];
+const STATUSES_TEST = ['pending','preparing','ready','done','done','done'];
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function rndId(){ return Math.random().toString(36).substr(2,8).toUpperCase(); }
+
+window.runLoadTest = async function() {
+  const count = parseInt(document.getElementById('load-test-count')?.value || 100);
+  const progress = document.getElementById('load-test-progress');
+  const bar = document.getElementById('load-test-bar');
+  const status = document.getElementById('load-test-status');
+
+  if (progress) progress.style.display = 'block';
+  if (status) status.textContent = `กำลังสร้าง 0/${count} orders...`;
+
+  const { collection: col, addDoc, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+  let done = 0;
+  const batchSize = 5;
+
+  for (let i = 0; i < count; i += batchSize) {
+    const promises = [];
+    for (let j = i; j < Math.min(i + batchSize, count); j++) {
+      const customer = rnd(CUSTOMERS_TEST);
+      const loc = rnd(LOCATIONS_TEST);
+      const itemCount = rndInt(1, 3);
+      const items = [];
+      let total = 0;
+      for (let k = 0; k < itemCount; k++) {
+        const m = rnd(MENUS_TEST);
+        const qty = rndInt(1, 2);
+        items.push({ name: m.name, price: m.price, qty, subtotal: m.price * qty });
+        total += m.price * qty;
+      }
+      const daysAgo = rndInt(0, 6);
+      const createdAt = new Date();
+      createdAt.setDate(createdAt.getDate() - daysAgo);
+      createdAt.setHours(rndInt(6,10), rndInt(0,59));
+
+      promises.push(addDoc(col(db, 'orders'), {
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        lineUserId: customer.lineUserId,
+        userId: customer.lineUserId ? 'line_' + customer.lineUserId : 'guest_' + rndId(),
+        items, total,
+        pickupTime: rnd(TIMES_TEST),
+        pickupLocation: loc.id,
+        pickupLocationName: loc.name,
+        status: rnd(STATUSES_TEST),
+        note: Math.random() > 0.7 ? 'ไม่ใส่ผัก' : '',
+        createdAt: Timestamp.fromDate(createdAt),
+        updatedAt: Timestamp.fromDate(createdAt),
+        isTest: true,
+      }));
+    }
+    await Promise.all(promises);
+    done = Math.min(i + batchSize, count);
+    _backendWrites += batchSize;
+    updateBackendStats();
+    const pct = Math.round((done / count) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (status) status.textContent = `สร้างแล้ว ${done}/${count} orders (${pct}%)`;
+  }
+
+  if (status) status.textContent = `✅ สร้างครบ ${count} orders แล้ว! กดรีเฟรชเพื่อดูใน Order Log`;
+  showToast(`✅ สร้าง ${count} test orders สำเร็จ`);
+};
+
+window.deleteTestOrders = async function() {
+  if (!confirm(`ลบ test orders ทั้งหมด (isTest: true)?`)) return;
+  showToast('🗑 กำลังลบ...');
+  try {
+    const { collection: col, query, where, getDocs, writeBatch } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(query(col(db, 'orders'), where('isTest', '==', true)));
+    if (snap.empty) { showToast('ไม่มี test orders'); return; }
+
+    // delete in batches of 500
+    let batch = writeBatch(db);
+    let count = 0;
+    for (const d of snap.docs) {
+      batch.delete(d.ref);
+      count++;
+      if (count % 500 === 0) { await batch.commit(); batch = writeBatch(db); }
+    }
+    await batch.commit();
+    showToast(`✅ ลบแล้ว ${snap.size} test orders`);
+    const status = document.getElementById('load-test-status');
+    if (status) status.textContent = `ลบแล้ว ${snap.size} test orders`;
+  } catch(e) {
+    showToast('❌ ลบไม่ได้: ' + e.message);
+  }
+};
+
+// ===== BOT LOAD TEST — Concurrent Users =====
+let _botRunning = false;
+let _botStats = { success: 0, failed: 0, total: 0 };
+
+window.runBotTest = async function() {
+  if (_botRunning) { showToast('⚠️ Bot กำลังทำงานอยู่'); return; }
+
+  const userCount = parseInt(document.getElementById('bot-user-count')?.value || 10);
+  const orderPerUser = parseInt(document.getElementById('bot-order-per-user')?.value || 10);
+  const total = userCount * orderPerUser;
+
+  _botRunning = true;
+  _botStats = { success: 0, failed: 0, total };
+
+  const bar = document.getElementById('bot-progress-bar');
+  const statusEl = document.getElementById('bot-status');
+  const logEl = document.getElementById('bot-log');
+
+  if (bar) bar.style.width = '0%';
+  if (logEl) logEl.innerHTML = '';
+  if (statusEl) statusEl.textContent = `🤖 Bot เริ่มทำงาน — ${userCount} users × ${orderPerUser} orders = ${total} orders`;
+
+  function botLog(msg, color) {
+    if (!logEl) return;
+    const row = document.createElement('div');
+    row.style.cssText = `font-size:12px;font-family:monospace;padding:2px 0;color:${color||'#374151'}`;
+    row.textContent = `[${new Date().toLocaleTimeString('th-TH')}] ${msg}`;
+    logEl.prepend(row);
+    if (logEl.children.length > 100) logEl.lastChild.remove();
+  }
+
+  function updateBotProgress() {
+    const done = _botStats.success + _botStats.failed;
+    const pct = Math.round((done / total) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (statusEl) statusEl.textContent = `✅ ${_botStats.success} สำเร็จ  ❌ ${_botStats.failed} ล้มเหลว  (${done}/${total})`;
+  }
+
+  const { collection: col, addDoc, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+  // สร้าง virtual users
+  const users = Array.from({ length: userCount }, (_, i) => ({
+    id: i + 1,
+    name: rnd(CUSTOMERS_TEST).name,
+    phone: `08${String(rndInt(10000000, 99999999))}`,
+    lineUserId: Math.random() > 0.5 ? 'Utest_bot_' + rndId() : null,
+  }));
+
+  botLog(`🚀 จำลอง ${userCount} users เริ่มสั่งพร้อมกัน...`, '#FF8C00');
+
+  // ทุก user สั่งพร้อมกัน (concurrent)
+  const userPromises = users.map(async (user) => {
+    botLog(`👤 User ${user.id} (${user.name}) เริ่มสั่ง ${orderPerUser} orders`, '#3b82f6');
+
+    for (let i = 0; i < orderPerUser; i++) {
+      try {
+        const loc = rnd(LOCATIONS_TEST);
+        const itemCount = rndInt(1, 3);
+        const items = [];
+        let total2 = 0;
+        for (let k = 0; k < itemCount; k++) {
+          const m = rnd(MENUS_TEST);
+          const qty = rndInt(1, 2);
+          items.push({ name: m.name, price: m.price, qty, subtotal: m.price * qty });
+          total2 += m.price * qty;
+        }
+
+        const createdAt = new Date();
+        createdAt.setMinutes(createdAt.getMinutes() - rndInt(0, 60));
+
+        await addDoc(col(db, 'orders'), {
+          customerName: user.name,
+          customerPhone: user.phone,
+          lineUserId: user.lineUserId,
+          userId: user.lineUserId ? 'line_' + user.lineUserId : 'guest_bot_' + rndId(),
+          items, total: total2,
+          pickupTime: rnd(TIMES_TEST),
+          pickupLocation: loc.id,
+          pickupLocationName: loc.name,
+          status: rnd(STATUSES_TEST),
+          note: '',
+          createdAt: Timestamp.fromDate(createdAt),
+          updatedAt: Timestamp.fromDate(createdAt),
+          isTest: true,
+          botUser: user.id,
+        });
+
+        _botStats.success++;
+        _backendWrites++;
+        updateBackendStats();
+        updateBotProgress();
+
+        if (i === orderPerUser - 1) {
+          botLog(`✅ User ${user.id} (${user.name}) สั่งครบ ${orderPerUser} orders`, '#22c55e');
+        }
+
+        // random delay 50-300ms เพื่อให้เหมือน user จริง
+        await new Promise(r => setTimeout(r, rndInt(50, 300)));
+
+      } catch(e) {
+        _botStats.failed++;
+        botLog(`❌ User ${user.id} order ${i+1} ล้มเหลว: ${e.message}`, '#ef4444');
+        updateBotProgress();
+      }
+    }
+  });
+
+  await Promise.all(userPromises);
+
+  _botRunning = false;
+  botLog(`🏁 Bot ทำงานเสร็จ — สำเร็จ ${_botStats.success}/${total}`, '#FF8C00');
+  showToast(`✅ Bot เสร็จ! ${_botStats.success} orders สำเร็จ`);
+};
+
+window.stopBot = function() {
+  _botRunning = false;
+  showToast('⏹ หยุด Bot แล้ว');
+};
+
+// ===== PHASE 2: EXPORT EXCEL + เมนูขายดีรายเดือน =====
+
+// Export Excel (xlsx) โดยใช้ SheetJS CDN
+window.exportOrdersExcel = async function() {
+  showToast('📊 กำลังสร้างไฟล์ Excel...');
+  try {
+    // Load SheetJS
+    if (!window.XLSX) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    const { collection: col, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(query(col(db, 'orders'), orderBy('createdAt', 'desc')));
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Sheet 1: Orders
+    const ordersData = orders.map(o => ({
+      'รหัสออเดอร์': '#' + o.id.slice(0,8).toUpperCase(),
+      'ชื่อลูกค้า': o.customerName || '-',
+      'เบอร์โทร': o.customerPhone || '-',
+      'วันที่': o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('th-TH') : '-',
+      'เวลา': o.createdAt?.toDate ? o.createdAt.toDate().toLocaleTimeString('th-TH') : '-',
+      'เวลารับ': o.pickupTime || '-',
+      'จุดรับ': o.pickupLocationName || '-',
+      'รายการ': (o.items||[]).map(i => `${i.name} x${i.qty}`).join(', '),
+      'ยอดรวม': o.total || 0,
+      'สถานะ': { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'เสร็จแล้ว', cancelled:'ยกเลิก' }[o.status] || o.status,
+      'หมายเหตุ': o.note || '-',
+    }));
+
+    // Sheet 2: เมนูขายดี
+    const menuCount = {};
+    const menuRevenue = {};
+    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+      (o.items||[]).forEach(i => {
+        menuCount[i.name] = (menuCount[i.name]||0) + (i.qty||1);
+        menuRevenue[i.name] = (menuRevenue[i.name]||0) + (i.subtotal||0);
+      });
+    });
+    const menuData = Object.entries(menuCount)
+      .sort((a,b) => b[1]-a[1])
+      .map(([name, qty], i) => ({
+        'อันดับ': i+1,
+        'ชื่อเมนู': name,
+        'จำนวนที่ขาย': qty,
+        'รายได้รวม': menuRevenue[name] || 0,
+      }));
+
+    // Sheet 3: รายได้รายวัน
+    const dailyMap = {};
+    orders.filter(o => o.status === 'done').forEach(o => {
+      if (!o.createdAt?.toDate) return;
+      const day = o.createdAt.toDate().toLocaleDateString('th-TH');
+      dailyMap[day] = (dailyMap[day]||0) + (o.total||0);
+    });
+    const dailyData = Object.entries(dailyMap)
+      .sort((a,b) => a[0].localeCompare(b[0]))
+      .map(([date, revenue]) => ({ 'วันที่': date, 'รายได้': revenue }));
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ordersData), 'ออเดอร์ทั้งหมด');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(menuData), 'เมนูขายดี');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dailyData), 'รายได้รายวัน');
+
+    const today = new Date().toLocaleDateString('th-TH').replace(/\//g,'-');
+    XLSX.writeFile(wb, `imoei_report_${today}.xlsx`);
+    showToast('✅ ดาวน์โหลด Excel สำเร็จ');
+  } catch(e) {
+    showToast('❌ Export ไม่ได้: ' + e.message);
+  }
+};
+
+// กราฟเมนูขายดีรายเดือน
+window.renderTopMenuChart = async function() {
+  const el = document.getElementById('top-menu-chart-wrap');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:20px;font-size:13px;">กำลังโหลด...</div>';
+
+  try {
+    const { collection: col, query, where, orderBy, getDocs, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const start = new Date(); start.setDate(1); start.setHours(0,0,0,0);
+    const snap = await getDocs(query(col(db, 'orders'),
+      where('createdAt', '>=', Timestamp.fromDate(start)),
+      where('status', '==', 'done')
+    ));
+
+    const menuCount = {};
+    snap.docs.forEach(d => {
+      (d.data().items||[]).forEach(i => {
+        menuCount[i.name] = (menuCount[i.name]||0) + (i.qty||1);
+      });
+    });
+
+    const sorted = Object.entries(menuCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    if (!sorted.length) { el.innerHTML = '<div style="color:#9ca3af;text-align:center;padding:20px;">ยังไม่มีข้อมูล</div>'; return; }
+
+    const maxVal = sorted[0][1];
+    el.innerHTML = sorted.map(([name, qty], i) => {
+      const pct = Math.round((qty/maxVal)*100);
+      const colors = ['#FF8C00','#FFC107','#FF6B35','#F59E0B','#EF4444','#8B5CF6','#3B82F6','#10B981'];
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span style="font-weight:600;color:#374151;">${i+1}. ${name}</span>
+          <span style="font-weight:700;color:${colors[i]};">${qty} จาน</span>
+        </div>
+        <div style="background:#f3f4f6;border-radius:99px;overflow:hidden;height:10px;">
+          <div style="height:100%;width:${pct}%;background:${colors[i]};border-radius:99px;transition:width 0.6s ease;"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ef4444;font-size:13px;">โหลดไม่ได้: ' + e.message + '</div>';
+  }
+};
+
+// ===== COUPON MANAGEMENT =====
+window.showAddCoupon = function() {
+  document.getElementById('coupon-form-wrap').style.display = 'block';
+  document.getElementById('cp-code').focus();
+};
+
+window.saveCoupon = async function() {
+  const code = document.getElementById('cp-code').value.trim().toUpperCase();
+  const name = document.getElementById('cp-name').value.trim();
+  const type = document.getElementById('cp-type').value;
+  const value = parseFloat(document.getElementById('cp-value').value);
+  const minOrder = parseFloat(document.getElementById('cp-min').value) || 0;
+  const maxUses = parseInt(document.getElementById('cp-max').value) || 999;
+  const startVal = document.getElementById('cp-start').value;
+  const endVal = document.getElementById('cp-end').value;
+
+  if (!code || !value) { showToast('❌ กรอกรหัสและมูลค่าให้ครบ'); return; }
+
+  try {
+    const data = {
+      name: name || code,
+      type, value, minOrder, maxUses,
+      usedCount: 0,
+      disabled: false,
+      createdAt: new Date(),
+    };
+    if (startVal) data.startsAt = new Date(startVal);
+    if (endVal) data.expiresAt = new Date(endVal + 'T23:59:59');
+
+    await setDoc(doc(db, 'coupons', code), data);
+    showToast('✅ สร้างคูปอง ' + code + ' แล้ว');
+    document.getElementById('coupon-form-wrap').style.display = 'none';
+    loadCoupons();
+  } catch(e) {
+    showToast('❌ บันทึกไม่ได้: ' + e.message);
+  }
+};
+
+async function loadCoupons() {
+  const el = document.getElementById('coupon-list');
+  if (!el) return;
+  try {
+    const { collection: col, getDocs, orderBy, query } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(query(col(db, 'coupons'), orderBy('createdAt', 'desc')));
+    if (snap.empty) { el.innerHTML = '<div style="color:#9ca3af;text-align:center;padding:20px;">ยังไม่มีคูปอง</div>'; return; }
+
+    el.innerHTML = snap.docs.map(d => {
+      const c = { id: d.id, ...d.data() };
+      const expires = c.expiresAt?.toDate ? c.expiresAt.toDate().toLocaleDateString('th-TH') : 'ไม่จำกัด';
+      const isExpired = c.expiresAt?.toDate && c.expiresAt.toDate() < new Date();
+      const isFull = c.usedCount >= c.maxUses;
+      const status = c.disabled ? '🔴 ปิด' : isExpired ? '⚫ หมดอายุ' : isFull ? '🟡 เต็ม' : '🟢 ใช้ได้';
+      const discount = c.type === 'percent' ? `${c.value}%` : `${c.value} บาท`;
+
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#f9fafb;border-radius:10px;margin-bottom:8px;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:#FF8C00;letter-spacing:1px;">${c.id}</div>
+          <div style="font-size:13px;color:#374151;">${c.name} · ลด ${discount}</div>
+          <div style="font-size:12px;color:#6b7280;">ใช้แล้ว ${c.usedCount||0}/${c.maxUses} · หมดอายุ ${expires}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;font-weight:700;">${status}</span>
+          <button onclick="toggleCoupon('${c.id}',${!c.disabled})" style="padding:6px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;cursor:pointer;">${c.disabled ? '✅ เปิด' : '🔴 ปิด'}</button>
+          <button onclick="deleteCoupon('${c.id}')" style="padding:6px 10px;border-radius:8px;border:1.5px solid #fca5a5;background:#fff0f0;color:#ef4444;font-size:12px;cursor:pointer;">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ef4444;">โหลดไม่ได้: ' + e.message + '</div>';
+  }
+}
+
+window.toggleCoupon = async function(code, disabled) {
+  await setDoc(doc(db, 'coupons', code), { disabled }, { merge: true });
+  showToast(disabled ? '🔴 ปิดคูปองแล้ว' : '✅ เปิดคูปองแล้ว');
+  loadCoupons();
+};
+
+window.deleteCoupon = async function(code) {
+  if (!confirm('ลบคูปอง ' + code + '?')) return;
+  const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  await deleteDoc(doc(db, 'coupons', code));
+  showToast('ลบคูปองแล้ว');
+  loadCoupons();
+};
+
+// Auto-load when tab opens
+const _switchTabOrig3 = window.switchTab;
+window.switchTab = function(tab, el) {
+  _switchTabOrig3 && _switchTabOrig3(tab, el);
+  if (tab === 'coupons') {
+    const panel = document.getElementById('panel-coupons');
+    if (panel) panel.style.display = 'block';
+    setTimeout(loadCoupons, 200);
+  }
+};
+
+// ===== REFERRAL SYSTEM =====
+window.generateReferralLink = function() {
+  const name = document.getElementById('ref-name-input')?.value?.trim();
+  if (!name) { showToast('กรอกชื่อผู้แนะนำก่อน'); return; }
+  const code = name.replace(/\s+/g, '').toLowerCase() + '_' + Date.now().toString(36);
+  const link = `https://im-oei.web.app/index.html?ref=${code}`;
+  const out = document.getElementById('ref-link-output');
+  const res = document.getElementById('ref-result');
+  if (out) out.value = link;
+  if (res) res.style.display = 'block';
+};
+
+window.copyRefLink = function() {
+  const out = document.getElementById('ref-link-output');
+  if (!out) return;
+  navigator.clipboard.writeText(out.value).then(() => showToast('📋 Copy แล้ว!'));
+};
+
+window.loadReferralStats = async function() {
+  const el = document.getElementById('referral-stats');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:16px;">กำลังโหลด...</div>';
+  try {
+    const { collection: col, getDocs, orderBy, query } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(query(col(db, 'referrals'), orderBy('orders', 'desc')));
+    if (snap.empty) { el.innerHTML = '<div style="color:#9ca3af;text-align:center;padding:16px;font-size:13px;">ยังไม่มีข้อมูล</div>'; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const r = { id: d.id, ...d.data() };
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f9fafb;border-radius:8px;margin-bottom:6px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#374151;">${r.id}</div>
+          <div style="font-size:12px;color:#6b7280;">คลิก ${r.clicks||0} ครั้ง</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:16px;font-weight:800;color:#FF8C00;">${r.orders||0}</div>
+          <div style="font-size:11px;color:#6b7280;">ออเดอร์</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ef4444;font-size:13px;">โหลดไม่ได้: ' + e.message + '</div>';
   }
 };

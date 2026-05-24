@@ -156,6 +156,19 @@ async function notifyLineOA(order) {
 
 window.checkout = async function() {
   if (_isCheckingOut) { showToast('กำลังดำเนินการ กรุณารอสักครู่...'); return; }
+  // ── Rate limit: ไม่เกิน 3 orders ใน 10 นาที ──
+  const now = Date.now();
+  const rlKey = 'imkum_order_times';
+  const orderTimes = JSON.parse(localStorage.getItem(rlKey) || '[]')
+    .filter(t => now - t < 10 * 60 * 1000); // เก็บแค่ 10 นาทีล่าสุด
+  if (orderTimes.length >= 3) {
+    const waitMs = 10 * 60 * 1000 - (now - orderTimes[0]);
+    const waitMin = Math.ceil(waitMs / 60000);
+    showToast(`⚠️ สั่งซื้อบ่อยเกินไป กรุณารอ ${waitMin} นาที`);
+    return;
+  }
+
+
   if (!navigator.onLine) { showToast('❌ ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ'); return; }
   var total = getTotal();
   if (!total) { showToast('ไม่มีสินค้าในตะกร้า'); return; }
@@ -231,11 +244,24 @@ window.checkout = async function() {
     }
     if (calculatedTotal <= 0 || verifiedItems.length === 0) { showToast('ไม่มีสินค้าในตะกร้า'); showLoading(false); _isCheckingOut = false; return; }
     total = calculatedTotal;
+    // หักส่วนลดคูปอง
+    const couponDiscount = window.getCouponDiscount ? window.getCouponDiscount() : 0;
+    const finalTotal = Math.max(0, total - couponDiscount);
+    if (couponDiscount > 0) total = finalTotal;
 
     // ── เขียน order ลง Firestore ตรงๆ (ไม่ต้องใช้ Cloud Functions / Blaze) ──
+    // บันทึกเวลาสั่งเพื่อ rate limit
+    const rlKey2 = 'imkum_order_times';
+    const times2 = JSON.parse(localStorage.getItem(rlKey2) || '[]');
+    times2.push(Date.now());
+    localStorage.setItem(rlKey2, JSON.stringify(times2.slice(-10)));
+
     const orderRef = await addDoc(collection(db, 'orders'), {
       items: verifiedItems,
       total,
+      couponCode: _appliedCoupon?.code || null,
+      couponDiscount: couponDiscount || 0,
+      referralCode: localStorage.getItem('imkum_referral') || null,
       note: note || '',
       customerName: customerName || '',
       ...(phone      ? { customerPhone: phone }   : {}),
@@ -316,6 +342,9 @@ window.checkout = async function() {
       pickupLocationName: (PICKUP_LOCATIONS.find(l => l.id === selectedLocation) || {}).name || selectedLocation || '',
       items: verifiedItems,
       total,
+      couponCode: _appliedCoupon?.code || null,
+      couponDiscount: couponDiscount || 0,
+      referralCode: localStorage.getItem('imkum_referral') || null,
       firstImageUrl: firstMenuObj?.imageUrl || null,
     }).catch(() => {});
     window.location.href = 'success.html';
@@ -341,3 +370,76 @@ window.checkout = async function() {
 window.placeOrder = window.checkout;
 
 syncMenu();
+
+// ===== COUPON SYSTEM =====
+let _appliedCoupon = null;
+
+window.applyCoupon = async function() {
+  const input = document.getElementById('coupon-input');
+  const code = (input?.value || '').trim().toUpperCase();
+  if (!code) { showToast('กรุณากรอกรหัสคูปอง'); return; }
+
+  try {
+    showToast('🔍 กำลังตรวจสอบคูปอง...');
+    const couponDoc = await getDoc(doc(db, 'coupons', code));
+    if (!couponDoc.exists()) { showToast('❌ ไม่พบรหัสคูปองนี้'); return; }
+
+    const c = couponDoc.data();
+    const now = new Date();
+
+    // ตรวจสอบ
+    if (c.disabled) { showToast('❌ คูปองนี้ถูกปิดใช้งานแล้ว'); return; }
+    if (c.expiresAt && c.expiresAt.toDate() < now) { showToast('❌ คูปองหมดอายุแล้ว'); return; }
+    if (c.startsAt && c.startsAt.toDate() > now) { showToast('❌ คูปองยังไม่ถึงวันใช้งาน'); return; }
+    if (c.usedCount >= c.maxUses) { showToast('❌ คูปองถูกใช้งานครบแล้ว'); return; }
+
+    const total = getTotal();
+    if (c.minOrder && total < c.minOrder) {
+      showToast(`❌ ต้องสั่งขั้นต่ำ ${c.minOrder} บาท`); return;
+    }
+
+    _appliedCoupon = { code, ...c };
+    renderCouponResult(c, total);
+    showToast(`✅ ใช้คูปอง "${code}" สำเร็จ!`);
+  } catch(e) {
+    showToast('❌ ตรวจสอบคูปองไม่ได้: ' + e.message);
+  }
+};
+
+function renderCouponResult(c, total) {
+  const el = document.getElementById('coupon-result');
+  if (!el) return;
+  const discount = calcDiscount(c, total);
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:10px 14px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#166534;">✅ ${c.name || _appliedCoupon.code}</div>
+        <div style="font-size:12px;color:#16a34a;">ลด ${discount} บาท</div>
+      </div>
+      <button onclick="removeCoupon()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:18px;">×</button>
+    </div>`;
+  renderTotal();
+}
+
+function calcDiscount(c, total) {
+  if (!c) return 0;
+  if (c.type === 'percent') return Math.min(Math.round(total * c.value / 100), c.maxDiscount || 99999);
+  if (c.type === 'fixed') return Math.min(c.value, total);
+  return 0;
+}
+
+window.removeCoupon = function() {
+  _appliedCoupon = null;
+  const el = document.getElementById('coupon-result');
+  if (el) el.style.display = 'none';
+  const inp = document.getElementById('coupon-input');
+  if (inp) inp.value = '';
+  renderTotal();
+  showToast('ลบคูปองแล้ว');
+};
+
+window.getCouponDiscount = function() {
+  if (!_appliedCoupon) return 0;
+  return calcDiscount(_appliedCoupon, getTotal());
+};

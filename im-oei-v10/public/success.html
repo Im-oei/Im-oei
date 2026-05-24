@@ -10,7 +10,7 @@
 body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#FFE8B0 100%);font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
 
 /* HERO */
-.hero{width:100%;background:linear-gradient(135deg,#FF8C00,#FFC107);padding:36px 20px 60px;text-align:center;position:relative;overflow:hidden;min-height:180px;}
+.hero{width:100%;background:linear-gradient(135deg,#FF8C00,#FFC107);padding:0;text-align:center;position:relative;overflow:hidden;height:240px;display:flex;align-items:center;justify-content:center;}
 .hero::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:48px;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 100%);border-radius:50% 50% 0 0 / 100% 100% 0 0}
 .confetti{font-size:36px;margin-bottom:10px;animation:bounce 0.6s ease-out}
 .hero-title{font-family:'Prompt',sans-serif;font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2)}
@@ -62,31 +62,34 @@ body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#
   #app-loader {
     position: fixed; inset: 0; z-index: 99999;
     background: #FFF9F0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
   }
   #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  #app-loader .al-logo {
-    width: 88px; height: 88px;
-    border-radius: 24px;
-    object-fit: cover;
+  #app-loader .al-box {
+    width: 80px; height: 80px; border-radius: 22px;
+    background: linear-gradient(135deg, #FF8C00, #FFC107);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
     animation: alPulse 1.4s ease-in-out infinite;
+    box-shadow: 0 4px 20px rgba(255,140,0,0.3);
   }
   @keyframes alPulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,140,0,0.35); }
-    50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(255,140,0,0); }
+    0%,100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,140,0,0.3); }
+    50% { transform: scale(1.08); box-shadow: 0 4px 30px rgba(255,140,0,0.5); }
   }
   </style>
 </head>
 <body>
-<div id="app-loader"><img class="al-logo" src="icon-192.png" alt="อิ่มเอ๋ย"></div></div>
+<div id="app-loader"><div class="al-box">🍱</div></div></div>
 
 <div class="hero">
-  <img src="hero.webp" alt="อิ่มเอ๋ย" style="width:100%;height:180px;object-fit:cover;display:block;position:absolute;inset:0;opacity:0.35;">
-  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
-    <img src="logo.webp" alt="อิ่มเอ๋ย" style="width:72px;height:72px;border-radius:20px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.2);margin-bottom:10px;">
+  <img src="hero.webp" alt="อิ่มเอ๋ย" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:0.4;">
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 0;">
+    <img src="logo.webp" alt="อิ่มเอ๋ย" style="width:72px;height:72px;border-radius:20px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
     <div class="confetti">🎉</div>
+    <div style="font-family:'Prompt',sans-serif;font-size:20px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2);">สั่งซื้อสำเร็จ!</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.95);font-weight:600;">ขอบคุณที่ใช้บริการ 🙏</div>
   </div>
 </div>
 

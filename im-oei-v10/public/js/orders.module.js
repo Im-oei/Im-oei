@@ -267,6 +267,9 @@ function renderOrders(docs){
       btn.style.display='flex';
       document.getElementById('show-more-text').textContent = historyExpanded ? 'ย่อกลับ' : `ดูทั้งหมด ${history.length} รายการ`;
     } else { btn.style.display='none'; }
+    // แสดง filter bar
+    const fb = document.getElementById('history-filter-bar');
+    if (fb) fb.style.display = 'flex';
   } else {
     historyCount.style.display='none';
     document.getElementById('history-wrap').innerHTML='<div class="sec-header-empty">ยังไม่มีประวัติออเดอร์</div>';
@@ -342,6 +345,68 @@ window.showAllHistory = function(){
   document.getElementById('show-more-text').textContent = historyExpanded ? 'ย่อกลับ' : `ดูทั้งหมด ${allHistoryDocs.length} รายการ`;
   const btn = document.getElementById('show-more-btn');
   btn.querySelector('svg').style.transform = historyExpanded ? 'rotate(180deg)' : '';
+};
+
+// ── HISTORY FILTER / SEARCH / EXPORT ──────────────────────────────────────────
+let _historyStatusFilter = 'all';
+let _historySearchTerm   = '';
+
+function getFilteredHistory() {
+  return allHistoryDocs.filter(o => {
+    const matchStatus = _historyStatusFilter === 'all' || o.status === _historyStatusFilter;
+    const term = _historySearchTerm.toLowerCase();
+    const matchSearch = !term
+      || o.id.toLowerCase().includes(term)
+      || (o.items || []).some(i => (i.name || '').toLowerCase().includes(term))
+      || (o.customerName || '').toLowerCase().includes(term);
+    return matchStatus && matchSearch;
+  });
+}
+
+window.setHistoryFilter = function(status) {
+  _historyStatusFilter = status;
+  document.querySelectorAll('.hf-chip').forEach(el => {
+    el.classList.toggle('active', el.dataset.status === status);
+  });
+  applyHistoryFilter();
+};
+
+window.filterHistory = function() {
+  _historySearchTerm = (document.getElementById('history-search')?.value || '').trim();
+  applyHistoryFilter();
+};
+
+function applyHistoryFilter() {
+  const filtered = getFilteredHistory();
+  if (!filtered.length) {
+    document.getElementById('history-wrap').innerHTML = '<div class="sec-header-empty">ไม่พบออเดอร์ที่ตรงกัน</div>';
+    return;
+  }
+  renderHistoryRows(filtered);
+  const btn = document.getElementById('show-more-btn');
+  if (btn) btn.style.display = 'none'; // ซ่อน show-more เมื่อ filter active
+}
+
+window.exportHistoryCSV = function() {
+  const list = getFilteredHistory();
+  if (!list.length) { showToast('⚠️ ไม่มีข้อมูลที่จะดาวน์โหลด'); return; }
+  const statusTH = { pending:'รอรับ', preparing:'กำลังทำ', ready:'พร้อมรับ', done:'รับแล้ว', cancelled:'ยกเลิก' };
+  const rows = [['วันที่','เวลา','#Order','รายการ','ยอด (฿)','สถานะ']];
+  list.forEach(o => {
+    const dt = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+    const dateStr = dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const timeStr = dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    const items = (o.items||[]).map(i=>`${i.name} x${i.qty}`).join(' | ');
+    rows.push([dateStr, timeStr, o.id.slice(0,8).toUpperCase(), items, o.total || 0, statusTH[o.status] || o.status]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const bom = '\uFEFF'; // UTF-8 BOM for Thai chars in Excel
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `orders_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📥 ดาวน์โหลด CSV แล้ว');
 };
 
 function renderActiveCard(o){
@@ -613,6 +678,28 @@ async function initCustomerNotifications() {
     }
   }
 
+  // ── รับ ORDER_STATUS_UPDATE จาก SW (กรณีหน้าเปิดอยู่) ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data && e.data.type === 'ORDER_STATUS_UPDATE') {
+        const { orderId, status, title, body } = e.data;
+        const icon = { pending:'🟡', preparing:'🔵', ready:'🟢', done:'✅', cancelled:'❌' }[status] || '📋';
+        showToast(`${icon} ${title || body}`);
+        if (status === 'ready') playCustSound('ready');
+        else playCustSound('update');
+      }
+    });
+
+    // แจ้ง SW ว่าหน้านี้เปิดอยู่ (ทุก 20 วิ เพื่อให้ SW รู้ว่าไม่ต้อง showNotification)
+    function pingPageVisible() {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'PAGE_VISIBLE' });
+      }
+    }
+    pingPageVisible();
+    setInterval(pingPageVisible, 20000);
+  }
+
   // เริ่ม watch orders สำหรับ status change
   startWatchingOrders();
 }
@@ -799,10 +886,40 @@ async function loadMyRatings() {
     snap.docs.forEach(d => { _ratingsCache[d.id] = d.data(); });
     // re-render history rows ถ้ามีข้อมูลแล้ว
     if (allHistoryDocs && allHistoryDocs.length) renderHistoryRows(historyExpanded ? allHistoryDocs : allHistoryDocs.slice(0, HISTORY_PREVIEW));
+
+    // ── "รีวิวค้าง": ตรวจหาออเดอร์ done ที่ยังไม่ได้รีวิวครบ ──
+    await checkPendingReviews();
   } catch(e) {
     console.warn('loadMyRatings: โหลดคะแนนรีวิวไม่ได้:', e.code || e.message);
     // _ratingsCache ว่าง → ประวัติยังแสดงได้ แค่ไม่มีดาว — ไม่ต้องแจ้ง user
   }
+}
+
+// ── ตรวจสอบ "รีวิวค้าง" เมื่อเปิดหน้าครั้งใหม่ ──
+async function checkPendingReviews() {
+  // รอให้ allHistoryDocs โหลดก่อน (อาจยังไม่มีตอน loadMyRatings วิ่ง)
+  if (!allHistoryDocs || !allHistoryDocs.length) {
+    // รอสักครู่แล้วลองใหม่ — loadOrders() ทำงาน async
+    await new Promise(r => setTimeout(r, 2000));
+    if (!allHistoryDocs || !allHistoryDocs.length) return;
+  }
+  // หาออเดอร์ที่ done แต่มี item ที่ยังไม่ได้รีวิว
+  const pendingOrders = allHistoryDocs.filter(o => {
+    if (o.status !== 'done') return false;
+    const items = (o.items || []).filter(i => i.id);
+    if (!items.length) return false;
+    const unrated = items.filter(i => !_ratingsCache[`${o.id}_${i.id}`]);
+    return unrated.length > 0;
+  });
+  if (!pendingOrders.length) return;
+  // แสดง popup ของออเดอร์แรกที่ยังค้าง (เรียงตามใหม่สุด)
+  const sorted = pendingOrders.sort((a,b)=>{
+    const ta = a.createdAt?.seconds || 0;
+    const tb = b.createdAt?.seconds || 0;
+    return tb - ta;
+  });
+  // หน่วงเวลาเล็กน้อยเพื่อให้ UI โหลดเสร็จก่อน
+  setTimeout(() => openRatingPopup(sorted[0]), 1800);
 }
 
 function openRatingPopup(order) {

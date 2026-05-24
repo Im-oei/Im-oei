@@ -167,6 +167,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ─── PUSH JOBS (Phase 4) — admin เขียน, Cloud Function อ่าน/อัปเดต ─────
+    match /pushJobs/{jobId} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['orderId','status','title','body','createdAt','done'])
+        && request.resource.data.done == false;
+      allow read, update: if isFirebaseAdmin();
+      allow delete: if isFirebaseAdmin();
+    }
+
     // ─── LINE QUEUE ───────────────────────────────────────────────────────────
     match /lineQueue/{docId} {
       allow read: if isFirebaseAdmin();
@@ -189,6 +198,15 @@ service cloud.firestore {
     // 🚫 ปิดทุกอย่างที่ไม่ได้กำหนด
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // ── Coupons (Phase 3) ──
+    match /coupons/{code} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount']);
     }
   }
 }
