@@ -3114,13 +3114,14 @@ window.renderTopMenuChart = async function() {
   try {
     const { collection: col, query, where, orderBy, getDocs, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const start = new Date(); start.setDate(1); start.setHours(0,0,0,0);
+    // query เฉพาะ createdAt เพื่อไม่ต้องสร้าง composite index
+    // กรอง status='done' ฝั่ง client แทน
     const snap = await getDocs(query(col(db, 'orders'),
-      where('createdAt', '>=', Timestamp.fromDate(start)),
-      where('status', '==', 'done')
+      where('createdAt', '>=', Timestamp.fromDate(start))
     ));
 
     const menuCount = {};
-    snap.docs.forEach(d => {
+    snap.docs.filter(d => d.data().status === 'done').forEach(d => {
       (d.data().items||[]).forEach(i => {
         menuCount[i.name] = (menuCount[i.name]||0) + (i.qty||1);
       });
