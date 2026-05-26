@@ -19,6 +19,18 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="css/index.css">
+<script>
+// Force clear old SW cache (one-time, removes fc-dot legacy)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.update());
+  });
+  caches.keys().then(keys => keys
+    .filter(k => k !== 'im-oei-v26')
+    .forEach(k => caches.delete(k))
+  );
+}
+</script>
 </head>
 <body>
 <div id="app-loader"><div class="al-box"><img src="logo.webp" alt="โลโก้" onerror="this.style.fontSize='48px';this.textContent='🍱'"></div></div>
@@ -58,7 +70,7 @@
   <a href="admin.html" style="margin-left:auto;font-size:12px;font-weight:700;color:#FF9F1C;text-decoration:none;padding:4px 10px;background:#fff;border-radius:20px;border:1.5px solid #FFE082;">⚙️ แอดมิน</a>
 </div>
 
-<main><div class="hero-wrap" style="width:100%;height:56vw;max-height:420px;min-height:220px;overflow:hidden;background:#FFE0B2;"><img src="hero.webp" alt="อิ่มเอ๋ย" fetchpriority="high" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;"></div>
+<main><div class="hero-wrap" style="width:100%;height:56vw;max-height:420px;min-height:220px;overflow:hidden;background:#FFE0B2;"><img src="hero.webp" alt="อิ่มเอ๋ย" fetchpriority="high" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:20% center;display:block;"></div>
 
 <div class="search-wrap">
   <span class="search-icon">🔍</span>
@@ -86,22 +98,8 @@
 
 <div id="promo-mid-wrap"></div>
 
-<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 6px;">
+<div style="padding:10px 18px 6px;">
   <span style="font-size:16px;font-weight:800;color:#2B2B2B;font-family:'Prompt',sans-serif;">เมนูทั้งหมด</span>
-  <div class="view-switcher">
-    <button id="view-btn-card" class="view-sw-btn vsw" onclick="setView('card')" title="การ์ด">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
-      <span>การ์ด</span>
-    </button>
-    <button id="view-btn-grid" class="view-sw-btn vsw active" onclick="setView('grid')" title="กริด">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
-      <span>กริด</span>
-    </button>
-    <button id="view-btn-list" class="view-sw-btn vsw" onclick="setView('list')" title="รายการ">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
-      <span>รายการ</span>
-    </button>
-  </div>
 </div>
 
 <div id="menu-list" class="pb-footer"></div>
@@ -144,8 +142,8 @@
   </div>
 </div>
 
-<script src="js/index.js" defer></script>
-<script type="module" src="js/index.module.js"></script>
+<script src="js/index.js?v32b" defer></script>
+<script type="module" src="js/index.module.js?v32b"></script>
 </main>
 
 <script>

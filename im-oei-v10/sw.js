@@ -1,5 +1,5 @@
 // Service Worker v23 - อิ่มเอ้ย PWA + Push Notifications + pre-cache
-const CACHE_NAME = 'im-oei-v24';
+const CACHE_NAME = 'im-oei-v26';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -89,6 +89,8 @@ self.addEventListener('notificationclick', e => {
 // รับ message จาก page (heartbeat)
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'HEARTBEAT') {
-    e.source && e.source.postMessage({ type: 'HEARTBEAT_ACK' });
+    try {
+      if (e.source) e.source.postMessage({ type: 'HEARTBEAT_ACK' });
+    } catch(err) { /* channel closed — ปกติ */ }
   }
 });
