@@ -228,14 +228,17 @@ function toggleUserMenu() {
 }
 
 async function adminLogout() {
+  // ล้าง auth ทุกจุด
   localStorage.removeItem('imkum_admin_auth');
-  sessionStorage.removeItem('imkum_user');
+  localStorage.removeItem('imkum_user');
   localStorage.removeItem('imkum_name');
+  sessionStorage.removeItem('imkum_user');
+  sessionStorage.removeItem('imkum_admin_auth');
   try {
     const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
     await signOut(getAuth());
   } catch (e) {}
-  window.location.href = 'login.html';
+  window.location.replace('login.html');
 }
 
 // ====== SIDEBAR ======
