@@ -6,7 +6,7 @@ import {
   doc, updateDoc, deleteDoc, setDoc, getDoc, addDoc,
   serverTimestamp, getDocs, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { FIREBASE_CONFIG } from '../config.js'
+import { FIREBASE_CONFIG, LIFF_ID as CONFIG_LIFF_ID } from '../config.js'
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
@@ -2405,7 +2405,7 @@ window.linkAdminLine = async function() {
       });
     }
 
-    const LIFF_ID = '2009910221-y5bGklzJ'; // same LIFF ID as login
+    const LIFF_ID = CONFIG_LIFF_ID; // imported from config.js
     if (!window._adminLiffInited) {
       await window.liff.init({ liffId: LIFF_ID });
       window._adminLiffInited = true;
