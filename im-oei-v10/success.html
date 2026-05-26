@@ -7,107 +7,353 @@
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#FFE8B0 100%);font-family:'Sarabun',sans-serif;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
 
-/* HERO */
-.hero{width:100%;background:linear-gradient(135deg,#FF8C00,#FFC107);padding:0;text-align:center;position:relative;overflow:hidden;height:240px;display:flex;align-items:center;justify-content:center;}
-.hero::after{content:'';position:absolute;bottom:-24px;left:0;right:0;height:48px;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 100%);border-radius:50% 50% 0 0 / 100% 100% 0 0}
-.confetti{font-size:36px;margin-bottom:10px;animation:bounce 0.6s ease-out}
-.hero-title{font-family:'Prompt',sans-serif;font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2)}
-.hero-sub{font-size:14px;color:rgba(255,255,255,0.9);font-weight:600;margin-top:6px}
-@keyframes bounce{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+body {
+  min-height: 100vh;
+  background: #F5F0E8;
+  font-family: 'Sarabun', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 48px;
+}
 
-/* CARD */
-.card{background:#fff;border-radius:24px;padding:22px 20px;box-shadow:0 8px 32px rgba(255,140,0,0.12);width:calc(100% - 32px);max-width:420px;margin-top:-24px;position:relative;z-index:1}
-.card+.card{margin-top:14px}
+/* ─── HERO ─── */
+.hero {
+  width: 100%;
+  height: 260px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
+/* gradient overlay แบบเข้มพอให้ข้อความชัด */
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(30,10,0,0.72) 0%,
+    rgba(60,20,0,0.60) 40%,
+    rgba(180,80,0,0.45) 100%
+  );
+}
+/* curved bottom */
+.hero-curve {
+  position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 40px;
+  background: #F5F0E8;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+.hero-content {
+  position: relative; z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 20px 36px;
+}
+.hero-logo {
+  width: 64px; height: 64px;
+  border-radius: 18px;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+  border: 2px solid rgba(255,255,255,0.3);
+  margin-bottom: 4px;
+}
+.hero-badge {
+  font-size: 28px;
+  animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1) both;
+}
+.hero-title {
+  font-family: 'Prompt', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+.hero-sub {
+  font-size: 13px;
+  color: rgba(255, 235, 180, 0.95);
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.3);
+}
+@keyframes popIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
 
-/* ORDER INFO */
-.order-id{font-family:'Prompt',sans-serif;font-size:22px;font-weight:800;color:#E65100;text-align:center;margin-bottom:16px;letter-spacing:1px}
-.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #FFF3E0}
-.info-row:last-child{border-bottom:none}
-.info-key{font-size:13px;color:#999;font-weight:600}
-.info-val{font-size:13px;font-weight:800;color:#2C2C2C;text-align:right;max-width:60%}
-.info-val.orange{color:#E65100}
-.location-val{color:#1565C0!important}
+/* ─── ORDER ID BADGE ─── */
+.order-id-wrap {
+  margin-top: -18px;
+  z-index: 10;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.order-id-badge {
+  background: linear-gradient(135deg, #E65100, #FF6D00);
+  color: #fff;
+  font-family: 'Prompt', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 8px 24px;
+  border-radius: 30px;
+  box-shadow: 0 4px 18px rgba(230,81,0,0.45);
+  border: 2px solid rgba(255,255,255,0.25);
+}
 
-/* ITEMS */
-.items-title{font-size:11px;font-weight:800;color:#999;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
-.item-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #F5EDE0}
-.item-row:last-child{border-bottom:none}
-.item-qty{background:#FFF3E0;color:#FF8C00;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;flex-shrink:0}
-.item-name{font-size:13px;font-weight:700;color:#2C2C2C;flex:1;margin:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item-price{font-size:13px;font-weight:800;color:#E65100;flex-shrink:0}
-.total-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:2px solid #F5EDE0}
-.total-label{font-size:14px;font-weight:700;color:#888}
-.total-val{font-size:22px;font-weight:800;color:#E65100;font-family:'Prompt',sans-serif}
+/* ─── CARD ─── */
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  width: calc(100% - 32px);
+  max-width: 420px;
+  margin-top: 12px;
+}
 
-/* STAMP */
-.stamp-box{background:linear-gradient(135deg,#FF6B35,#FF8C00);border-radius:18px;padding:16px;text-align:center;color:#fff}
-.stamp-icon{font-size:32px;margin-bottom:6px}
-.stamp-text{font-size:15px;font-weight:800}
-.stamp-sub{font-size:12px;opacity:0.85;margin-top:4px}
+/* ─── INFO ROWS ─── */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #F5EDE0;
+  gap: 12px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-key {
+  font-size: 13px;
+  color: #A08060;
+  font-weight: 600;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.info-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #2C2C2C;
+  text-align: right;
+  word-break: break-all;
+}
+.info-val.orange { color: #E65100; }
+.info-val.blue { color: #1565C0; }
 
-/* PREORDER */
-.preorder-box{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:18px;padding:14px;text-align:center;color:#fff;font-size:13px;font-weight:700}
+/* ─── PHONE ROW ─── */
+.phone-row .info-val {
+  color: #1A5C2A;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
 
-/* BUTTONS */
-.btn-wrap{display:flex;flex-direction:column;gap:10px;width:calc(100%-32px);max-width:420px;padding:0 16px}
-.btn-main{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:16px;font-family:'Prompt',sans-serif;font-size:15px;font-weight:800;text-decoration:none;transition:transform 0.15s}
-.btn-main:active{transform:scale(0.97)}
-.btn-primary{background:linear-gradient(135deg,#FFC107,#FF8C00);color:#3E2000;box-shadow:0 4px 16px rgba(255,140,0,0.35)}
-.btn-secondary{background:#fff;color:#666;border:2px solid #E8E8E8}
-.btn-ghost{background:none;border:none;font-size:12px;color:#bbb;padding:8px;cursor:pointer;text-decoration:underline;font-family:'Sarabun',sans-serif}
-.note{font-size:12px;color:#bbb;text-align:center;padding:4px 0}
-  
-  #app-loader {
-    position: fixed; inset: 0; z-index: 99999;
-    background: #FFF9F0;
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
-  }
-  #app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  #app-loader .al-box {
-    width: 80px; height: 80px; border-radius: 22px;
-    background: linear-gradient(135deg, #FF8C00, #FFC107);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 38px;
-    animation: alPulse 1.4s ease-in-out infinite;
-    box-shadow: 0 4px 20px rgba(255,140,0,0.3);
-  }
-  @keyframes alPulse {
-    0%,100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,140,0,0.3); }
-    50% { transform: scale(1.08); box-shadow: 0 4px 30px rgba(255,140,0,0.5); }
-  }
-  </style>
+/* ─── ITEMS ─── */
+.section-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #C8A87A;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dashed #F0E4D0;
+}
+.item-row:last-child { border-bottom: none; }
+.item-qty {
+  background: #FFF3E0;
+  color: #E65100;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.item-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2C2C2C;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.item-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: #E65100;
+  flex-shrink: 0;
+}
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid #F5EDE0;
+}
+.total-label { font-size: 13px; font-weight: 700; color: #A08060; }
+.total-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: #E65100;
+  font-family: 'Prompt', sans-serif;
+}
+
+/* ─── STAMP ─── */
+.stamp-box {
+  background: linear-gradient(135deg, #3E1A00, #8B4000);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  color: #FFE082;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.stamp-icon { font-size: 28px; flex-shrink: 0; }
+.stamp-text { font-size: 14px; font-weight: 800; text-align: left; }
+.stamp-sub { font-size: 12px; opacity: 0.8; margin-top: 3px; text-align: left; }
+
+/* ─── PREORDER ─── */
+.preorder-box {
+  background: linear-gradient(135deg, #1a237e, #4527a0);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+/* ─── BUTTONS ─── */
+.btn-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: calc(100% - 32px);
+  max-width: 420px;
+  margin-top: 20px;
+}
+.btn-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px;
+  border-radius: 16px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-main:active { transform: scale(0.97); }
+.btn-primary {
+  background: linear-gradient(135deg, #FFC107, #FF8C00);
+  color: #3E2000;
+  box-shadow: 0 4px 16px rgba(255,140,0,0.35);
+}
+.btn-secondary {
+  background: #fff;
+  color: #555;
+  border: 2px solid #E8E0D8;
+}
+.btn-ghost {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #B0A090;
+  padding: 8px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: 'Sarabun', sans-serif;
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ─── APP LOADER ─── */
+#app-loader {
+  position: fixed; inset: 0; z-index: 99999;
+  background: #FFF9F0;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+#app-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+#app-loader .al-box {
+  width: 90px; height: 90px; border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  animation: alPulse 1.4s ease-in-out infinite;
+}
+#app-loader .al-box img {
+  width: 90px; height: 90px; border-radius: 24px;
+  object-fit: cover;
+  box-shadow: 0 4px 24px rgba(255,140,0,0.35);
+}
+@keyframes alPulse {
+  0%,100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(255,140,0,0.3)); }
+  50%      { transform: scale(1.08); filter: drop-shadow(0 4px 24px rgba(255,140,0,0.55)); }
+}
+</style>
 </head>
 <body>
-<div id="app-loader"><div class="al-box">🍱</div></div></div>
 
+<div id="app-loader"><div class="al-box"><img src="logo.webp" alt="โลโก้"></div></div>
+
+<!-- HERO -->
 <div class="hero">
-  <img src="hero.webp" alt="อิ่มเอ๋ย" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:0.4;">
-  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 0;">
-    <img src="logo.webp" alt="อิ่มเอ๋ย" style="width:72px;height:72px;border-radius:20px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
-    <div class="confetti">🎉</div>
-    <div style="font-family:'Prompt',sans-serif;font-size:20px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.2);">สั่งซื้อสำเร็จ!</div>
-    <div style="font-size:14px;color:rgba(255,255,255,0.95);font-weight:600;">ขอบคุณที่ใช้บริการ 🙏</div>
+  <img class="hero-img" src="hero.webp" alt="อิ่มเอ๋ย">
+  <div class="hero-overlay"></div>
+  <div class="hero-curve"></div>
+  <div class="hero-content">
+    <img class="hero-logo" src="logo.webp" alt="อิ่มเอ๋ย">
+    <div class="hero-badge">🎉</div>
+    <div class="hero-title">สั่งซื้อสำเร็จ!</div>
+    <div class="hero-sub">ขอบคุณที่ใช้บริการ 🙏</div>
   </div>
 </div>
 
-<!-- ORDER ID -->
-<div class="card" style="margin-top:-24px">
-  <div class="order-id" id="s-id">#??????</div>
+<!-- ORDER ID BADGE -->
+<div class="order-id-wrap">
+  <div class="order-id-badge" id="s-id">#??????</div>
+</div>
 
+<!-- INFO CARD -->
+<div class="card">
   <div class="info-row">
-    <span class="info-key">ชื่อผู้สั่ง</span>
+    <span class="info-key">👤 ชื่อผู้สั่ง</span>
     <span class="info-val" id="s-name">-</span>
+  </div>
+  <div class="info-row phone-row" id="s-phone-row" style="display:none">
+    <span class="info-key">📞 เบอร์โทร</span>
+    <span class="info-val" id="s-phone">-</span>
   </div>
   <div class="info-row">
     <span class="info-key">⏰ เวลารับอาหาร</span>
-    <span class="info-val" id="s-time">07:30 น.</span>
+    <span class="info-val orange" id="s-time">07:30 น.</span>
   </div>
   <div class="info-row" id="s-location-row" style="display:none">
     <span class="info-key">📍 จุดรับอาหาร</span>
-    <span class="info-val location-val" id="s-location">-</span>
+    <span class="info-val blue" id="s-location">-</span>
   </div>
   <div class="info-row" id="s-date-row">
     <span class="info-key">📅 วันที่สั่ง</span>
@@ -117,7 +363,7 @@ body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#
 
 <!-- ITEMS -->
 <div class="card" id="s-items-card" style="display:none">
-  <div class="items-title">รายการที่สั่ง</div>
+  <div class="section-label">รายการที่สั่ง</div>
   <div id="s-items-list"></div>
   <div class="total-row">
     <span class="total-label">ยอดรวมทั้งหมด</span>
@@ -129,8 +375,10 @@ body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#
 <div class="card" id="stamp-card" style="display:none">
   <div class="stamp-box">
     <div class="stamp-icon">⭐</div>
-    <div class="stamp-text" id="stamp-text"></div>
-    <div class="stamp-sub" id="stamp-sub"></div>
+    <div>
+      <div class="stamp-text" id="stamp-text"></div>
+      <div class="stamp-sub" id="stamp-sub"></div>
+    </div>
   </div>
 </div>
 
@@ -140,27 +388,27 @@ body{min-height:100vh;background:linear-gradient(160deg,#FFF9F0 0%,#FFF3DC 60%,#
 </div>
 
 <!-- BUTTONS -->
-<div style="height:20px"></div>
 <div class="btn-wrap">
   <a class="btn-main btn-primary" id="btn-status" href="orders.html">📋 ดูสถานะออเดอร์</a>
   <a class="btn-main btn-secondary" href="index.html">🛒 สั่งเพิ่มอีก</a>
 </div>
-<div style="margin-top:12px;text-align:center">
-  <a href="index.html" class="btn-ghost">← กลับหน้าหลัก</a>
-</div>
+<a href="index.html" class="btn-ghost">← กลับหน้าหลัก</a>
 
 <script src="js/success.js"></script>
-
 <script>
-  // Hide loader when page is ready
-  (function(){
-    function hideLoader(){
-      var el = document.getElementById('app-loader');
-      if(el){ el.classList.add('hide'); setTimeout(function(){ el.remove(); }, 450); }
+// เพิ่มแสดงเบอร์โทร
+(function(){
+  try {
+    const order = JSON.parse(localStorage.getItem('imkum_last_order') || '{}');
+    const phone = order.customerPhone
+      || order.phone
+      || (function(){ try{ return JSON.parse(localStorage.getItem('imkum_user')||'{}').phone || localStorage.getItem('imkum_saved_phone') || ''; }catch(e){ return ''; } })();
+    if (phone) {
+      document.getElementById('s-phone').textContent = phone;
+      document.getElementById('s-phone-row').style.display = '';
     }
-    if(document.readyState === 'complete') { setTimeout(hideLoader, 400); }
-    else { window.addEventListener('load', function(){ setTimeout(hideLoader, 400); }); }
-  })();
+  } catch(e){}
+})();
 </script>
 <script>
 (function(){

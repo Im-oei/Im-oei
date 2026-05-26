@@ -150,26 +150,6 @@
 .fc-track::-webkit-scrollbar { display: none; }
 .fc-track .featured-card { scroll-snap-align: start; }
 
-/* ── Dots ── */
-.fc-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 0 10px;
-}
-.fc-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: rgba(255,159,28,0.25);
-  transition: background 0.25s, transform 0.25s, width 0.25s;
-  cursor: pointer;
-}
-.fc-dot.active {
-  background: #FF9F1C;
-  width: 18px;
-  border-radius: 4px;
-  transform: scaleY(1.1);
-}
 .featured-card {
   flex-shrink:0; width:148px;
   background:#fff; border-radius:var(--r-lg,24px);

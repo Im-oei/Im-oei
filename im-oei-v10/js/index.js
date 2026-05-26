@@ -337,15 +337,6 @@ function buildFeatured(){
   });
   track.addEventListener('mouseleave', function(){ _dragging = false; });
 
-  // dot click
-  Array.prototype.forEach.call(dotsEl.children, function(d, i){
-    d.addEventListener('click', function(){
-      clearInterval(_featTimer);
-      goTo(i);
-      _featTimer = setInterval(function(){ goTo(_featIdx + 1); }, 3500);
-    });
-  });
-
   // pause on hover
   track.addEventListener('mouseenter', function(){ clearInterval(_featTimer); });
   track.addEventListener('mouseleave', function(){

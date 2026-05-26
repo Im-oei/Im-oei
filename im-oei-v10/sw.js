@@ -1,5 +1,5 @@
 // Service Worker v23 - อิ่มเอ้ย PWA + Push Notifications + pre-cache
-const CACHE_NAME = 'im-oei-v23';
+const CACHE_NAME = 'im-oei-v24';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

@@ -2549,6 +2549,16 @@ window.notifyCustomerLine = async function(orderId, customerName, pickupTime, cu
   if (!gasUrl) { showToast('❌ ยังไม่ได้ตั้งค่า GAS URL'); return; }
   if (!customerLineId) { showToast('❌ ลูกค้ารายนี้ไม่มี LINE ID'); return; }
 
+  // ดึง items + total จาก Firestore เพื่อส่งไปแสดงในข้อความ
+  let items = [], total = '';
+  try {
+    const oSnap = await getDoc(doc(db, 'orders', orderId));
+    if (oSnap.exists()) {
+      items = oSnap.data().items || [];
+      total = oSnap.data().total || '';
+    }
+  } catch(e) { console.warn('fetch order for notify:', e.message); }
+
   try {
     showToast('📤 กำลังส่ง LINE...');
     const res = await fetch(gasUrl, {
@@ -2560,12 +2570,13 @@ window.notifyCustomerLine = async function(orderId, customerName, pickupTime, cu
         customerName,
         orderId,
         pickupTime,
+        items,
+        total,
       })
     });
     const data = await res.json();
     if (data.ok) {
       showToast('✅ ส่ง LINE ให้ลูกค้าแล้ว');
-      // update order status badge
       await updateDoc(doc(db, 'orders', orderId), {
         lineNotifiedAt: new Date(),
         lineNotifyStatus: 'sent'

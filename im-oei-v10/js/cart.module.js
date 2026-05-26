@@ -87,61 +87,61 @@ let _isCheckingOut = false; // guard กัน double-submit
 async function notifyLineOA(order) {
   try {
     const orderId = '#' + order.orderId.slice(0,8).toUpperCase();
-    const customerLine = (order.customerName || 'ไม่ระบุ') + (order.customerPhone ? '  📞 ' + order.customerPhone : '');
     const itemsBody = (order.items || []).map(i => ({
       type: 'box', layout: 'horizontal', margin: 'sm',
       contents: [
-        { type: 'text', text: i.name + ' ×' + i.qty, size: 'sm', color: '#555555', flex: 4, wrap: true },
-        { type: 'text', text: i.subtotal + ' ฿', size: 'sm', color: '#FF8C00', flex: 2, align: 'end', weight: 'bold' }
+        { type: 'text', text: '· ' + i.name, size: 'sm', color: '#555555', flex: 5, wrap: true },
+        { type: 'text', text: '×' + i.qty + '  ' + i.subtotal + '฿', size: 'sm', color: '#E65100', flex: 3, align: 'end', weight: 'bold' }
       ]
     }));
 
     const flexMsg = {
       type: 'flex', altText: '🛎️ ออเดอร์ใหม่ ' + orderId,
       contents: {
-        type: 'bubble',
-        hero: order.firstImageUrl ? {
-          type: 'image', url: order.firstImageUrl,
-          size: 'full', aspectRatio: '20:13', aspectMode: 'cover'
-        } : undefined,
+        type: 'bubble', size: 'kilo',
         header: {
           type: 'box', layout: 'vertical',
-          backgroundColor: '#FF8C00', paddingAll: '16px',
+          backgroundColor: '#3E1A00', paddingAll: '18px',
           contents: [
-            { type: 'text', text: '🛎️ ออเดอร์ใหม่!', color: '#ffffff', size: 'xl', weight: 'bold' },
-            { type: 'text', text: orderId, color: '#ffe0b2', size: 'sm', margin: 'xs' }
+            { type: 'text', text: 'อิ่มเอ๋ย • ออเดอร์ใหม่', color: '#FFC107', size: 'xs', weight: 'bold', letterSpacing: '1px' },
+            { type: 'text', text: orderId, color: '#FFFFFF', size: 'xxl', weight: 'bold', margin: 'sm', fontFamily: 'Prompt' },
           ]
         },
         body: {
-          type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '16px',
+          type: 'box', layout: 'vertical', spacing: 'none', paddingAll: '16px',
           contents: [
-            { type: 'box', layout: 'baseline', spacing: 'sm', contents: [
-              { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'xs' },
-              { type: 'text', text: customerLine, size: 'sm', color: '#333', flex: 5, wrap: true }
-            ]},
+            // ลูกค้า
+            {
+              type: 'box', layout: 'vertical',
+              backgroundColor: '#FFF8EE', cornerRadius: '10px',
+              paddingAll: '12px', margin: 'none',
+              contents: [
+                { type: 'text', text: '👤 ' + (order.customerName || 'ไม่ระบุ'), size: 'md', color: '#2C2C2C', weight: 'bold', wrap: true },
+                ...(order.customerPhone ? [{ type: 'text', text: '📞 ' + order.customerPhone, size: 'sm', color: '#555', margin: 'xs' }] : []),
+                { type: 'text', text: '⏰ รับ ' + (order.pickupTime || '07:30') + ' น.', size: 'sm', color: '#E65100', margin: 'xs', weight: 'bold' },
+                ...(order.pickupLocationName ? [{ type: 'text', text: '📍 ' + order.pickupLocationName, size: 'sm', color: '#555', margin: 'xs', wrap: true }] : []),
+              ]
+            },
+            // รายการ
+            { type: 'text', text: 'รายการ', size: 'xs', color: '#AAA', weight: 'bold', margin: 'lg', letterSpacing: '1px' },
+            { type: 'separator', margin: 'sm' },
+            { type: 'box', layout: 'vertical', margin: 'sm', spacing: 'xs', contents: itemsBody },
             { type: 'separator', margin: 'md' },
-            { type: 'box', layout: 'horizontal', margin: 'md', contents: [
-              { type: 'text', text: '⏰', size: 'sm', flex: 1 },
-              { type: 'text', text: 'รับ ' + (order.pickupTime || '07:30') + ' น.', size: 'sm', color: '#333', flex: 5 }
-            ]},
-            { type: 'box', layout: 'horizontal', contents: [
-              { type: 'text', text: '📍', size: 'sm', flex: 1 },
-              { type: 'text', text: order.pickupLocationName || '-', size: 'sm', color: '#333', flex: 5, wrap: true }
-            ]},
-            { type: 'separator', margin: 'md' },
-            ...itemsBody,
-            { type: 'separator', margin: 'md' },
-            { type: 'box', layout: 'horizontal', margin: 'md', contents: [
-              { type: 'text', text: 'รวมทั้งหมด', size: 'sm', color: '#333', weight: 'bold', flex: 3 },
-              { type: 'text', text: order.total + ' บาท', size: 'lg', color: '#FF8C00', weight: 'bold', flex: 3, align: 'end' }
-            ]}
+            // รวม
+            {
+              type: 'box', layout: 'horizontal', margin: 'md', alignItems: 'center',
+              contents: [
+                { type: 'text', text: 'ยอดรวม', size: 'sm', color: '#888', flex: 4, weight: 'bold' },
+                { type: 'text', text: order.total + ' บาท', size: 'xl', color: '#E65100', weight: 'bold', flex: 4, align: 'end' }
+              ]
+            }
           ]
         },
         footer: {
-          type: 'box', layout: 'vertical', paddingAll: '12px',
+          type: 'box', layout: 'vertical', paddingAll: '12px', backgroundColor: '#FFFBF5',
           contents: [{
-            type: 'button', style: 'primary', color: '#FF8C00',
-            action: { type: 'uri', label: '📋 ดูออเดอร์ในระบบ', uri: 'https://im-oei.web.app/admin.html' }
+            type: 'button', style: 'primary', color: '#FF8C00', height: 'sm',
+            action: { type: 'uri', label: 'ดูออเดอร์ในระบบ →', uri: 'https://im-oei.web.app/admin.html' }
           }]
         }
       }
